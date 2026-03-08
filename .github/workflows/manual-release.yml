@@ -1,0 +1,58 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release turi"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          git fetch --tags
+          TAG=$(git tag --sort=-v:refname | head -n 1)
+          echo "latest=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Calculate next version
+        id: version
+        run: |
+          TAG=${{ steps.tag.outputs.latest }}
+          TAG=${TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$TAG"
+
+          if [ "${{ github.event.inputs.release_type }}" = "patch" ]; then
+            PATCH=$((PATCH+1))
+          elif [ "${{ github.event.inputs.release_type }}" = "minor" ]; then
+            MINOR=$((MINOR+1))
+            PATCH=0
+          else
+            MAJOR=$((MAJOR+1))
+            MINOR=0
+            PATCH=0
+          fi
+
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
