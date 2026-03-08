@@ -1,0 +1,20 @@
+
+name: Protect Main Branch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR source branch
+        run: |
+          echo "Source branch: ${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "test" ]; then
+            echo "❌ 'main' branchiga faqat 'test' branchi merge qila oladi"
+            exit 1
+          fi
