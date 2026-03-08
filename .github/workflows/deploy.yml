@@ -19,10 +19,27 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-            cd /var/www/prohome/frontend/sales &&
-            git fetch origin &&
-            git reset --hard origin/main &&
-            cd /var/www/prohome/docker &&
-            docker compose up -d --build
-          "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+
+          echo "🚀 Deploy boshlandi"
+
+          cd /var/www/prohome/frontend/sales
+
+          echo "📥 Git yangilanishlar olinmoqda..."
+          git fetch origin
+          git reset --hard origin/main
+
+          cd /var/www/prohome/docker
+
+          echo "🐳 Docker image build qilinmoqda..."
+          docker compose build
+
+          echo "🔄 Container yangilanmoqda..."
+          docker compose up -d
+
+          echo "📊 Container holati:"
+          docker ps
+
+          echo "✅ Deploy muvaffaqiyatli tugadi"
+
+          EOF
