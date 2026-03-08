@@ -37,7 +37,7 @@ jobs:
           echo "🔄 Container yangilanmoqda..."
           docker compose up -d
 
-          echo "📊 Container holati:"
+          echo "📊 Container holati: "
           docker ps
 
           echo "✅ Deploy muvaffaqiyatli tugadi."
