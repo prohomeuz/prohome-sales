@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -20,12 +17,12 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy on server
+      - name: Deploy to server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            cd /var/www/prohome/frontend/sales
-            git pull origin main
-            cd /var/www/prohome/docker
-            docker compose down
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            cd /var/www/prohome/frontend/sales &&
+            git fetch origin &&
+            git reset --hard origin/main &&
+            cd /var/www/prohome/docker &&
             docker compose up -d --build
-          EOF
+          "
