@@ -40,6 +40,6 @@ jobs:
           echo "📊 Container holati:"
           docker ps
 
-          echo "✅ Deploy muvaffaqiyatli tugadi"
+          echo "✅ Deploy muvaffaqiyatli tugadi."
 
           EOF
