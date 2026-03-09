@@ -9,7 +9,7 @@ export default function MainLayout() {
       <AppSidebar />
       <SidebarInset>
         <SidebarHeader />
-        <main className="h-full w-full overflow-x-auto">
+        <main className="h-full w-full overflow-hidden">
           <Outlet />
         </main>
       </SidebarInset>

@@ -1,4 +1,23 @@
+import { useRoomStatus } from "@/shared/hooks/use-room-status";
+import useSound from "@/shared/hooks/use-sound";
+import {
+  cn,
+  formatNumber,
+  formatNumberWithPercent,
+  getFormData,
+  normalizePeriod,
+} from "@/shared/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { Badge } from "@/shared/ui/badge";
+import { Button, buttonVariants } from "@/shared/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
 import { Drawer, DrawerClose, DrawerContent } from "@/shared/ui/drawer";
 import {
   Field,
@@ -7,38 +26,6 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
-import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
-import { SparklesText } from "@/shared/ui/sparkles-text";
-import confetti from "canvas-confetti";
-import {
-  BadgePercent,
-  Bolt,
-  Calculator,
-  CalendarDays,
-  CircleCheckBig,
-  CircleDollarSign,
-  CircleMinus,
-  CirclePlus,
-  Coins,
-  Grid2X2,
-  HandCoins,
-  Layers2,
-  Lock,
-  X,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { PhotoProvider, PhotoView } from "react-photo-view";
-import { toast } from "sonner";
-import useSound from "@/shared/hooks/use-sound";
-import {
-  formatNumber,
-  formatNumberWithPercent,
-  getFormData,
-  normalizePeriod,
-} from "@/shared/lib/utils";
-import AppartmentTimeLine from "./AppartmentTimeLine";
-import { Badge } from "@/shared/ui/badge";
-import { Button, buttonVariants } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import {
   InputGroup,
@@ -49,8 +36,43 @@ import {
 import { Label } from "@/shared/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 import { NoiseBackground } from "@/shared/ui/noise-background";
-import { Pointer } from "@/shared/ui/pointer";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { SparklesText } from "@/shared/ui/sparkles-text";
 import { Spinner } from "@/shared/ui/spinner";
+import { Textarea } from "@/shared/ui/textarea";
+import confetti from "canvas-confetti";
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  BadgePercent,
+  Ban,
+  Bolt,
+  Calculator,
+  CalendarDays,
+  CircleCheckBig,
+  CircleDollarSign,
+  CircleMinus,
+  CirclePlus,
+  Coins,
+  FileText,
+  Grid2X2,
+  HandCoins,
+  Layers2,
+  LoaderCircle,
+  Lock,
+  MessageSquareText,
+  Phone,
+  RotateCcw,
+  UserRound,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import AppartmentTimeLine from "./AppartmentTimeLine";
+import LoadTransition from "./loading/LoadTransition";
+import SurfaceLoader from "./loading/SurfaceLoader";
 
 const states = {
   BOX: "Karobka",
@@ -64,60 +86,367 @@ const uzbekTranslate = {
   "electric-plate": "Elektr plita",
 };
 
+const statusBadgeClass = {
+  SOLD: "bg-red-500",
+  RESERVED: "bg-yellow-500",
+  EMPTY: "bg-green-500",
+  NOT: "bg-slate-400",
+};
+
+const statusLabels = {
+  SOLD: "Sotilgan",
+  RESERVED: "Bron qilingan",
+  EMPTY: "Bo'sh",
+  NOT: "Sotilmaydi",
+};
+
 const actionButtons = [
   {
     code: "SOLD",
     title: "Sotish",
-    bg: "bg-green-500",
+    description: "Mijoz ma'lumoti bilan sotuvni yakunlash",
+    submitLabel: "Sotishni tasdiqlash",
+    successText: "Uy muvaffaqiyatli sotildi.",
+    icon: BadgeCheck,
+    cardTone:
+      "border-emerald-500/18 hover:border-emerald-500/35 hover:bg-emerald-500/4",
+    accentTone: "bg-emerald-500/85",
+    iconTone:
+      "border-emerald-500/20 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
   },
   {
     code: "RESERVED",
     title: "Bron qilish",
-    bg: "bg-yellow-500",
+    description: "Uyga vaqtinchalik bron qo'yish",
+    submitLabel: "Bronni saqlash",
+    successText: "Uy bron holatiga o'tkazildi.",
+    icon: CalendarDays,
+    cardTone:
+      "border-amber-500/18 hover:border-amber-500/35 hover:bg-amber-500/4",
+    accentTone: "bg-amber-500/85",
+    iconTone:
+      "border-amber-500/20 bg-amber-500/15 text-amber-600 dark:text-amber-300",
   },
   {
     code: "NOT",
     title: "To'xtatish",
-    bg: "bg-slate-400",
+    description: "Uyni vaqtincha sotuvdan olib tashlash",
+    submitLabel: "Sotuvdan olish",
+    successText: "Uy sotilmaydigan holatga o'tkazildi.",
+    icon: Ban,
+    cardTone:
+      "border-slate-400/30 hover:border-slate-500/45 hover:bg-slate-500/4",
+    accentTone: "bg-slate-500/75",
+    iconTone:
+      "border-slate-400/30 bg-slate-500/15 text-slate-600 dark:text-slate-300",
   },
   {
     code: "EMPTY",
     title: "Sotuvga chiqarish",
-    bg: "bg-green-500",
+    description: "Uyni qayta aktiv sotuvga qaytarish",
+    submitLabel: "Sotuvga qaytarish",
+    successText: "Uy qayta sotuvga chiqarildi.",
+    icon: RotateCcw,
+    cardTone:
+      "border-sky-500/18 hover:border-sky-500/35 hover:bg-sky-500/4",
+    accentTone: "bg-sky-500/85",
+    iconTone: "border-sky-500/20 bg-sky-500/15 text-sky-600 dark:text-sky-300",
   },
 ];
 
 const paymentPeriods = [12, 24, 36, 48, 60];
+const UZ_PHONE = /^\+998\d{9}$/;
+const STATUS_DIALOG_CLOSE_DELAY = 220;
+const ACTIONS_BY_STATUS = {
+  SOLD: ["EMPTY"],
+  RESERVED: ["SOLD", "EMPTY"],
+  NOT: ["EMPTY"],
+  EMPTY: ["SOLD", "RESERVED", "NOT"],
+};
+const INITIAL_CALC_RESULT = {
+  monthlyPayment: 0,
+  downPayment: 0,
+  months: 60,
+  bonus: [],
+};
 
-export default function CalculatorTool({ home }) {
+function normalizePhone(raw) {
+  return String(raw ?? "").replace(/[^\d+]/g, "");
+}
+
+function digitsOnly(raw) {
+  return String(raw ?? "").replace(/\D/g, "");
+}
+
+function getPositiveNumericString(...candidates) {
+  for (const candidate of candidates) {
+    const normalized = digitsOnly(candidate);
+    const numeric = Number(normalized);
+
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return String(numeric);
+    }
+  }
+
+  return "1";
+}
+
+function createEmptyStatusForm() {
+  return {
+    firstName: "",
+    lastName: "",
+    phone: "",
+    description: "",
+    downPayment: "0",
+    installments: "60",
+    discountValue: "",
+  };
+}
+
+function getInitialStatusForm(home, nextStatus, defaults) {
+  const form = createEmptyStatusForm();
+  const isCustomerFlow = nextStatus === "SOLD" || nextStatus === "RESERVED";
+  const customer = home?.customer ?? {};
+
+  if (isCustomerFlow) {
+    const currentDownPayment =
+      digitsOnly(
+        defaults?.calcResult?.downPayment ??
+          defaults?.downPayment ??
+          customer?.downPayment ??
+          0,
+      ) || "0";
+    const currentInstallments =
+      Number(
+        defaults?.calcResult?.months ??
+          defaults?.period ??
+          customer?.installments ??
+          60,
+      ) || 60;
+
+    form.firstName = customer.firstName ?? "";
+    form.lastName = customer.lastName ?? "";
+    form.phone = customer.phone ?? "";
+    form.description = home?.description ?? "";
+    form.downPayment = formatNumber(currentDownPayment);
+    form.installments = String(currentInstallments);
+    form.discountValue = String(
+      defaults?.discount ?? customer?.discountValue ?? "",
+    ).trim();
+    return form;
+  }
+
+  form.installments = "0";
+  if (nextStatus === "NOT") {
+    form.description = home?.description ?? "";
+  }
+
+  return form;
+}
+
+function createCalculatorInitialState() {
+  return {
+    calcResult: INITIAL_CALC_RESULT,
+    showDiscount: false,
+    discountType: "discountPerM2",
+    period: 60,
+    downPayment: "0",
+    discount: "",
+    galleryShow: false,
+    calcLoading: false,
+    statusDialogOpen: false,
+    statusDialogAction: null,
+    statusDialogRenderedAction: null,
+    statusForm: createEmptyStatusForm(),
+    statusErrors: {},
+    pendingAction: null,
+  };
+}
+
+function calculatorReducer(state, action) {
+  switch (action.type) {
+    case "SET_CALC_LOADING":
+      return { ...state, calcLoading: action.payload };
+    case "SET_CALC_RESULT":
+      return { ...state, calcResult: action.payload };
+    case "TOGGLE_DISCOUNT":
+      return { ...state, showDiscount: !state.showDiscount };
+    case "SET_DISCOUNT_TYPE":
+      return { ...state, discountType: action.payload };
+    case "SET_PERIOD":
+      return { ...state, period: action.payload };
+    case "SET_DOWN_PAYMENT":
+      return { ...state, downPayment: action.payload };
+    case "SET_DISCOUNT":
+      return { ...state, discount: action.payload };
+    case "SET_GALLERY_SHOW":
+      return { ...state, galleryShow: action.payload };
+    case "OPEN_STATUS_DIALOG":
+      return {
+        ...state,
+        statusDialogOpen: true,
+        statusDialogAction: action.payload.action,
+        statusDialogRenderedAction: action.payload.action,
+        statusForm: action.payload.form,
+        statusErrors: {},
+        pendingAction: null,
+      };
+    case "CLOSE_STATUS_DIALOG":
+      return {
+        ...state,
+        statusDialogOpen: false,
+        statusDialogAction: null,
+        pendingAction: null,
+      };
+    case "CLEAR_STATUS_DIALOG":
+      return {
+        ...state,
+        statusDialogRenderedAction: null,
+        statusForm: createEmptyStatusForm(),
+        statusErrors: {},
+      };
+    case "SET_STATUS_FIELD":
+      return {
+        ...state,
+        statusForm: {
+          ...state.statusForm,
+          [action.payload.field]: action.payload.value,
+        },
+        statusErrors: state.statusErrors[action.payload.field]
+          ? {
+              ...state.statusErrors,
+              [action.payload.field]: null,
+            }
+          : state.statusErrors,
+      };
+    case "SET_STATUS_ERRORS":
+      return { ...state, statusErrors: action.payload };
+    case "SET_PENDING_ACTION":
+      return { ...state, pendingAction: action.payload };
+    case "RESET":
+      return {
+        ...createCalculatorInitialState(),
+        galleryShow: state.galleryShow,
+      };
+    case "RESET_FOR_HOME":
+      return createCalculatorInitialState();
+    default:
+      return state;
+  }
+}
+
+export default function CalculatorTool({ home, onStatusUpdated }) {
   const timerRef = useRef();
+  const dialogResetTimerRef = useRef();
   const { sound } = useSound("/win.mp3");
-  const [open, setOpen] = useState(
-    window.location.search.includes("details=") &&
-      window.location.hash === "#calculator",
+  const { updateStatus, loading: statusLoading } = useRoomStatus();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [state, dispatch] = useReducer(
+    calculatorReducer,
+    undefined,
+    createCalculatorInitialState,
   );
-  const [calcResult, setCalcResult] = useState({
-    monthlyPayment: 0,
-    downPayment: 0,
-    months: 60,
-    bonus: [],
-  });
-  const [showDiscount, setShowDiscount] = useState(false);
-  const [discountType, setDiscountType] = useState("discountPerM2");
-  const [period, setPeriod] = useState(60);
-  const [downPayment, setDownPayment] = useState(0);
-  const [discount, setDiscount] = useState("");
+  const {
+    calcResult,
+    showDiscount,
+    discountType,
+    period,
+    downPayment,
+    discount,
+    galleryShow,
+    calcLoading,
+    statusDialogOpen,
+    statusDialogAction,
+    statusDialogRenderedAction,
+    statusForm,
+    statusErrors,
+    pendingAction,
+  } = state;
+  const activeAction = statusDialogAction ?? statusDialogRenderedAction;
+  const ActiveActionIcon = activeAction?.icon;
+  const actionLocked =
+    (home?.canBeSold ?? home?.customer?.canBeSold ?? true) === false;
+  const isOpen =
+    location.search.includes("details=") && location.hash === "#calculator";
+  const hasDiscountValue = showDiscount && String(discount ?? "").trim();
+  const availableActions = useMemo(() => {
+    const allowedCodes = ACTIONS_BY_STATUS[home.status] ?? [];
+    return actionButtons.filter((action) => allowedCodes.includes(action.code));
+  }, [home.status]);
+  const summaryCards = useMemo(() => {
+    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+    const totalPrice = resolvedPrice > 0 && resolvedSize > 0
+      ? formatNumber(resolvedPrice * resolvedSize)
+      : "---";
+    const cards = [
+      {
+        key: "price",
+        label: "Umumiy narx",
+        value: totalPrice,
+        icon: CircleDollarSign,
+        mono: true,
+      },
+      {
+        key: "months",
+        label: "Muddat",
+        value: `${calcResult.months} oy`,
+        icon: CalendarDays,
+        mono: true,
+      },
+    ];
 
-  const [galleryShow, setGalleryShow] = useState(false);
+    if (states[calcResult.state]) {
+      cards.push({
+        key: "size",
+        label: "O'lchami",
+        value: (
+          <>
+            {calcResult.size} m<sup>2</sup>
+          </>
+        ),
+        icon: Grid2X2,
+        mono: true,
+      });
+      cards.push({
+        key: "state",
+        label: "Holati",
+        value: states[calcResult.state],
+        icon: Bolt,
+        mono: false,
+      });
+    }
 
-  // Loadings
-  const [calcLoading, setCalcLoading] = useState(false);
+    cards.push(
+      {
+        key: "down-payment",
+        label: "Boshlang'ich to'lov",
+        value: formatNumber(calcResult.downPayment),
+        icon: HandCoins,
+        mono: true,
+      },
+      {
+        key: "price-per-meter",
+        label: (
+          <>
+            M<sup>2</sup>
+          </>
+        ),
+        value: formatNumber(home.price),
+        icon: Coins,
+        mono: true,
+      },
+    );
+
+    return cards;
+  }, [calcResult, home.price, home.size]);
 
   //   API
   async function calc(url) {
     let req;
     const token = localStorage.getItem("token");
-    setCalcLoading(true);
+    dispatch({ type: "SET_CALC_LOADING", payload: true });
     try {
       req = await fetch(url, {
         headers: {
@@ -131,7 +460,7 @@ export default function CalculatorTool({ home }) {
     if (req) {
       if (req.status === 200) {
         const data = await req.json();
-        setCalcResult(data);
+        dispatch({ type: "SET_CALC_RESULT", payload: data });
         if (data.bonus.length > 0) win();
       } else if (req.status === 400) {
         toast.error(
@@ -145,35 +474,19 @@ export default function CalculatorTool({ home }) {
       }
     }
 
-    setCalcLoading(false);
+    dispatch({ type: "SET_CALC_LOADING", payload: false });
   }
 
-  function handleOpen() {
-    setOpen(!open);
-  }
-
-  function handleClose() {
-    setCalcResult({
-      monthlyPayment: 0,
-      downPayment: 0,
-      months: 60,
-      bonus: [],
-    });
-
-    setDownPayment(0);
-    setPeriod(60);
-    setDiscount("");
-    setShowDiscount(false);
-    setCalcLoading(false);
-
-    const url = new URL(window.location.href);
-    url.hash = "";
-
-    history.replaceState(null, "", url);
+  function handleClose({ clearDetails = false } = {}) {
+    dispatch({ type: "RESET" });
+    const nextUrl = clearDetails
+      ? location.pathname
+      : `${location.pathname}${location.search}`;
+    navigate(nextUrl, { replace: true });
   }
 
   function handleChangeDiscountType(value) {
-    setDiscountType(value);
+    dispatch({ type: "SET_DISCOUNT_TYPE", payload: value });
   }
 
   function handleCalc(evt) {
@@ -191,19 +504,192 @@ export default function CalculatorTool({ home }) {
   }
 
   function handlePeriod(p) {
-    setPeriod(p);
+    dispatch({ type: "SET_PERIOD", payload: p });
   }
 
   function handleDownPayment(evt) {
     let input = evt.target.value;
     let rawValue = input.replace(/\D/g, "");
     let formattedValue = formatNumber(rawValue);
-    setDownPayment(formattedValue);
+    dispatch({ type: "SET_DOWN_PAYMENT", payload: formattedValue });
   }
 
   function handleDiscount(evt) {
     const value = formatNumberWithPercent(evt.target.value);
-    setDiscount(value);
+    dispatch({ type: "SET_DISCOUNT", payload: value });
+  }
+
+  function getFallbackPaymentValues() {
+    const fallbackDownPayment = getPositiveNumericString(
+      home?.customer?.downPayment,
+      calcResult.downPayment,
+      downPayment,
+      Number(home?.price ?? 0) * Number(home?.size ?? 0),
+      home?.price,
+      1,
+    );
+    const fallbackInstallments = String(
+      Number(
+        digitsOnly(
+          home?.customer?.installments ??
+            calcResult.months ??
+            period ??
+            1,
+        ),
+      ) || 1,
+    );
+
+    return {
+      downPayment: fallbackDownPayment,
+      installments: fallbackInstallments,
+    };
+  }
+
+  function createDirectStatusPayload(status) {
+    const fallbackPayment = getFallbackPaymentValues();
+
+    return {
+      status,
+      downPayment: fallbackPayment.downPayment,
+      installments: fallbackPayment.installments,
+      description: home?.description ?? "",
+    };
+  }
+
+  function handleStatusAction(action) {
+    if (actionLocked) return;
+
+    if (home.status === "RESERVED" && action.code === "SOLD") {
+      submitStatusAction(action, createDirectStatusPayload("SOLD"));
+      return;
+    }
+
+    if (home.status === "RESERVED" && action.code === "EMPTY") {
+      submitStatusAction(action, createDirectStatusPayload("EMPTY"));
+      return;
+    }
+
+    dispatch({
+      type: "OPEN_STATUS_DIALOG",
+      payload: {
+        action,
+        form: getInitialStatusForm(home, action.code, {
+          calcResult,
+          downPayment,
+          period,
+          discount,
+        }),
+      },
+    });
+  }
+
+  function handleStatusDialog(nextOpen) {
+    if (nextOpen) return;
+    dispatch({ type: "CLOSE_STATUS_DIALOG" });
+  }
+
+  function handleStatusField(field, value) {
+    dispatch({ type: "SET_STATUS_FIELD", payload: { field, value } });
+  }
+
+  function validateStatusForm(actionCode) {
+    const nextErrors = {};
+
+    if (actionCode === "SOLD" || actionCode === "RESERVED") {
+      const phone = normalizePhone(statusForm.phone);
+      const downPaymentValue = Number(digitsOnly(statusForm.downPayment));
+      const installments = Number(digitsOnly(statusForm.installments));
+
+      if (!statusForm.firstName.trim()) {
+        nextErrors.firstName = "Mijoz ismini kiriting!";
+      }
+      if (!statusForm.lastName.trim()) {
+        nextErrors.lastName = "Mijoz familiyasini kiriting!";
+      }
+      if (!phone) {
+        nextErrors.phone = "Telefon raqamini kiriting!";
+      } else if (!UZ_PHONE.test(phone)) {
+        nextErrors.phone = "Telefon +998xxxxxxxxx formatda bo'lsin!";
+      }
+      if (!String(statusForm.downPayment ?? "").trim()) {
+        nextErrors.downPayment = "Boshlang'ich to'lovni kiriting!";
+      } else if (
+        !Number.isFinite(downPaymentValue) ||
+        downPaymentValue <= 0
+      ) {
+        nextErrors.downPayment = "Boshlang'ich to'lov 0 dan katta bo'lsin!";
+      }
+      if (!String(statusForm.installments ?? "").trim()) {
+        nextErrors.installments = "Muddatni kiriting!";
+      } else if (!Number.isFinite(installments) || installments <= 0) {
+        nextErrors.installments = "Muddat 0 dan katta bo'lsin!";
+      }
+    }
+
+    if (actionCode === "NOT" && !statusForm.description.trim()) {
+      nextErrors.description = "Nima uchun sotuv to'xtatilganini yozing!";
+    }
+
+    dispatch({ type: "SET_STATUS_ERRORS", payload: nextErrors });
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  function createStatusPayload(actionCode) {
+    const isCustomerFlow = actionCode === "SOLD" || actionCode === "RESERVED";
+    const fallbackPayment = getFallbackPaymentValues();
+
+    return {
+      firstName: isCustomerFlow ? statusForm.firstName.trim() : "",
+      lastName: isCustomerFlow ? statusForm.lastName.trim() : "",
+      description:
+        actionCode === "NOT" || isCustomerFlow
+          ? statusForm.description.trim()
+          : "",
+      phone: isCustomerFlow ? normalizePhone(statusForm.phone) : "",
+      status: actionCode,
+      downPayment: isCustomerFlow
+        ? digitsOnly(statusForm.downPayment) || "0"
+        : fallbackPayment.downPayment,
+      installments: isCustomerFlow
+        ? digitsOnly(statusForm.installments) || "0"
+        : fallbackPayment.installments,
+      discountValue:
+        actionCode === "SOLD" && hasDiscountValue
+          ? statusForm.discountValue.trim()
+          : "",
+    };
+  }
+
+  async function submitStatusAction(action, payloadOverride) {
+    dispatch({ type: "SET_PENDING_ACTION", payload: action.code });
+    const payload = payloadOverride ?? createStatusPayload(action.code);
+    const result = await updateStatus(home.id, payload);
+    if (!result.ok) {
+      toast.error(result.message);
+      dispatch({ type: "SET_PENDING_ACTION", payload: null });
+      return false;
+    }
+
+    await Promise.resolve(
+      onStatusUpdated?.({
+        roomId: home.id,
+        nextStatus: payload.status ?? action.code,
+        description: payload.description ?? "",
+      }),
+    );
+    toast.success(action.successText);
+    handleClose({ clearDetails: true });
+    dispatch({ type: "SET_PENDING_ACTION", payload: null });
+    return true;
+  }
+
+  async function handleStatusSubmit(evt) {
+    evt.preventDefault();
+
+    const action = statusDialogAction;
+    if (!action || !validateStatusForm(action.code)) return;
+
+    await submitStatusAction(action);
   }
 
   function win() {
@@ -215,23 +701,12 @@ export default function CalculatorTool({ home }) {
     sound();
   }
 
-  useEffect(() => {
-    window.addEventListener("hashchange", (evt) => {
-      const url = new URL(evt.newURL);
-      if (url.searchParams.has("details") && url.hash === "#calculator") {
-        setOpen(true);
-      } else {
-        setOpen(false);
-      }
-    });
-  }, []);
-
   // Discount
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.keyCode === 68 && !timerRef.current) {
         timerRef.current = setTimeout(() => {
-          setShowDiscount((prev) => !prev);
+          dispatch({ type: "TOGGLE_DISCOUNT" });
           timerRef.current = null;
         }, 2500);
       }
@@ -250,64 +725,93 @@ export default function CalculatorTool({ home }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, []);
 
+  useEffect(() => {
+    dispatch({ type: "RESET_FOR_HOME" });
+  }, [home.id]);
+
+  useEffect(() => {
+    if (statusDialogOpen || !statusDialogRenderedAction) return undefined;
+
+    dialogResetTimerRef.current = window.setTimeout(() => {
+      dispatch({ type: "CLEAR_STATUS_DIALOG" });
+    }, STATUS_DIALOG_CLOSE_DELAY);
+
+    return () => {
+      window.clearTimeout(dialogResetTimerRef.current);
+    };
+  }, [statusDialogOpen, statusDialogRenderedAction]);
+
   return (
     <Drawer
-      open={open}
+      open={isOpen}
       onOpenChange={(v) => {
         if (v === false && galleryShow === false) {
-          handleOpen();
           handleClose();
         }
       }}
       direction={"top"}
     >
-      <DrawerContent className="h-full min-h-screen">
+      <DrawerContent className="h-full min-h-screen overflow-y-auto lg:overflow-hidden">
         {/* Close  */}
         <DrawerClose
           onClick={handleClose}
           className={`${buttonVariants({
             variant: "secondary",
             size: "icon-sm",
-          })} absolute top-3 right-3 border shadow`}
+          })} absolute top-4 right-4 z-20 border shadow sm:top-5 sm:right-5`}
         >
           <X />
         </DrawerClose>
 
-        <div className="flex h-full gap-10 px-10 py-15">
+        <div className="flex min-h-full flex-col gap-6 px-4 pb-6 pt-16 sm:px-6 lg:h-full lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
           <div
-            className={`no-scrollbar relative h-full w-[65%] overflow-y-auto transition-opacity ${
-              calcLoading ? "pointer-events-none opacity-50" : ""
+            className={`no-scrollbar relative min-h-0 flex-1 overflow-visible lg:h-full lg:w-[64%] lg:overflow-y-auto lg:pr-2 ${
+              calcLoading ? "pointer-events-none" : ""
             }`}
           >
-            {calcLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center">
-                <Spinner />
-              </div>
-            )}
-
-            <div className="animate-fade-in bg-background sticky top-2 z-10 mb-8 w-full rounded border px-3 py-6">
+            <LoadTransition
+              loading={calcLoading}
+              hideContentWhileLoading
+              className="min-h-full"
+              loader={
+                <SurfaceLoader
+                  title="Hisoblash tayyorlanmoqda"
+                  description="To'lov jadvali va natijalar yangilanmoqda."
+                />
+              }
+              loaderClassName="bg-background/72 backdrop-blur-[2px]"
+              contentClassName="min-h-full"
+            >
+            <div className="animate-fade-in bg-background sticky top-0 z-10 mb-6 w-full rounded-xl border px-4 py-5 sm:top-2 sm:mb-8 sm:px-6 sm:py-6">
               <h3 className="bg-background text-muted-foreground absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded px-2">
                 Oyiga
               </h3>
-              <h2 className={"font-mono text-4xl font-bold"}>
+              <h2 className={"font-mono text-3xl font-bold sm:text-4xl lg:text-5xl"}>
                 {formatNumber(calcResult.monthlyPayment)}
               </h2>
             </div>
 
             <div className="animate-fade-in mb-5">
               {calcResult.bonus.length > 0 && (
-                <div className="text-primary-foreground animate-fade-in mb-5 flex w-full overflow-hidden rounded border-3 border-green-500">
-                  <div className="flex items-center justify-center bg-green-500 p-2 text-4xl font-bold">
+                <div className="text-primary-foreground animate-fade-in mb-5 flex w-full flex-col overflow-hidden rounded-xl border-3 border-green-500 sm:flex-row">
+                  <div className="flex items-center justify-center bg-green-500 px-4 py-3 text-2xl font-bold sm:text-4xl">
                     Bonus:
                   </div>
 
-                  <div className="flex w-full gap-5 px-10 py-2">
+                  <div className="grid w-full grid-cols-2 gap-4 px-4 py-4 sm:grid-cols-3 sm:px-6">
                     <PhotoProvider
                       onVisibleChange={(visible) => {
-                        setGalleryShow(visible);
+                        dispatch({
+                          type: "SET_GALLERY_SHOW",
+                          payload: visible,
+                        });
                       }}
                       toolbarRender={({ onScale, scale }) => {
                         return (
@@ -334,20 +838,20 @@ export default function CalculatorTool({ home }) {
                     >
                       {calcResult.bonus.map((b) => {
                         return (
-                          <PhotoView src={`/bonus/png/${b}.png`}>
-                            <div className="flex w-2/4 flex-col items-center gap-1">
+                          <PhotoView key={b} src={`/bonus/png/${b}.png`}>
+                            <div className="flex min-w-0 flex-col items-center gap-2 rounded-lg bg-background/80 p-2">
                               <picture>
                                 <source
                                   srcset={`/bonus/avif/${b}.avif`}
                                   type="image/avif"
                                 />
                                 <img
-                                  className="w-full"
+                                  className="h-24 w-full object-contain"
                                   src={`/bonus/png/${b}.png`}
                                   alt={b}
                                 />
                               </picture>
-                              <span className="text-foreground text-xs">
+                              <span className="text-foreground text-center text-xs">
                                 {uzbekTranslate[b]}
                               </span>
                             </div>
@@ -361,16 +865,16 @@ export default function CalculatorTool({ home }) {
 
               {calcResult.totalDiscount ? (
                 <NoiseBackground
-                  containerClassName="w-full p-4 rounded mb-10"
+                  containerClassName="mb-10 w-full rounded-xl p-4"
                   speed={0.4}
                 >
-                  <div className="bg-background inline-flex w-full items-end gap-5 rounded p-2">
+                  <div className="bg-background inline-flex w-full flex-col items-start gap-4 rounded-xl p-4 sm:flex-row sm:items-end sm:gap-5">
                     <CircleCheckBig
                       className="text-green-600"
                       width={40}
                       height={40}
                     />
-                    <SparklesText className="text-5xl" sparklesCount={5}>
+                    <SparklesText className="text-3xl sm:text-4xl lg:text-5xl" sparklesCount={5}>
                       {formatNumber(calcResult.totalDiscount)}
                     </SparklesText>
                     <p>so'm foydadasiz hurmatli mijoz!</p>
@@ -378,90 +882,38 @@ export default function CalculatorTool({ home }) {
                 </NoiseBackground>
               ) : null}
 
-              <div id="shu">
-                <div className="mb-2 grid grid-cols-[6fr_2fr_3fr] gap-2">
-                  <div className="bg-primary/2 w-full rounded border p-2">
-                    <div className="mb-2 flex items-center gap-1">
-                      <CircleDollarSign />
-                      <span className="text-muted-foreground text-xs">
-                        Umumiy narx
-                      </span>
-                    </div>
-                    <h4 className="font-mono text-lg font-medium">
-                      {calcResult.price
-                        ? formatNumber(calcResult.price * calcResult.size)
-                        : "---"}{" "}
-                    </h4>
-                  </div>
-                  <div className="bg-primary/2 w-full rounded border p-2">
-                    <div className="mb-2 flex items-center gap-1">
-                      <CalendarDays />
-                      <span className="text-muted-foreground text-xs">
-                        Muddat
-                      </span>
-                    </div>
-                    <h4 className="font-mono text-lg font-medium">
-                      {calcResult.months} oy
-                    </h4>
-                  </div>
-                  {states[calcResult.state] && (
-                    <div className="bg-primary/2 w-full rounded border p-2">
-                      <div className="mb-2 flex items-center gap-1">
-                        <Grid2X2 />
-                        <span className="text-muted-foreground text-xs">
-                          O'lchami
-                        </span>
-                      </div>
-                      <h4 className="font-mono text-lg font-medium">
-                        {calcResult.size} m<sup>2</sup>
-                      </h4>
-                    </div>
-                  )}
-                </div>
+              <div
+                id="shu"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3"
+              >
+                {summaryCards.map((card) => {
+                  const Icon = card.icon;
 
-                <div className="mb-2 grid grid-cols-[1fr_3fr_2fr] gap-2">
-                  {states[calcResult.state] && (
-                    <div className="bg-primary/2 w-full rounded border p-2">
+                  return (
+                    <div key={card.key} className="bg-primary/2 w-full rounded border p-2">
                       <div className="mb-2 flex items-center gap-1">
-                        <Bolt />
+                        <Icon />
                         <span className="text-muted-foreground text-xs">
-                          Holati
+                          {card.label}
                         </span>
                       </div>
-                      <h4 className="font-mono text-lg font-medium">
-                        {states[calcResult.state]}
+                      <h4
+                        className={cn(
+                          "text-lg font-medium",
+                          card.mono ? "font-mono" : "tracking-normal",
+                        )}
+                      >
+                        {card.value}
                       </h4>
                     </div>
-                  )}
-                  <div className="bg-primary/2 w-full rounded border p-2">
-                    <div className="mb-2 flex items-center gap-1">
-                      <HandCoins />
-                      <span className="text-muted-foreground text-xs">
-                        Boshlang'ich to'lov
-                      </span>
-                    </div>
-                    <h4 className="font-mono text-lg font-medium">
-                      {formatNumber(calcResult.downPayment)}
-                    </h4>
-                  </div>
-                  <div className="bg-primary/2 w-full rounded border p-2">
-                    <div className="mb-2 flex items-center gap-1">
-                      <Coins />
-                      <span className="text-muted-foreground text-xs">
-                        M<sup>2</sup>
-                      </span>
-                    </div>
-                    <h4 className="font-mono text-lg font-medium">
-                      {formatNumber(home.price)}
-                    </h4>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
             <div className="mb-5">
               <PhotoProvider
                 onVisibleChange={(visible) => {
-                  setGalleryShow(visible);
+                  dispatch({ type: "SET_GALLERY_SHOW", payload: visible });
                 }}
                 toolbarRender={({ onScale, scale }) => {
                   return (
@@ -493,7 +945,7 @@ export default function CalculatorTool({ home }) {
                       type="image/avif"
                     />
                     <img
-                      className="w-full shadow"
+                      className="w-full"
                       src={`/gallery/jpg/${home.image}.jpg`}
                       alt={home.image}
                     />
@@ -533,20 +985,21 @@ export default function CalculatorTool({ home }) {
 
             {/* Timeline  */}
             <AppartmentTimeLine />
+            </LoadTransition>
           </div>
 
-          <div className="no-scrollbar flex h-full w-[35%] flex-col justify-between overflow-y-auto px-1">
+          <div className="no-scrollbar flex w-full flex-col gap-6 overflow-visible lg:h-full lg:w-[36%] lg:min-w-[23rem] lg:max-w-[26rem] lg:overflow-y-auto lg:pl-2">
             <form
               onSubmit={handleCalc}
-              className="mx-auto flex w-full flex-col gap-5 pb-10"
+              className="mx-auto flex w-full flex-col gap-5 rounded-xl border bg-background p-4 sm:p-5"
             >
               {showDiscount && (
-                <div className="py-5">
-                  <div className="border-primary animate-fade-in relative rounded border px-3 py-6">
+                <div className="py-0">
+                  <div className="border-primary animate-fade-in relative rounded-xl border px-4 py-5">
                     <h3 className="bg-primary absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded p-0.5 px-2 font-bold text-white">
                       <BadgePercent /> Chegirma
                     </h3>
-                    <div className="flex w-full gap-5">
+                    <div className="flex w-full flex-col gap-3 sm:flex-row">
                       <Input
                         placeholder="100 yoki 5%"
                         onChange={handleDiscount}
@@ -556,7 +1009,7 @@ export default function CalculatorTool({ home }) {
                         name={discountType}
                       />
                       <NativeSelect
-                        className={"w-30"}
+                        className={"w-full sm:w-32"}
                         onChange={(evt) => {
                           handleChangeDiscountType(evt.target.value);
                         }}
@@ -575,7 +1028,7 @@ export default function CalculatorTool({ home }) {
                 </div>
               )}
               <RadioGroup name={"state"} defaultValue="BOX">
-                <div className="flex gap-4">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <FieldLabel htmlFor="box">
                     <Field orientation="horizontal">
                       <FieldContent>
@@ -620,26 +1073,28 @@ export default function CalculatorTool({ home }) {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="months">Necha oyga</Label>
-                <div className="flex gap-2">
-                  <div className="flex gap-1">
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(8.5rem,10rem)]">
+                  <div className="grid grid-cols-5 gap-2">
                     {paymentPeriods.map((p) => {
                       return (
-                        <span
+                        <button
+                          type="button"
+                          key={p}
                           onClick={() => {
                             handlePeriod(p);
                           }}
-                          className={`inline-flex w-9 cursor-pointer items-center justify-center rounded-full ${
+                          className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-full border text-sm font-medium transition-colors ${
                             period === p
-                              ? "bg-primary text-primary-foreground"
-                              : "border"
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "bg-background hover:bg-accent"
                           }`}
                         >
                           {p}
-                        </span>
+                        </button>
                       );
                     })}
                   </div>
-                  <InputGroup>
+                  <InputGroup className="w-full">
                     <InputGroupInput
                       id="months"
                       name={"months"}
@@ -671,36 +1126,370 @@ export default function CalculatorTool({ home }) {
               </Button>
             </form>
 
-            <div className="flex flex-col gap-2">
-              {home.customer && home.customer.canBeSold === false && (
-                <Pointer>
-                  <Badge className={"bg-black"}>
-                    <Lock /> Ushbu uy ustida amal bajara olmaysiz
-                  </Badge>
-                </Pointer>
+            <div className="rounded-xl border bg-muted/20 p-3">
+              {actionLocked && (
+                <div className="mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-950">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-background">
+                    <Lock className="size-4 text-amber-700" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      Ushbu uy ustida amal bajara olmaysiz
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-amber-800">
+                      Faqat ushbu bron yoki savdo amalini yaratgan foydalanuvchi
+                      statusni o'zgartira oladi.
+                    </p>
+                  </div>
+                </div>
               )}
-              {home &&
-                actionButtons.map(({ bg, title, code }, index) => {
-                  return (
-                    code !== home.status && (
-                      <Button
-                        className={`${bg} hover:${bg} text-primary-foreground hover:text-primary-foreground hover:opacity-90 ${
-                          home.customer && home.customer.canBeSold === false
-                            ? "pointer-events-none"
-                            : ""
-                        }`}
-                        size="sm"
-                        key={index}
+
+              <div className="flex flex-col gap-2">
+                {home &&
+                  availableActions.map((action) => {
+                    const {
+                      code,
+                      title,
+                      description,
+                      icon: Icon,
+                      cardTone,
+                      accentTone,
+                      iconTone,
+                    } = action;
+
+                    return (
+                      <button
+                        type="button"
+                        key={code}
+                        disabled={actionLocked || statusLoading}
+                        onClick={() => handleStatusAction(action)}
+                        className={cn(
+                          "group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border bg-background px-4 py-4 text-left transition-colors duration-200",
+                          "hover:bg-accent/30 disabled:pointer-events-none disabled:opacity-60",
+                          cardTone,
+                        )}
                       >
-                        {title}
-                      </Button>
-                    )
-                  );
-                })}
+                        <span
+                          className={cn(
+                            "absolute top-3 bottom-3 left-0 w-1 rounded-full",
+                            accentTone,
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "flex size-11 shrink-0 items-center justify-center rounded-lg border transition-transform duration-200 group-hover:scale-[1.03]",
+                            iconTone,
+                          )}
+                        >
+                          <Icon className="size-4.5" />
+                        </span>
+
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className="text-foreground text-base font-semibold tracking-[-0.01em]">
+                            {title}
+                          </span>
+                          <span className="text-muted-foreground mt-1 text-sm leading-6">
+                            {description}
+                          </span>
+                        </span>
+
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover:text-foreground">
+                          {pendingAction === code && statusLoading ? (
+                            <LoaderCircle className="size-4 animate-spin" />
+                          ) : (
+                            <ArrowUpRight className="size-4" />
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
             </div>
           </div>
         </div>
       </DrawerContent>
+
+      <Dialog open={statusDialogOpen} onOpenChange={handleStatusDialog}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
+          {activeAction && (
+            <form onSubmit={handleStatusSubmit} className="flex flex-col gap-4">
+              <DialogHeader className="gap-3">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      "mt-1 flex size-11 shrink-0 items-center justify-center rounded-lg border",
+                      activeAction.iconTone,
+                    )}
+                  >
+                    {ActiveActionIcon && (
+                      <ActiveActionIcon className="size-5" />
+                    )}
+                  </span>
+
+                  <div className="space-y-1 text-left">
+                    <DialogTitle>{activeAction.title}</DialogTitle>
+                    <DialogDescription>
+                      #{home.houseNumber} uy uchun statusni{" "}
+                      <span className="font-medium">
+                        {activeAction.title.toLowerCase()}
+                      </span>{" "}
+                      oqimi.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="bg-primary/5 grid gap-2 rounded-xl border p-3 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Joriy holat</span>
+                  <Badge
+                    className={cn(
+                      "text-primary-foreground",
+                      statusBadgeClass[home.status],
+                    )}
+                  >
+                    {statusLabels[home.status]}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Uy raqami</span>
+                  <span className="font-mono">#{home.houseNumber}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Umumiy qiymat</span>
+                  <span className="font-mono">
+                    {formatNumber(home.price * home.size)}
+                  </span>
+                </div>
+              </div>
+
+              {(activeAction.code === "SOLD" ||
+                activeAction.code === "RESERVED") && (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="status-firstName">Ism*</Label>
+                      <Input
+                        id="status-firstName"
+                        autoFocus
+                        value={statusForm.firstName}
+                        onChange={(evt) => {
+                          handleStatusField("firstName", evt.target.value);
+                        }}
+                        placeholder="Ali"
+                      />
+                      {statusErrors.firstName && (
+                        <p className="text-destructive text-xs">
+                          {statusErrors.firstName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="status-lastName">Familiya*</Label>
+                      <Input
+                        id="status-lastName"
+                        value={statusForm.lastName}
+                        onChange={(evt) => {
+                          handleStatusField("lastName", evt.target.value);
+                        }}
+                        placeholder="Valiyev"
+                      />
+                      {statusErrors.lastName && (
+                        <p className="text-destructive text-xs">
+                          {statusErrors.lastName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="status-phone">Telefon*</Label>
+                      <div className="relative">
+                        <Phone className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                        <Input
+                          id="status-phone"
+                          value={statusForm.phone}
+                          onChange={(evt) => {
+                            handleStatusField("phone", evt.target.value);
+                          }}
+                          placeholder="+998901234567"
+                          className="pl-9"
+                        />
+                      </div>
+                      {statusErrors.phone && (
+                        <p className="text-destructive text-xs">
+                          {statusErrors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="status-downPayment">
+                        Boshlang'ich to'lov
+                      </Label>
+                      <Input
+                        id="status-downPayment"
+                        value={statusForm.downPayment}
+                        onChange={(evt) => {
+                          handleStatusField(
+                            "downPayment",
+                            formatNumber(digitsOnly(evt.target.value) || 0),
+                          );
+                        }}
+                        placeholder="0"
+                      />
+                      {statusErrors.downPayment && (
+                        <p className="text-destructive text-xs">
+                          {statusErrors.downPayment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "grid gap-4",
+                      activeAction.code === "SOLD" ? "sm:grid-cols-2" : "",
+                    )}
+                  >
+                    <div className="grid gap-2">
+                      <Label htmlFor="status-installments">Muddat (oy)*</Label>
+                      <Input
+                        id="status-installments"
+                        type="number"
+                        min={1}
+                        value={statusForm.installments}
+                        onChange={(evt) => {
+                          handleStatusField(
+                            "installments",
+                            digitsOnly(evt.target.value),
+                          );
+                        }}
+                        placeholder="60"
+                      />
+                      {statusErrors.installments && (
+                        <p className="text-destructive text-xs">
+                          {statusErrors.installments}
+                        </p>
+                      )}
+                    </div>
+
+                    {activeAction.code === "SOLD" && (
+                      <div className="grid gap-2">
+                        {hasDiscountValue ? (
+                          <>
+                            <Label htmlFor="status-discountValue">
+                              Chegirma
+                            </Label>
+                            <Input
+                              id="status-discountValue"
+                              value={statusForm.discountValue}
+                              onChange={(evt) => {
+                                handleStatusField(
+                                  "discountValue",
+                                  formatNumberWithPercent(evt.target.value),
+                                );
+                              }}
+                              placeholder="100 000 yoki 5%"
+                            />
+                          </>
+                        ) : (
+                          <div className="bg-muted/40 rounded-xl border px-3 py-3 text-xs">
+                            <p className="font-medium">Chegirma berilmagan</p>
+                            <p className="text-muted-foreground mt-1 leading-5">
+                              Sotish oqimida chegirma mavjud bo'lsa yuboriladi.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="status-description">Izoh</Label>
+                    <div className="relative">
+                      <MessageSquareText className="text-muted-foreground absolute top-3 left-3 size-4" />
+                      <Textarea
+                        id="status-description"
+                        value={statusForm.description}
+                        onChange={(evt) => {
+                          handleStatusField("description", evt.target.value);
+                        }}
+                        className="min-h-24 pl-9"
+                        placeholder="Qo'shimcha qaydlar yoki mijozga oid eslatma..."
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeAction.code === "NOT" && (
+                <div className="grid gap-2">
+                  <Label htmlFor="status-not-description">Sabab*</Label>
+                  <div className="relative">
+                    <FileText className="text-muted-foreground absolute top-3 left-3 size-4" />
+                    <Textarea
+                      id="status-not-description"
+                      autoFocus
+                      value={statusForm.description}
+                      onChange={(evt) => {
+                        handleStatusField("description", evt.target.value);
+                      }}
+                      className="min-h-28 pl-9"
+                      placeholder="Masalan: namunaviy kvartira, ichki rezerv yoki texnik sababi bor..."
+                    />
+                  </div>
+                  {statusErrors.description && (
+                    <p className="text-destructive text-xs">
+                      {statusErrors.description}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {activeAction.code === "EMPTY" && (
+                <div className="bg-muted/40 flex items-start gap-3 rounded-xl border p-4 text-sm">
+                  <span className="bg-background flex size-10 shrink-0 items-center justify-center rounded-xl border">
+                    <UserRound className="text-muted-foreground size-4" />
+                  </span>
+                  <div>
+                    <p className="font-medium">
+                      Uy yana aktiv sotuvga chiqadi.
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Ushbu amal bajarilganda uy yana sotuvga chiqadi.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    handleStatusDialog(false);
+                  }}
+                >
+                  Bekor qilish
+                </Button>
+                <Button disabled={statusLoading}>
+                  {pendingAction === activeAction.code && statusLoading ? (
+                    <>
+                      <Spinner />
+                      Saqlanmoqda...
+                    </>
+                  ) : (
+                    activeAction.submitLabel
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </Drawer>
   );
 }

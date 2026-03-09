@@ -13,7 +13,7 @@ export function useCompanyDetails(id) {
   const [details, setDetails] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
-  const [getLoading, setGetLoading] = useState(false);
+  const [getLoading, setGetLoading] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -31,6 +31,7 @@ export function useCompanyDetails(id) {
       const res = await apiRequest(`/api/v1/company/one/${id}`, {
         signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
       if (res.ok) {
         const { data } = await res.json();
         setDetails({
@@ -42,11 +43,14 @@ export function useCompanyDetails(id) {
       } else {
         setError(GENERIC_ERR);
       }
-    } catch {
+    } catch (error) {
+      if (error?.name === "AbortError") return;
       setError("Tizimda nosozlik!");
     } finally {
-      controllerRef.current = null;
-      setGetLoading(false);
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+        setGetLoading(false);
+      }
     }
   }, [id]);
 

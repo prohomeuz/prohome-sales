@@ -5,7 +5,7 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 import { ArrowLeft, Plus, PlusCircle, RefreshCcw, Trash } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -31,11 +31,38 @@ const EMPTY_ERRORS = {
   permissions: null,
 };
 
+const INITIAL_STATE = {
+  logo: { file: null, src: null },
+  addLoading: false,
+  errors: EMPTY_ERRORS,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_LOGO":
+      return { ...state, logo: action.payload };
+    case "SET_ADD_LOADING":
+      return { ...state, addLoading: action.payload };
+    case "SET_ERRORS":
+      return { ...state, errors: action.payload };
+    case "PATCH_ERRORS":
+      return { ...state, errors: { ...state.errors, ...action.payload } };
+    case "CLEAR_ERROR":
+      return state.errors[action.payload]
+        ? {
+            ...state,
+            errors: { ...state.errors, [action.payload]: null },
+          }
+        : state;
+    default:
+      return state;
+  }
+}
+
 export default function AddCompany() {
   const navigate = useNavigate();
-  const [logo, setLogo] = useState({ file: null, src: null });
-  const [addLoading, setAddLoading] = useState(false);
-  const [errors, setErrors] = useState(EMPTY_ERRORS);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { logo, addLoading, errors } = state;
 
   useEffect(
     () => () => {
@@ -66,7 +93,7 @@ export default function AddCompany() {
       if (!description) next.description = "Kompaniya uchun izoh yozing!";
       if (!data.permissions?.length) next.permissions = "Kompaniya uchun ruxsatlarni belgilang!";
 
-      setErrors(next);
+      dispatch({ type: "SET_ERRORS", payload: next });
       if (next.name) form.name?.focus();
       else if (next.phoneNumber) form.phoneNumber?.focus();
       else if (next.managerName) form.managerName?.focus();
@@ -78,21 +105,25 @@ export default function AddCompany() {
   );
 
   const handleImage = useCallback((file) => {
-    setLogo((prev) => {
-      if (prev.src?.startsWith("blob:")) URL.revokeObjectURL(prev.src);
-      return { ...prev, src: URL.createObjectURL(file), file };
+    const previousSrc = state.logo.src;
+    if (previousSrc?.startsWith("blob:")) URL.revokeObjectURL(previousSrc);
+    dispatch({
+      type: "SET_LOGO",
+      payload: { file, src: URL.createObjectURL(file) },
     });
-  }, []);
+  }, [state.logo.src]);
 
   const handleDeleteLogo = useCallback(() => {
-    setLogo((prev) => {
-      if (prev.src?.startsWith("blob:")) URL.revokeObjectURL(prev.src);
-      return { ...prev, file: null, src: null };
+    const previousSrc = state.logo.src;
+    if (previousSrc?.startsWith("blob:")) URL.revokeObjectURL(previousSrc);
+    dispatch({
+      type: "SET_LOGO",
+      payload: { file: null, src: null },
     });
-  }, []);
+  }, [state.logo.src]);
 
   const clearFieldError = useCallback((field) => {
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: null } : prev));
+    dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
 
   const handleSubmit = useCallback(
@@ -116,31 +147,45 @@ export default function AddCompany() {
       });
       if (logo.file) formData.append("logo", logo.file);
 
-      setAddLoading(true);
+      dispatch({ type: "SET_ADD_LOADING", payload: true });
       try {
         const res = await apiRequest("/api/v1/company", {
           method: "POST",
           body: formData,
         });
         if (res.status === 201) {
-          const result = await res.json();
+          await res.json();
           navigate("/company");
           return;
         }
-        if (res.status === 409) setErrors((e) => ({ ...e, name: "Ushbu kompaniya ro'yhatdan o'tgan!" }));
-        else setErrors((e) => ({ ...e, name: "Xatolik yuz berdi, qayta urunib ko'ring!" }));
+        if (res.status === 409) {
+          dispatch({
+            type: "PATCH_ERRORS",
+            payload: { name: "Ushbu kompaniya ro'yhatdan o'tgan!" },
+          });
+        } else {
+          dispatch({
+            type: "PATCH_ERRORS",
+            payload: { name: "Xatolik yuz berdi, qayta urunib ko'ring!" },
+          });
+        }
       } catch {
-        setErrors((e) => ({ ...e, name: "Tizimda nosozlik, adminga aloqaga chiqing!" }));
+        dispatch({
+          type: "PATCH_ERRORS",
+          payload: {
+            name: "Tizimda nosozlik, adminga aloqaga chiqing!",
+          },
+        });
       } finally {
-        setAddLoading(false);
+        dispatch({ type: "SET_ADD_LOADING", payload: false });
       }
     },
     [formatPhone, logo.file, navigate, validateCompanyForm]
   );
 
   return (
-    <section className="animate-fade-in h-full p-5">
-      <Link className={`${buttonVariants({ variant: "outline" })} mb-10`} to="/company">
+    <section className="animate-fade-in h-full overflow-y-auto p-4 sm:p-5 lg:p-6">
+      <Link className={`${buttonVariants({ variant: "outline" })} mb-8`} to="/company">
         <ArrowLeft />
         Orqaga
       </Link>
@@ -151,8 +196,8 @@ export default function AddCompany() {
           kerak!
         </p>
       </div>
-      <div className="flex items-start gap-10">
-        <div className="relative h-40 w-40 shrink-0">
+      <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
+        <div className="relative mx-auto h-32 w-32 shrink-0 sm:h-40 sm:w-40 xl:mx-0">
           {!logo.file ? (
             <label
               className="hover:border-primary group inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg border-4 border-dashed transition-colors"
@@ -199,7 +244,7 @@ export default function AddCompany() {
           )}
         </div>
         <form onSubmit={handleSubmit} className="relative flex w-full flex-col">
-          <div className="mb-5 grid w-full grid-cols-2 gap-5">
+          <div className="mb-5 grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="name">Kompaniya nomi*</Label>
               <Input
@@ -261,9 +306,9 @@ export default function AddCompany() {
                 <p className="text-destructive text-xs">{errors.description}</p>
               )}
             </div>
-            <div className="col-span-2 grid w-full items-center gap-3">
+            <div className="col-span-1 grid w-full items-center gap-3 lg:col-span-2">
               <Label>Ruxsatlar*</Label>
-              <div className="flex gap-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <FieldLabel>
                   <Field orientation="horizontal">
                     <Checkbox
@@ -296,7 +341,7 @@ export default function AddCompany() {
               )}
             </div>
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link className={buttonVariants({ variant: "outline" })} to="/company">
               Bekor qilish
             </Link>

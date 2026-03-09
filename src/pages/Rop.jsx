@@ -19,6 +19,7 @@ import { Label } from "@/shared/ui/label";
 import { Spinner } from "@/shared/ui/spinner";
 import EmptyData from "@/widgets/EmptyData";
 import GeneralError from "@/widgets/error/GeneralError";
+import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
 import {
   Table,
@@ -29,12 +30,47 @@ import {
   TableRow,
 } from "@/widgets/optics/table";
 import { Check, Plus, Trash, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
+
+const INITIAL_STATE = {
+  addModal: false,
+  showConfirmation: null,
+  errors: USER_FORM_ERRORS,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "TOGGLE_ADD_MODAL":
+      return {
+        ...state,
+        addModal: !state.addModal,
+        errors: USER_FORM_ERRORS,
+      };
+    case "SET_ADD_MODAL":
+      return {
+        ...state,
+        addModal: action.payload,
+        errors: USER_FORM_ERRORS,
+      };
+    case "SET_SHOW_CONFIRMATION":
+      return { ...state, showConfirmation: action.payload };
+    case "SET_ERRORS":
+      return { ...state, errors: action.payload };
+    case "CLEAR_ERROR":
+      return state.errors[action.payload]
+        ? {
+            ...state,
+            errors: { ...state.errors, [action.payload]: null },
+          }
+        : state;
+    default:
+      return state;
+  }
+}
 
 export default function Rop() {
-  const [addModal, setAddModal] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(null);
-  const [errors, setErrors] = useState(USER_FORM_ERRORS);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { addModal, showConfirmation, errors } = state;
 
   const {
     list: rops,
@@ -57,12 +93,11 @@ export default function Rop() {
   }, [getLoading, start, complete]);
 
   const handleAddModal = useCallback(() => {
-    setErrors(USER_FORM_ERRORS);
-    setAddModal((v) => !v);
+    dispatch({ type: "TOGGLE_ADD_MODAL" });
   }, []);
 
   const clearFieldError = useCallback((field) => {
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: null } : prev));
+    dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
 
   const handleAddSubmit = useCallback(
@@ -73,30 +108,46 @@ export default function Rop() {
         ...getFormData(form),
         permissions: new FormData(form).getAll("permissions"),
       };
-      if (!validateUserForm(form, result, setErrors)) return;
+      if (!validateUserForm(form, result, (next) => dispatch({ type: "SET_ERRORS", payload: next }))) return;
       result.companyId = 1;
       const ok = await add(result);
-      if (ok) setAddModal(false);
+      if (ok) {
+        dispatch({ type: "SET_ADD_MODAL", payload: false });
+        dispatch({ type: "SET_SHOW_CONFIRMATION", payload: null });
+      }
     },
-    [add, setErrors],
+    [add],
   );
 
   const handleDelete = useCallback(
-    (id) => remove(id).then(() => setShowConfirmation(null)),
+    (id) =>
+      remove(id).then(() =>
+        dispatch({ type: "SET_SHOW_CONFIRMATION", payload: null }),
+      ),
     [remove],
   );
 
   const toggleConfirm = useCallback((id) => {
-    setShowConfirmation((prev) => (prev === id ? null : id));
-  }, []);
-
-  if (getLoading) return <LogoLoader />;
-  if (error) return <GeneralError />;
+    dispatch({
+      type: "SET_SHOW_CONFIRMATION",
+      payload: showConfirmation === id ? null : id,
+    });
+  }, [showConfirmation]);
 
   return (
-    <>
-      <section className="animate-fade-in relative h-full p-5">
-        <header className="bg-primary/2 mb-10 flex items-center justify-between rounded border p-3">
+    <LoadTransition
+      loading={getLoading}
+      className="h-full"
+      loader={<LogoLoader title="Roplar yuklanmoqda" description="Foydalanuvchilar ro'yxati tayyorlanmoqda." />}
+      loaderClassName="bg-background/92 backdrop-blur-sm"
+      contentClassName="h-full"
+    >
+      {error ? (
+        <GeneralError />
+      ) : (
+        <>
+          <section className="animate-fade-in relative flex h-full min-h-0 flex-col p-4 sm:p-5 lg:p-6">
+        <header className="bg-primary/2 mb-6 flex flex-col gap-3 rounded-[24px] border p-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <h2 className="text-2xl font-bold">Roplar</h2>
           <Button
             onClick={handleAddModal}
@@ -109,72 +160,126 @@ export default function Rop() {
           </Button>
         </header>
 
-        <div className="flex h-full max-h-75 w-full flex-col gap-4 overflow-y-auto pr-2">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
           {rops.length > 0 ? (
-            <Table className="w-full">
-              <TableHeader className="bg-background sticky top-0">
-                <TableRow>
-                  <TableHead>№</TableHead>
-                  <TableHead>Ism</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Ruxsatlar</TableHead>
-                  <TableHead className="text-end">Harakatlar</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="grid gap-3 lg:hidden">
                 {rops.map((rp, index) => (
-                  <TableRow key={rp.id} className="group">
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell className="font-medium">{rp.fullName}</TableCell>
-                    <TableCell>{rp.email}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-0.5">
-                        {rp.permission?.PROHOME && (
-                          <Badge variant="outline">Prohome</Badge>
-                        )}
-                        {rp.permission?.CRM && (
-                          <Badge variant="outline">CRM</Badge>
-                        )}
+                  <article
+                    key={rp.id}
+                    className="rounded-[22px] border bg-background p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-muted-foreground text-xs">#{index + 1}</p>
+                        <p className="font-semibold">{rp.fullName}</p>
+                        <p className="text-muted-foreground text-sm">{rp.email}</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex w-full min-w-37.5 items-center justify-end gap-1">
-                        {showConfirmation === rp.id && (
-                          <Badge
-                            onClick={() => handleDelete(rp.id)}
-                            className={`animate-fade-in cursor-pointer hover:opacity-80 ${removeLoading ? "pointer-events-none opacity-60" : ""}`}
-                          >
-                            {removeLoading ? (
-                              <>
-                                <Spinner /> O&apos;chirilmoqda...
-                              </>
-                            ) : (
-                              <>
-                                <Check /> Tasdiqlang
-                              </>
-                            )}
-                          </Badge>
-                        )}
-                        <Button
-                          onClick={() => toggleConfirm(rp.id)}
-                          variant="ghost"
-                          size="icon-sm"
+                      <Button
+                        onClick={() => toggleConfirm(rp.id)}
+                        variant="ghost"
+                        size="icon-sm"
+                      >
+                        {showConfirmation === rp.id ? <X /> : <Trash />}
+                      </Button>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {rp.permission?.PROHOME && (
+                        <Badge variant="outline">Prohome</Badge>
+                      )}
+                      {rp.permission?.CRM && <Badge variant="outline">CRM</Badge>}
+                    </div>
+
+                    {showConfirmation === rp.id && (
+                      <div className="mt-4 flex justify-end">
+                        <Badge
+                          onClick={() => handleDelete(rp.id)}
+                          className={`animate-fade-in cursor-pointer hover:opacity-80 ${removeLoading ? "pointer-events-none opacity-60" : ""}`}
                         >
-                          {showConfirmation === rp.id ? <X /> : <Trash />}
-                        </Button>
+                          {removeLoading ? (
+                            <>
+                              <Spinner /> O&apos;chirilmoqda...
+                            </>
+                          ) : (
+                            <>
+                              <Check /> Tasdiqlang
+                            </>
+                          )}
+                        </Badge>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    )}
+                  </article>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              <div className="hidden lg:block">
+                <Table className="w-full">
+                  <TableHeader className="bg-background sticky top-0">
+                    <TableRow>
+                      <TableHead>№</TableHead>
+                      <TableHead>Ism</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Ruxsatlar</TableHead>
+                      <TableHead className="text-end">Harakatlar</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rops.map((rp, index) => (
+                      <TableRow key={rp.id} className="group">
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="font-medium">{rp.fullName}</TableCell>
+                        <TableCell>{rp.email}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-0.5">
+                            {rp.permission?.PROHOME && (
+                              <Badge variant="outline">Prohome</Badge>
+                            )}
+                            {rp.permission?.CRM && (
+                              <Badge variant="outline">CRM</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex w-full min-w-37.5 items-center justify-end gap-1">
+                            {showConfirmation === rp.id && (
+                              <Badge
+                                onClick={() => handleDelete(rp.id)}
+                                className={`animate-fade-in cursor-pointer hover:opacity-80 ${removeLoading ? "pointer-events-none opacity-60" : ""}`}
+                              >
+                                {removeLoading ? (
+                                  <>
+                                    <Spinner /> O&apos;chirilmoqda...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check /> Tasdiqlang
+                                  </>
+                                )}
+                              </Badge>
+                            )}
+                            <Button
+                              onClick={() => toggleConfirm(rp.id)}
+                              variant="ghost"
+                              size="icon-sm"
+                            >
+                              {showConfirmation === rp.id ? <X /> : <Trash />}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : (
             <EmptyData text="Hozircha roplar yo'q" />
           )}
         </div>
-      </section>
+          </section>
 
-      <Drawer open={addModal} onOpenChange={handleAddModal}>
+          <Drawer open={addModal} onOpenChange={handleAddModal}>
         <DrawerContent className="inset-0 h-screen max-h-screen rounded-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:rounded-none">
           <DrawerHeader className="relative flex flex-col items-center gap-2 text-center">
             <DrawerTitle>Yangi rop qo&apos;shish.</DrawerTitle>
@@ -280,7 +385,9 @@ export default function Rop() {
             </Button>
           </form>
         </DrawerContent>
-      </Drawer>
-    </>
+          </Drawer>
+        </>
+      )}
+    </LoadTransition>
   );
 }
