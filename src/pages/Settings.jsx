@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { GlobeLockIcon, KeyRound, Palette, RefreshCcw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
@@ -16,24 +16,61 @@ import { apiRequest } from "@/shared/lib/api";
 import { getFormData } from "@/shared/lib/utils";
 import { useAppStore } from "@/entities/session/model";
 
+const INITIAL_ERRORS = { oldPassword: null, newPassword: null, form: null };
+
+function createInitialState() {
+  return {
+    dark: localStorage.getItem("theme") === "dark",
+    updateModal: false,
+    updateLoading: false,
+    errors: INITIAL_ERRORS,
+  };
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "TOGGLE_DARK":
+      return { ...state, dark: !state.dark };
+    case "TOGGLE_UPDATE_MODAL":
+      return { ...state, updateModal: !state.updateModal };
+    case "SET_UPDATE_LOADING":
+      return { ...state, updateLoading: action.payload };
+    case "SET_ERRORS":
+      return { ...state, errors: action.payload };
+    case "PATCH_ERRORS":
+      return { ...state, errors: { ...state.errors, ...action.payload } };
+    case "CLEAR_ERROR":
+      return state.errors[action.payload]
+        ? {
+            ...state,
+            errors: { ...state.errors, [action.payload]: null },
+          }
+        : state;
+    default:
+      return state;
+  }
+}
+
 export default function Settings() {
   const { user } = useAppStore();
-  const [dark, setDark] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
-  const [updateModal, setUpdateModal] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [errors, setErrors] = useState({ oldPassword: null, newPassword: null, form: null });
+  const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
+  const { dark, updateModal, updateLoading, errors } = state;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
-  const handleChange = useCallback(() => setDark((v) => !v), []);
-  const handleUpdateModal = useCallback(() => setUpdateModal((v) => !v), []);
+  const handleChange = useCallback(
+    () => dispatch({ type: "TOGGLE_DARK" }),
+    [],
+  );
+  const handleUpdateModal = useCallback(
+    () => dispatch({ type: "TOGGLE_UPDATE_MODAL" }),
+    [],
+  );
   const clearFieldError = useCallback((field) => {
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: null } : prev));
+    dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
 
   const handleSubmit = useCallback(
@@ -43,10 +80,10 @@ export default function Settings() {
       const oldP = (result.oldPassword ?? "").trim();
       const newP = (result.newPassword ?? "").trim();
 
-      const nextErrors = { oldPassword: null, newPassword: null, form: null };
+      const nextErrors = { ...INITIAL_ERRORS };
       if (!oldP) nextErrors.oldPassword = "Amaldagi parolni kiriting!";
       if (!newP) nextErrors.newPassword = "Yangi parolni kiriting!";
-      setErrors(nextErrors);
+      dispatch({ type: "SET_ERRORS", payload: nextErrors });
       if (nextErrors.oldPassword) {
         evt.currentTarget.oldPassword?.focus();
         return;
@@ -56,7 +93,7 @@ export default function Settings() {
         return;
       }
 
-      setUpdateLoading(true);
+      dispatch({ type: "SET_UPDATE_LOADING", payload: true });
       try {
         const res = await apiRequest("/api/v1/auth/reset-password", {
           method: "POST",
@@ -70,21 +107,32 @@ export default function Settings() {
         if (res.status === 201) {
           handleUpdateModal();
           toast.success("Parolingiz o'zgartirildi!");
-          setErrors({ oldPassword: null, newPassword: null, form: null });
+          dispatch({ type: "SET_ERRORS", payload: INITIAL_ERRORS });
         } else if (res.status === 400) {
-          setErrors((e) => ({
-            ...e,
-            newPassword: "Parol eng kamida 6 belgidan iborat bo'lishi kerak!",
-          }));
+          dispatch({
+            type: "PATCH_ERRORS",
+            payload: {
+              newPassword: "Parol eng kamida 6 belgidan iborat bo'lishi kerak!",
+            },
+          });
         } else if (res.status === 404) {
-          setErrors((e) => ({ ...e, oldPassword: "Amaldagi parol noto'g'ri." }));
+          dispatch({
+            type: "PATCH_ERRORS",
+            payload: { oldPassword: "Amaldagi parol noto'g'ri." },
+          });
         } else {
-          setErrors((e) => ({ ...e, form: "Xatolik yuz berdi, qayta urunib ko'ring!" }));
+          dispatch({
+            type: "PATCH_ERRORS",
+            payload: { form: "Xatolik yuz berdi, qayta urunib ko'ring!" },
+          });
         }
       } catch {
-        setErrors((e) => ({ ...e, form: "Tizimda nosozlik!" }));
+        dispatch({
+          type: "PATCH_ERRORS",
+          payload: { form: "Tizimda nosozlik!" },
+        });
       } finally {
-        setUpdateLoading(false);
+        dispatch({ type: "SET_UPDATE_LOADING", payload: false });
       }
     },
     [user?.email, handleUpdateModal]

@@ -135,18 +135,93 @@ export default function Contracts() {
   }, []);
 
   return (
-    <section className="animate-fade-in h-full p-5">
-      <header className="bg-primary/2 mb-6 rounded border p-3">
+    <section className="animate-fade-in flex h-full min-h-0 flex-col p-4 sm:p-5 lg:p-6">
+      <header className="bg-primary/2 mb-6 rounded-[24px] border p-4 sm:p-5">
         <h2 className="text-2xl font-bold">Shartnomalar</h2>
         <p className="text-muted-foreground mt-1 text-xs">
           Hozircha mock ma&apos;lumotlar ko&apos;rsatilmoqda.
         </p>
       </header>
 
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 lg:hidden">
+        <div className="grid gap-3 pb-2">
+          {MOCK_CONTRACTS.map((contract) => (
+            <article
+              key={contract.id}
+              className="rounded-[24px] border bg-background p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{contract.contractNumber}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {contract.contractDate}
+                  </p>
+                </div>
+                <Button
+                  size="icon-sm"
+                  variant="secondary"
+                  disabled={downloadingId === contract.id}
+                  onClick={() => handleDownloadContract(contract)}
+                  title="Shartnomani yuklab olish"
+                >
+                  {downloadingId === contract.id ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Download />
+                  )}
+                </Button>
+              </div>
+
+              <div className="mt-4 grid gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
+                    Mijoz
+                  </p>
+                  <p className="font-medium">{contract.clientFullName}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {contract.clientPassport}
+                  </p>
+                </div>
+
+                <div className="grid gap-1 rounded-2xl border bg-muted/25 p-3">
+                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
+                    Uy ma&apos;lumoti
+                  </p>
+                  <p>Uy: {contract.apartmentNumber}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {contract.apartmentFloor}-qavat · {contract.apartmentArea} m²
+                  </p>
+                </div>
+
+                <div className="grid gap-1 rounded-2xl border bg-muted/25 p-3">
+                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
+                    To&apos;lov
+                  </p>
+                  <p className="font-medium">{formatAmount(contract.totalPrice)}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Boshlang&apos;ich: {formatAmount(contract.downPayment)}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Muddat: {contract.paymentMonths} oy
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
+                    Telefon
+                  </p>
+                  <p>{contract.clientPhone}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="h-[calc(100%-96px)] overflow-y-auto pr-2"
+        className="hidden min-h-0 flex-1 overflow-y-auto pr-2 lg:block"
       >
         <div className="relative w-full">
           <table className="w-full table-fixed text-xs">

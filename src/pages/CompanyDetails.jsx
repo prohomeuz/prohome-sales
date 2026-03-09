@@ -29,6 +29,7 @@ import { Label } from "@/shared/ui/label";
 import { Switch } from "@/shared/ui/switch";
 import { Textarea } from "@/shared/ui/textarea";
 import GeneralError from "@/widgets/error/GeneralError";
+import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
 import {
   ArrowLeft,
@@ -40,23 +41,59 @@ import {
   ShieldAlert,
   Trash,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 const UZ_PHONE = /^\+998\d{9}$/;
+const INITIAL_ERRORS = {
+  name: null,
+  phoneNumber: null,
+  managerName: null,
+  description: null,
+  permissions: null,
+};
+const INITIAL_STATE = {
+  editMode: false,
+  logo: { file: null, src: null, removed: false },
+  errors: INITIAL_ERRORS,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "TOGGLE_EDIT_MODE":
+      return {
+        ...state,
+        editMode: !state.editMode,
+        errors: INITIAL_ERRORS,
+      };
+    case "SET_LOGO":
+      return { ...state, logo: action.payload };
+    case "RESET_LOGO":
+      return {
+        ...state,
+        logo: { file: null, src: null, removed: false },
+      };
+    case "SET_ERRORS":
+      return { ...state, errors: action.payload };
+    case "PATCH_ERRORS":
+      return { ...state, errors: { ...state.errors, ...action.payload } };
+    case "CLEAR_ERROR":
+      return state.errors[action.payload]
+        ? {
+            ...state,
+            errors: { ...state.errors, [action.payload]: null },
+          }
+        : state;
+    default:
+      return state;
+  }
+}
 
 export default function CompanyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [editMode, setEditMode] = useState(false);
-  const [logo, setLogo] = useState({ file: null, src: null, removed: false });
-  const [errors, setErrors] = useState({
-    name: null,
-    phoneNumber: null,
-    managerName: null,
-    description: null,
-    permissions: null,
-  });
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { editMode, logo, errors } = state;
 
   const {
     details,
@@ -120,7 +157,7 @@ export default function CompanyDetails() {
       if (!data.permissions?.length)
         next.permissions = "Kompaniya uchun ruxsatlarni belgilang!";
 
-      setErrors(next);
+      dispatch({ type: "SET_ERRORS", payload: next });
       if (next.name) form.name?.focus();
       else if (next.phoneNumber) form.phoneNumber?.focus();
       else if (next.managerName) form.managerName?.focus();
@@ -132,37 +169,31 @@ export default function CompanyDetails() {
   );
 
   const handleEditMode = useCallback(() => {
-    setErrors({
-      name: null,
-      phoneNumber: null,
-      managerName: null,
-      description: null,
-      permissions: null,
-    });
-    setEditMode((v) => !v);
+    dispatch({ type: "TOGGLE_EDIT_MODE" });
   }, []);
 
   const handleImage = useCallback((file) => {
-    setLogo((prev) => {
-      if (prev.src?.startsWith("blob:")) URL.revokeObjectURL(prev.src);
-      return {
-        ...prev,
+    if (logo.src?.startsWith("blob:")) URL.revokeObjectURL(logo.src);
+    dispatch({
+      type: "SET_LOGO",
+      payload: {
         src: URL.createObjectURL(file),
         file,
         removed: false,
-      };
+      },
     });
-  }, []);
+  }, [logo.src]);
 
   const handleRemoveImage = useCallback(() => {
-    setLogo((prev) => {
-      if (prev.src?.startsWith("blob:")) URL.revokeObjectURL(prev.src);
-      return { file: null, src: null, removed: true };
+    if (logo.src?.startsWith("blob:")) URL.revokeObjectURL(logo.src);
+    dispatch({
+      type: "SET_LOGO",
+      payload: { file: null, src: null, removed: true },
     });
-  }, []);
+  }, [logo.src]);
 
   const clearFieldError = useCallback((field) => {
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: null } : prev));
+    dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
 
   const handleSubmit = useCallback(
@@ -181,12 +212,7 @@ export default function CompanyDetails() {
         phoneNumber: formatPhone(data.phoneNumber),
       }).then((ok) => {
         if (ok) {
-          setLogo((prev) => ({
-            ...prev,
-            file: null,
-            src: null,
-            removed: false,
-          }));
+          dispatch({ type: "RESET_LOGO" });
           handleEditMode();
         }
       });
@@ -213,50 +239,53 @@ export default function CompanyDetails() {
         ? apiUrl(details.logo)
         : undefined;
 
-  if (getLoading) return <LogoLoader />;
-  if (error) return <GeneralError />;
-  if (notFound)
-    return (
-      <div className="animate-fade-in flex h-full w-full items-center justify-center">
-        <div className="tex-center flex w-full max-w-sm flex-col items-center">
-          <h3 className="mb-3 text-2xl font-medium">404</h3>
-          <p className="text-muted-foreground mb-5">
-            Bunday kompaniya mavjud emas!
-          </p>
-          <Link
-            className={buttonVariants({ variant: "secondary" })}
-            to="/company"
-          >
-            <Search /> Mavjud kompaniyalar
-          </Link>
-        </div>
-      </div>
-    );
-
-  if (!details) return null;
-
   return (
-    <section className="animate-fade-in h-full p-5">
-      <div className="mb-10 flex items-center justify-between">
-        <Link className={buttonVariants({ variant: "outline" })} to="/company">
-          <ArrowLeft />
-          Orqaga
-        </Link>
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="edit-mode"
-            checked={editMode}
-            onCheckedChange={handleEditMode}
-          />
-          <Label htmlFor="edit-mode">O&apos;zgartirish</Label>
+    <LoadTransition
+      loading={getLoading}
+      className="h-full"
+      loader={<LogoLoader title="Kompaniya yuklanmoqda" description="Kompaniya tafsilotlari tayyorlanmoqda." />}
+      loaderClassName="bg-background/92 backdrop-blur-sm"
+      contentClassName="h-full"
+    >
+      {error ? (
+        <GeneralError />
+      ) : notFound ? (
+        <div className="animate-fade-in flex h-full w-full items-center justify-center">
+          <div className="tex-center flex w-full max-w-sm flex-col items-center">
+            <h3 className="mb-3 text-2xl font-medium">404</h3>
+            <p className="text-muted-foreground mb-5">
+              Bunday kompaniya mavjud emas!
+            </p>
+            <Link
+              className={buttonVariants({ variant: "secondary" })}
+              to="/company"
+            >
+              <Search /> Mavjud kompaniyalar
+            </Link>
+          </div>
         </div>
-      </div>
+      ) : !details ? null : (
+        <section className="animate-fade-in h-full overflow-y-auto p-4 sm:p-5 lg:p-6">
+          <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
+            <Link className={buttonVariants({ variant: "outline" })} to="/company">
+              <ArrowLeft />
+              Orqaga
+            </Link>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-mode"
+                checked={editMode}
+                onCheckedChange={handleEditMode}
+              />
+              <Label htmlFor="edit-mode">O&apos;zgartirish</Label>
+            </div>
+          </div>
 
-      <div className="relative mb-4 rounded border px-3 py-6">
+          <div className="relative mb-6 rounded-[24px] border px-4 py-6 sm:px-5">
         <h3 className="bg-background text-muted-foreground absolute top-0 left-5 flex -translate-y-2/4 gap-2 px-2 font-bold">
           <ShieldAlert /> Muhim harakatlar
         </h3>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {!statusLoading && (
             <Badge
               className={`animate-fade-in ${details.status === false ? "bg-background" : ""}`}
@@ -278,7 +307,7 @@ export default function CompanyDetails() {
               {details.status ? "To'xtatilmoqda..." : "Faollashtirilmoqda..."}
             </p>
           )}
-          <div className="flex gap-3">
+          <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <Button
               onClick={toggleStatus}
               disabled={!editMode || statusLoading || editLoading}
@@ -328,8 +357,8 @@ export default function CompanyDetails() {
         </div>
       </div>
 
-      <div className="flex items-start gap-10">
-        <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg">
+      <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
+        <div className="relative mx-auto h-32 w-32 shrink-0 overflow-hidden rounded-lg sm:h-40 sm:w-40 xl:mx-0">
           <Avatar className="h-full w-full rounded-lg">
             <AvatarImage src={avatarSrc} alt={details.name?.[0]} />
             <AvatarFallback className="rounded-lg uppercase select-none">
@@ -371,7 +400,7 @@ export default function CompanyDetails() {
         </div>
 
         <form onSubmit={handleSubmit} className="relative flex w-full flex-col">
-          <div className="grid w-full grid-cols-2 gap-5">
+          <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="name">Kompaniya nomi*</Label>
               <Input
@@ -439,9 +468,9 @@ export default function CompanyDetails() {
                 <p className="text-destructive text-xs">{errors.description}</p>
               )}
             </div>
-            <div className="col-span-2 grid w-full items-center gap-3">
+            <div className="col-span-1 grid w-full items-center gap-3 lg:col-span-2">
               <Label>Ruxsatlar*</Label>
-              <div className="flex gap-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <FieldLabel>
                   <Field orientation="horizontal">
                     <Checkbox
@@ -479,7 +508,7 @@ export default function CompanyDetails() {
             </div>
           </div>
           {editMode && (
-            <div className="animate-fade-in absolute right-0 -bottom-5 flex translate-y-full gap-3">
+            <div className="animate-fade-in mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button
                 onClick={handleEditMode}
                 variant="outline"
@@ -500,8 +529,10 @@ export default function CompanyDetails() {
               </Button>
             </div>
           )}
-        </form>
-      </div>
-    </section>
+          </form>
+        </div>
+      </section>
+      )}
+    </LoadTransition>
   );
 }

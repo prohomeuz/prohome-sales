@@ -1,10 +1,24 @@
-export default function LogoLoader() {
+import { cn } from "@/shared/lib/utils";
+import SurfaceLoader from "./SurfaceLoader";
+
+export default function LogoLoader({
+  title = "ProHome yuklanmoqda",
+  description = "Sahifa ma'lumotlari tayyorlanmoqda.",
+  className,
+}) {
   return (
-    <div className="bg-background absolute inset-0 z-40 flex h-full w-full items-center justify-center">
-      <div className="flex animate-pulse items-center gap-4">
-        <img className="h-20 w-20" src="/logo.png" aria-hidden={true} />
-        <h2 className="text-xl font-medium">PROHOME</h2>
-      </div>
+    <div
+      className={cn(
+        "flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(94,165,0,0.08),transparent_42%),linear-gradient(to_bottom,rgba(255,255,255,0.96),rgba(255,255,255,0.9))]",
+        className,
+      )}
+    >
+      <SurfaceLoader
+        title={title}
+        description={description}
+        className="p-6"
+        panelClassName="border-primary/10 bg-background/92"
+      />
     </div>
-  )
+  );
 }

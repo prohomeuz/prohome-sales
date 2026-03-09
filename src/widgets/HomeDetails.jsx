@@ -14,17 +14,18 @@ import {
   Info,
   MessageSquareWarning,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { useClipboard } from "@/shared/hooks/use-clipboard";
 import { formatNumber } from "@/shared/lib/utils";
-import CalculatorTool from "./CalculatorTool";
 import { Badge } from "@/shared/ui/badge";
 import { NoiseBackground } from "@/shared/ui/noise-background";
-import { Spinner } from "@/shared/ui/spinner";
+import CalculatorTool from "./CalculatorTool";
+import LoadTransition from "./loading/LoadTransition";
+import SurfaceLoader from "./loading/SurfaceLoader";
 
 const statuses = {
   SOLD: "bg-red-500",
@@ -40,23 +41,76 @@ const uzebekTranslate = {
   NOT: "Sotilmaydi",
 };
 
-export default function HomeDetails() {
+const INITIAL_HOME_DETAILS_STATE = {
+  home: null,
+  notFound: false,
+  error: false,
+  pdfLoading: false,
+  getLoading: false,
+};
+
+function homeDetailsReducer(state, action) {
+  switch (action.type) {
+    case "FETCH_START":
+      return {
+        ...state,
+        getLoading: true,
+        error: false,
+        notFound: false,
+      };
+    case "FETCH_SUCCESS":
+      return {
+        ...state,
+        home: action.payload,
+        notFound: false,
+        error: false,
+        getLoading: false,
+      };
+    case "FETCH_NOT_FOUND":
+      return {
+        ...state,
+        home: null,
+        notFound: true,
+        error: false,
+        getLoading: false,
+      };
+    case "FETCH_ERROR":
+      return {
+        ...state,
+        error: action.payload,
+        getLoading: false,
+      };
+    case "CLEAR_HOME":
+      return {
+        ...state,
+        home: null,
+        notFound: false,
+        error: false,
+        getLoading: false,
+      };
+    case "SET_PDF_LOADING":
+      return {
+        ...state,
+        pdfLoading: action.payload,
+      };
+    default:
+      return state;
+  }
+}
+
+export default function HomeDetails({ onRoomStatusUpdated }) {
   const l = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { copied, copy } = useClipboard({
     copiedDuring: 1000,
   });
-
-  const [home, setHome] = useState(null);
-  const [notFound, setNotFound] = useState(false);
-
-  // Errors
-  const [error, setError] = useState(false);
-
-  // Loadings
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [getLoading, setGetLoading] = useState(false);
+  const [state, dispatch] = useReducer(
+    homeDetailsReducer,
+    INITIAL_HOME_DETAILS_STATE,
+  );
+  const { home, notFound, error, pdfLoading, getLoading } = state;
+  const showPanel = Boolean(home || getLoading || notFound || error);
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
     height: 3,
@@ -66,7 +120,7 @@ export default function HomeDetails() {
     start();
     let req;
     const token = localStorage.getItem("token");
-    setGetLoading(true);
+    dispatch({ type: "FETCH_START" });
     try {
       req = await fetch(
         import.meta.env.VITE_BASE_URL + `/api/v1/room/by/${id}`,
@@ -77,23 +131,24 @@ export default function HomeDetails() {
         },
       );
     } catch {
-      setError("Tizimda nosozlik!");
+      dispatch({ type: "FETCH_ERROR", payload: "Tizimda nosozlik!" });
     }
 
     if (req) {
       if (req.status === 200) {
         const data = await req.json();
-        setHome(data);
-        setNotFound(false);
+        dispatch({ type: "FETCH_SUCCESS", payload: data });
       } else if (req.status === 404 || req.status === 400) {
-        setNotFound(true);
+        dispatch({ type: "FETCH_NOT_FOUND" });
       } else {
-        setError("Xatolik yuz berdi qayta urunib ko'ring!");
+        dispatch({
+          type: "FETCH_ERROR",
+          payload: "Xatolik yuz berdi qayta urunib ko'ring!",
+        });
       }
     }
 
     complete();
-    setGetLoading(false);
   }
 
   useEffect(() => {
@@ -103,7 +158,7 @@ export default function HomeDetails() {
       const id = url.get("details");
       get(id);
     } else {
-      setHome(null);
+      dispatch({ type: "CLEAR_HOME" });
     }
   }, [l.search]);
 
@@ -112,7 +167,7 @@ export default function HomeDetails() {
   }
 
   function handleClick() {
-    setPdfLoading(true);
+    dispatch({ type: "SET_PDF_LOADING", payload: true });
     fetch("http://localhost:3030/save-as-pdf")
       .then((res) => {
         return res.blob();
@@ -125,14 +180,14 @@ export default function HomeDetails() {
         URL.revokeObjectURL(url);
       })
       .finally(() => {
-        setPdfLoading(false);
+        dispatch({ type: "SET_PDF_LOADING", payload: false });
       });
   }
 
   if (notFound) {
     return (
-      <div className="animate-fade-in flex h-full w-112.5 items-center justify-center">
-        <div className="tex-center flex w-full flex-col items-center">
+      <div className="animate-fade-in fixed inset-x-4 bottom-4 top-16 z-40 flex items-center justify-center rounded-xl border bg-background/98 p-6 shadow-2xl backdrop-blur lg:static lg:inset-auto lg:h-full lg:min-w-[24rem] lg:w-[24rem] lg:rounded-none lg:border-l lg:border-t-0 lg:bg-background lg:p-6 lg:shadow-none">
+        <div className="tex-center flex w-full max-w-sm flex-col items-center text-center">
           <h3 className="mb-3 text-2xl font-medium">404</h3>
           <p className="text-muted-foreground mb-5">Bunday uy mavjud emas!</p>
         </div>
@@ -143,19 +198,41 @@ export default function HomeDetails() {
   return (
     <>
       <div
-        className={`bg-background no-scrollbar relative h-full overflow-y-scroll transition-all duration-400 ${
-          home ? "w-112.5 translate-x-0" : "w-0 translate-x-112.5"
-        } ${getLoading ? "pointer-events-none opacity-50" : ""}`}
+        className={`bg-background no-scrollbar fixed inset-x-0 bottom-0 top-12 z-40 overflow-y-auto border-t shadow-2xl transition-all duration-300 lg:static lg:h-full lg:border-l lg:border-t-0 lg:shadow-none ${
+          showPanel
+            ? "translate-y-0 opacity-100 lg:w-[24rem] lg:min-w-[24rem] lg:translate-x-0 lg:opacity-100 xl:w-[26rem] xl:min-w-[26rem]"
+            : "pointer-events-none translate-y-8 opacity-0 lg:w-0 lg:min-w-0 lg:translate-x-full lg:translate-y-0"
+        }`}
       >
-        {getLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center">
-            <Spinner />
-          </div>
-        )}
-        {home && (
-          <div className="pb-10">
-            <div className="bg-background sticky top-0 z-10 border-b">
-              <div className="flex items-center justify-between px-2 pb-5">
+        <LoadTransition
+          loading={getLoading}
+          className="min-h-full"
+          loader={
+            <SurfaceLoader
+              title="Uy ma'lumoti yuklanmoqda"
+              description={
+                home
+                  ? "Tanlangan uy tafsilotlari yangilanmoqda."
+                  : "Tanlangan uy tafsilotlari tayyorlanmoqda."
+              }
+            />
+          }
+          loaderClassName="bg-background/72 backdrop-blur-[2px]"
+          contentClassName="min-h-full"
+        >
+          {error ? (
+            <div className="flex h-full items-center justify-center p-6">
+              <div className="max-w-sm text-center">
+                <h3 className="mb-3 text-xl font-medium">Xatolik yuz berdi</h3>
+                <p className="text-muted-foreground text-sm leading-6">
+                  {error}
+                </p>
+              </div>
+            </div>
+          ) : home ? (
+          <div className="pb-6 lg:pb-10">
+            <div className="bg-background/95 sticky top-0 z-10 border-b backdrop-blur-sm">
+              <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
                 <Badge className={statuses[home.status]}>
                   {uzebekTranslate[home.status]}
                 </Badge>
@@ -164,7 +241,7 @@ export default function HomeDetails() {
                   className={"border shadow"}
                   onClick={() => {
                     navigate(`/tjm/${id}`);
-                    setHome(null);
+                    dispatch({ type: "CLEAR_HOME" });
                   }}
                   variant="secondary"
                   size="icon-sm"
@@ -173,7 +250,7 @@ export default function HomeDetails() {
                 </Button>
               </div>
 
-              <div className="p-2">
+              <div className="px-4 pb-4 sm:px-5">
                 {home.customer && (
                   <div className="animate-fade-in mb-5">
                     <Popover>
@@ -232,10 +309,10 @@ export default function HomeDetails() {
                     </Popover>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <i className="font-mono">№ {home.houseNumber}</i>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <i className="font-mono text-sm sm:text-base">№ {home.houseNumber}</i>
 
-                  <span className="bg-primary text-primary-foreground px-2 py-1 text-xs leading-none">
+                  <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
                     {formatNumber(home.price * home.size)} UZS
                   </span>
                 </div>
@@ -243,7 +320,7 @@ export default function HomeDetails() {
             </div>
 
             {/* Images */}
-            <div className="mb-5 p-2">
+            <div className="mb-5 px-4 pt-4 sm:px-5">
               <PhotoProvider
                 toolbarRender={({ onScale, scale }) => {
                   return (
@@ -275,7 +352,7 @@ export default function HomeDetails() {
                       type="image/avif"
                     />
                     <img
-                      className="h-45 w-full shadow"
+                      className="h-56 w-full object-contain sm:h-72 lg:h-64"
                       src={`/gallery/jpg/${home.image}.jpg`}
                       alt={home.size}
                     />
@@ -284,7 +361,7 @@ export default function HomeDetails() {
               </PhotoProvider>
             </div>
 
-            <div className="mb-5 px-2">
+            <div className="mb-5 px-4 sm:px-5">
               <NoiseBackground
                 className={"rounded p-2"}
                 gradientColors={[]}
@@ -320,7 +397,7 @@ export default function HomeDetails() {
               </NoiseBackground>
             </div>
 
-            <div className="mb-5 px-2">
+            <div className="mb-5 px-4 sm:px-5">
               {home.status === "NOT" && (
                 <Alert className="relative mb-10 border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900">
                   <MessageSquareWarning className="text-slate-600 dark:text-slate-400" />
@@ -336,21 +413,34 @@ export default function HomeDetails() {
               )}
             </div>
 
-            <div className="px-2">
-              <a
-                className={`${buttonVariants({
-                  variant: "secondary",
-                })} w-full`}
-                href="#calculator"
-              >
-                <Calculator />
-                Hisoblash
-              </a>
+            <div className="sticky bottom-0 bg-background/95 px-4 pb-4 pt-2 backdrop-blur-sm sm:px-5 lg:static lg:bg-transparent lg:p-0">
+              <div className="lg:px-5">
+                <a
+                  className={`${buttonVariants({
+                    variant: "secondary",
+                  })} w-full shadow-sm`}
+                  href="#calculator"
+                >
+                  <Calculator />
+                  Hisoblash
+                </a>
+              </div>
             </div>
           </div>
-        )}
+          ) : null}
+        </LoadTransition>
       </div>
-      {home && <CalculatorTool home={home} />}
+      {home && (
+        <CalculatorTool
+          home={home}
+          onStatusUpdated={(payload) => {
+            onRoomStatusUpdated?.(payload.roomId, {
+              status: payload.nextStatus,
+              description: payload.description ?? "",
+            });
+          }}
+        />
+      )}
     </>
   );
 }

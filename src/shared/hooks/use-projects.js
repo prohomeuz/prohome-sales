@@ -8,7 +8,7 @@ import { apiRequest } from "@/shared/lib/api";
 export function useProjects() {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const controllerRef = useRef(null);
 
   const get = useCallback(async () => {
@@ -21,17 +21,21 @@ export function useProjects() {
       const res = await apiRequest("/api/v1/projects", {
         signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
       if (res.ok) {
         const data = await res.json();
         setProjects(Array.isArray(data) ? data : []);
       } else {
         setError("Xatolik yuz berdi qayta urunib ko'ring!");
       }
-    } catch {
+    } catch (error) {
+      if (error?.name === "AbortError") return;
       setError("Tizimda nosozlik!");
     } finally {
-      controllerRef.current = null;
-      setLoading(false);
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+        setLoading(false);
+      }
     }
   }, []);
 

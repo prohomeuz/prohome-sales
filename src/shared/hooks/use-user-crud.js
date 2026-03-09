@@ -46,7 +46,7 @@ export function useUserCrud(type) {
   const config = CONFIG[type];
   const [list, setList] = useState([]);
   const [error, setError] = useState(null);
-  const [getLoading, setGetLoading] = useState(false);
+  const [getLoading, setGetLoading] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
 

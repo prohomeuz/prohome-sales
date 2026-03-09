@@ -1,6 +1,6 @@
 import { Label } from "@radix-ui/react-label";
 import { Eye, EyeClosed } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
@@ -23,6 +23,39 @@ const SUCCESS_STATUS = 201;
 const BAD_REQUEST_STATUSES = new Set([400, 404]);
 
 const INITIAL_ERRORS = { email: null, password: null, form: null };
+const INITIAL_STATE = {
+  loading: false,
+  errors: INITIAL_ERRORS,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_ERRORS":
+      return {
+        ...state,
+        errors:
+          typeof action.payload === "function"
+            ? action.payload(state.errors)
+            : action.payload,
+      };
+    case "PATCH_ERRORS":
+      return {
+        ...state,
+        errors: { ...state.errors, ...action.payload },
+      };
+    case "CLEAR_ERROR":
+      return state.errors[action.payload] === null
+        ? state
+        : {
+            ...state,
+            errors: { ...state.errors, [action.payload]: null },
+          };
+    default:
+      return state;
+  }
+}
 
 function FieldError({ id, children }) {
   if (!children) return null;
@@ -35,19 +68,17 @@ function FieldError({ id, children }) {
 
 export default function Login() {
   const { user, setUser } = useAppStore();
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState(INITIAL_ERRORS);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { loading, errors } = state;
   const [passwordShow, { toggle }] = useBoolean();
   const abortRef = useRef(null);
 
   const clearError = useCallback((field) => {
-    setErrors((prev) =>
-      prev[field] === null ? prev : { ...prev, [field]: null },
-    );
+    dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
 
   const setFieldErrors = useCallback((next) => {
-    setErrors((prev) => ({ ...prev, ...next }));
+    dispatch({ type: "PATCH_ERRORS", payload: next });
   }, []);
 
   const login = useCallback(
@@ -56,8 +87,8 @@ export default function Login() {
       abortRef.current = new AbortController();
       const { signal } = abortRef.current;
 
-      setLoading(true);
-      setFieldErrors(INITIAL_ERRORS);
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "SET_ERRORS", payload: INITIAL_ERRORS });
 
       try {
         const res = await fetch(LOGIN_API, {
@@ -90,7 +121,7 @@ export default function Login() {
         });
       } finally {
         abortRef.current = null;
-        setLoading(false);
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     },
     [setUser, setFieldErrors],
