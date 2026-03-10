@@ -1,4 +1,5 @@
 import { useRoomStatus } from "@/shared/hooks/use-room-status";
+import { useRenderPdf } from "@/shared/hooks/use-render-pdf";
 import useSound from "@/shared/hooks/use-sound";
 import {
   cn,
@@ -88,7 +89,7 @@ const uzbekTranslate = {
 
 const statusBadgeClass = {
   SOLD: "bg-red-500",
-  RESERVED: "bg-yellow-500",
+  RESERVED: "bg-orange-500",
   EMPTY: "bg-green-500",
   NOT: "bg-slate-400",
 };
@@ -122,10 +123,10 @@ const actionButtons = [
     successText: "Uy bron holatiga o'tkazildi.",
     icon: CalendarDays,
     cardTone:
-      "border-amber-500/18 hover:border-amber-500/35 hover:bg-amber-500/4",
-    accentTone: "bg-amber-500/85",
+      "border-orange-500/24 hover:border-orange-500/45 hover:bg-orange-500/6",
+    accentTone: "bg-orange-500",
     iconTone:
-      "border-amber-500/20 bg-amber-500/15 text-amber-600 dark:text-amber-300",
+      "border-orange-500/25 bg-orange-500/15 text-orange-600 dark:text-orange-300",
   },
   {
     code: "NOT",
@@ -157,6 +158,7 @@ const actionButtons = [
 const paymentPeriods = [12, 24, 36, 48, 60];
 const UZ_PHONE = /^\+998\d{9}$/;
 const STATUS_DIALOG_CLOSE_DELAY = 220;
+const DEFAULT_CALC_STATE = "BOX";
 const ACTIONS_BY_STATUS = {
   SOLD: ["EMPTY"],
   RESERVED: ["SOLD", "EMPTY"],
@@ -247,6 +249,7 @@ function getInitialStatusForm(home, nextStatus, defaults) {
 function createCalculatorInitialState() {
   return {
     calcResult: INITIAL_CALC_RESULT,
+    selectedState: DEFAULT_CALC_STATE,
     showDiscount: false,
     discountType: "discountPerM2",
     period: 60,
@@ -269,6 +272,8 @@ function calculatorReducer(state, action) {
       return { ...state, calcLoading: action.payload };
     case "SET_CALC_RESULT":
       return { ...state, calcResult: action.payload };
+    case "SET_SELECTED_STATE":
+      return { ...state, selectedState: action.payload };
     case "TOGGLE_DISCOUNT":
       return { ...state, showDiscount: !state.showDiscount };
     case "SET_DISCOUNT_TYPE":
@@ -340,6 +345,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const dialogResetTimerRef = useRef();
   const { sound } = useSound("/win.mp3");
   const { updateStatus, loading: statusLoading } = useRoomStatus();
+  const { renderPdf, loading: pdfLoading } = useRenderPdf();
   const location = useLocation();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(
@@ -349,6 +355,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   );
   const {
     calcResult,
+    selectedState,
     showDiscount,
     discountType,
     period,
@@ -365,6 +372,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   } = state;
   const activeAction = statusDialogAction ?? statusDialogRenderedAction;
   const ActiveActionIcon = activeAction?.icon;
+  const actionInProgress = statusLoading || pdfLoading;
   const actionLocked =
     (home?.canBeSold ?? home?.customer?.canBeSold ?? true) === false;
   const isOpen =
@@ -479,8 +487,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
   function handleClose({ clearDetails = false } = {}) {
     dispatch({ type: "RESET" });
+    const params = new URLSearchParams(location.search);
+    if (clearDetails) {
+      params.delete("details");
+    }
+    const nextSearch = params.toString();
     const nextUrl = clearDetails
-      ? location.pathname
+      ? `${location.pathname}${nextSearch ? `?${nextSearch}` : ""}`
       : `${location.pathname}${location.search}`;
     navigate(nextUrl, { replace: true });
   }
@@ -554,6 +567,72 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       installments: fallbackPayment.installments,
       description: home?.description ?? "",
     };
+  }
+
+  function createReservationDocumentNumber(statusData) {
+    const dynamicNumber =
+      statusData?.reservationNumber ??
+      statusData?.contractNumber ??
+      statusData?.contractId ??
+      statusData?.id;
+
+    if (dynamicNumber) {
+      return String(dynamicNumber);
+    }
+
+    const datePart = new Date()
+      .toISOString()
+      .slice(0, 16)
+      .replace(/[-:T]/g, "");
+
+    return `BRON-${home.houseNumber}-${datePart}`;
+  }
+
+  function buildReservationPdfPayload(payload, statusData) {
+    const resolvedPrice = Number(calcResult?.price ?? home?.price ?? 0);
+    const resolvedSize = Number(calcResult?.size ?? home?.size ?? 0);
+    const totalPrice =
+      resolvedPrice > 0 && resolvedSize > 0
+        ? formatNumber(Math.round(resolvedPrice * resolvedSize))
+        : undefined;
+    const pricePerSquareMeter =
+      resolvedPrice > 0 ? formatNumber(Math.round(resolvedPrice)) : undefined;
+    const initialPaymentDigits = digitsOnly(payload?.downPayment);
+    const conditionKey = calcResult?.state ?? selectedState;
+
+    return {
+      fileName: `bron-hujjati-uy-${home.houseNumber}.pdf`,
+      reservationNumber: createReservationDocumentNumber(statusData),
+      metrics: {
+        totalPrice,
+        duration: payload?.installments
+          ? `${payload.installments} oy`
+          : undefined,
+        size: resolvedSize > 0 ? `${resolvedSize} m²` : undefined,
+        condition: states[conditionKey] ?? undefined,
+        initialPayment:
+          initialPaymentDigits !== ""
+            ? formatNumber(initialPaymentDigits)
+            : undefined,
+        pricePerSquareMeter,
+        houseNumber:
+          home?.houseNumber !== undefined ? String(home.houseNumber) : undefined,
+      },
+    };
+  }
+
+  function downloadPdfFile(blob, fileName) {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+    }, 60_000);
   }
 
   function handleStatusAction(action) {
@@ -677,7 +756,24 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
         description: payload.description ?? "",
       }),
     );
-    toast.success(action.successText);
+
+    if ((payload.status ?? action.code) === "RESERVED") {
+      const pdfResult = await renderPdf(
+        buildReservationPdfPayload(payload, result.data),
+      );
+
+      if (pdfResult.ok) {
+        downloadPdfFile(pdfResult.blob, pdfResult.fileName);
+      } else {
+        toast.info("Uy bron qilindi, lekin PDF yuklab olinmadi.");
+      }
+    }
+
+    toast.success(
+      (payload.status ?? action.code) === "RESERVED"
+        ? "Uy bron qilindi."
+        : action.successText,
+    );
     handleClose({ clearDetails: true });
     dispatch({ type: "SET_PENDING_ACTION", payload: null });
     return true;
@@ -759,20 +855,32 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       direction={"top"}
     >
       <DrawerContent className="h-full min-h-screen overflow-y-auto lg:overflow-hidden">
+        <div className="bg-background/95 sticky top-0 z-30 flex justify-end px-4 pb-2 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:px-6 sm:pt-5 lg:hidden">
+          <DrawerClose
+            onClick={handleClose}
+            className={buttonVariants({
+              variant: "secondary",
+              size: "icon-sm",
+            })}
+          >
+            <X />
+          </DrawerClose>
+        </div>
+
         {/* Close  */}
         <DrawerClose
           onClick={handleClose}
           className={`${buttonVariants({
             variant: "secondary",
             size: "icon-sm",
-          })} absolute top-4 right-4 z-20 border shadow sm:top-5 sm:right-5`}
+          })} absolute top-5 right-5 z-20 hidden border shadow lg:inline-flex`}
         >
           <X />
         </DrawerClose>
 
         <div className="flex min-h-full flex-col gap-6 px-4 pb-6 pt-16 sm:px-6 lg:h-full lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
           <div
-            className={`no-scrollbar relative min-h-0 flex-1 overflow-visible lg:h-full lg:w-[64%] lg:overflow-y-auto lg:pr-2 ${
+            className={`no-scrollbar relative w-full overflow-visible lg:min-h-0 lg:h-full lg:w-[64%] lg:flex-1 lg:overflow-y-auto lg:pr-2 ${
               calcLoading ? "pointer-events-none" : ""
             }`}
           >
@@ -789,7 +897,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
               loaderClassName="bg-background/72 backdrop-blur-[2px]"
               contentClassName="min-h-full"
             >
-            <div className="animate-fade-in bg-background sticky top-0 z-10 mb-6 w-full rounded-xl border px-4 py-5 sm:top-2 sm:mb-8 sm:px-6 sm:py-6">
+            <div className="animate-fade-in bg-background/95 sticky top-[4.5rem] z-10 mb-6 w-full rounded-xl border px-4 py-5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:top-[4.75rem] sm:mb-8 sm:px-6 sm:py-6 lg:top-2 lg:shadow-none">
               <h3 className="bg-background text-muted-foreground absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded px-2">
                 Oyiga
               </h3>
@@ -1027,7 +1135,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                   </div>
                 </div>
               )}
-              <RadioGroup name={"state"} defaultValue="BOX">
+              <RadioGroup
+                name={"state"}
+                value={selectedState}
+                onValueChange={(value) => {
+                  dispatch({ type: "SET_SELECTED_STATE", payload: value });
+                }}
+              >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <FieldLabel htmlFor="box">
                     <Field orientation="horizontal">
@@ -1073,7 +1187,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="months">Necha oyga</Label>
-                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(8.5rem,10rem)]">
+                <div className="grid gap-3">
                   <div className="grid grid-cols-5 gap-2">
                     {paymentPeriods.map((p) => {
                       return (
@@ -1161,7 +1275,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                       <button
                         type="button"
                         key={code}
-                        disabled={actionLocked || statusLoading}
+                        disabled={actionLocked || actionInProgress}
                         onClick={() => handleStatusAction(action)}
                         className={cn(
                           "group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border bg-background px-4 py-4 text-left transition-colors duration-200",
@@ -1194,7 +1308,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                         </span>
 
                         <span className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover:text-foreground">
-                          {pendingAction === code && statusLoading ? (
+                          {pendingAction === code && actionInProgress ? (
                             <LoaderCircle className="size-4 animate-spin" />
                           ) : (
                             <ArrowUpRight className="size-4" />
@@ -1475,11 +1589,11 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 >
                   Bekor qilish
                 </Button>
-                <Button disabled={statusLoading}>
-                  {pendingAction === activeAction.code && statusLoading ? (
+                <Button disabled={actionInProgress}>
+                  {pendingAction === activeAction.code && actionInProgress ? (
                     <>
                       <Spinner />
-                      Saqlanmoqda...
+                      {pdfLoading ? "PDF tayyorlanmoqda..." : "Saqlanmoqda..."}
                     </>
                   ) : (
                     activeAction.submitLabel
