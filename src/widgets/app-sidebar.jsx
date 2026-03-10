@@ -62,7 +62,6 @@ const routes = {
   SALESMANAGER: [
     { url: "/", text: "Bosh sahifa", icon: <HomeIcon /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
-    { url: "/contracts", text: "Shartnomalar", icon: <FileText /> },
     { url: "/crm", text: "CRM", icon: <UsersRound /> },
   ],
 };

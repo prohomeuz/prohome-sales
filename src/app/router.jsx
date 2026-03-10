@@ -46,8 +46,8 @@ function getRoleRoutes(role) {
         pageRoute("add/company", () => import("@/pages/AddCompany")),
         pageRoute("company/:id", () => import("@/pages/CompanyDetails")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
     case "ADMIN":
@@ -60,8 +60,8 @@ function getRoleRoutes(role) {
         pageRoute("add/company", () => import("@/pages/AddCompany")),
         pageRoute("company/:id", () => import("@/pages/CompanyDetails")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
     case "ROP":
@@ -70,8 +70,8 @@ function getRoleRoutes(role) {
         pageRoute("salesmanager", () => import("@/pages/SalesManager")),
         pageRoute("settings", () => import("@/pages/Settings")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("dashboard", () => import("@/pages/Dashboard")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
     case "SALESMANAGER":
@@ -79,7 +79,6 @@ function getRoleRoutes(role) {
         indexRoute(() => import("@/pages/Home")),
         pageRoute("settings", () => import("@/pages/Settings")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("contracts", () => import("@/pages/Contracts")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
     default:

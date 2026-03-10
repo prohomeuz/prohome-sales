@@ -52,7 +52,14 @@ export function useRoomStatus() {
       });
 
       if (res.ok) {
-        return { ok: true };
+        let data = null;
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+
+        return { ok: true, data };
       }
 
       let message = "";

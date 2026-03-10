@@ -206,6 +206,5 @@
   .no-scrollbar {
     -ms-overflow-style: auto;
     scrollbar-width: thin;
-    scrollbar-gutter: stable;
   }
 }
