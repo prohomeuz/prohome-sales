@@ -10,7 +10,29 @@ function appendFormValue(formData, key, value) {
     return;
   }
 
+  if (value instanceof Blob) {
+    const fileName =
+      typeof value.name === "string" && value.name.trim()
+        ? value.name
+        : `${key}.pdf`;
+    formData.append(key, value, fileName);
+    return;
+  }
+
   formData.append(key, String(value));
+}
+
+function createStatusFormData(payload) {
+  if (payload instanceof FormData) {
+    return payload;
+  }
+
+  const formData = new FormData();
+  Object.entries(payload ?? {}).forEach(([key, value]) => {
+    appendFormValue(formData, key, value);
+  });
+
+  return formData;
 }
 
 function normalizeApiMessage(message) {
@@ -37,10 +59,7 @@ export function useRoomStatus() {
   const [error, setError] = useState(null);
 
   const updateStatus = useCallback(async (id, payload) => {
-    const formData = new FormData();
-    Object.entries(payload ?? {}).forEach(([key, value]) => {
-      appendFormValue(formData, key, value);
-    });
+    const formData = createStatusFormData(payload);
 
     setLoading(true);
     setError(null);

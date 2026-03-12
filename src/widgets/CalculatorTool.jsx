@@ -193,6 +193,29 @@ function getPositiveNumericString(...candidates) {
   return "1";
 }
 
+function createMultipartPayload(payload) {
+  const formData = new FormData();
+
+  Object.entries(payload ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+
+    if (value instanceof Blob) {
+      const fileName =
+        typeof value.name === "string" && value.name.trim()
+          ? value.name
+          : `${key}.pdf`;
+      formData.append(key, value, fileName);
+      return;
+    }
+
+    formData.append(key, String(value));
+  });
+
+  return formData;
+}
+
 function createEmptyStatusForm() {
   return {
     firstName: "",
@@ -249,6 +272,7 @@ function getInitialStatusForm(home, nextStatus, defaults) {
 function createCalculatorInitialState() {
   return {
     calcResult: INITIAL_CALC_RESULT,
+    hasCalculated: false,
     selectedState: DEFAULT_CALC_STATE,
     showDiscount: false,
     discountType: "discountPerM2",
@@ -271,19 +295,47 @@ function calculatorReducer(state, action) {
     case "SET_CALC_LOADING":
       return { ...state, calcLoading: action.payload };
     case "SET_CALC_RESULT":
-      return { ...state, calcResult: action.payload };
+      return {
+        ...state,
+        calcResult: action.payload,
+        hasCalculated: true,
+      };
     case "SET_SELECTED_STATE":
-      return { ...state, selectedState: action.payload };
+      return {
+        ...state,
+        selectedState: action.payload,
+        hasCalculated: false,
+      };
     case "TOGGLE_DISCOUNT":
-      return { ...state, showDiscount: !state.showDiscount };
+      return {
+        ...state,
+        showDiscount: !state.showDiscount,
+        hasCalculated: false,
+      };
     case "SET_DISCOUNT_TYPE":
-      return { ...state, discountType: action.payload };
+      return {
+        ...state,
+        discountType: action.payload,
+        hasCalculated: false,
+      };
     case "SET_PERIOD":
-      return { ...state, period: action.payload };
+      return {
+        ...state,
+        period: action.payload,
+        hasCalculated: false,
+      };
     case "SET_DOWN_PAYMENT":
-      return { ...state, downPayment: action.payload };
+      return {
+        ...state,
+        downPayment: action.payload,
+        hasCalculated: false,
+      };
     case "SET_DISCOUNT":
-      return { ...state, discount: action.payload };
+      return {
+        ...state,
+        discount: action.payload,
+        hasCalculated: false,
+      };
     case "SET_GALLERY_SHOW":
       return { ...state, galleryShow: action.payload };
     case "OPEN_STATUS_DIALOG":
@@ -343,6 +395,7 @@ function calculatorReducer(state, action) {
 export default function CalculatorTool({ home, onStatusUpdated }) {
   const timerRef = useRef();
   const dialogResetTimerRef = useRef();
+  const wasOpenRef = useRef(false);
   const { sound } = useSound("/win.mp3");
   const { updateStatus, loading: statusLoading } = useRoomStatus();
   const { renderPdf, loading: pdfLoading } = useRenderPdf();
@@ -355,6 +408,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   );
   const {
     calcResult,
+    hasCalculated,
     selectedState,
     showDiscount,
     discountType,
@@ -375,6 +429,8 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const actionInProgress = statusLoading || pdfLoading;
   const actionLocked =
     (home?.canBeSold ?? home?.customer?.canBeSold ?? true) === false;
+  const calculationRequired = !hasCalculated;
+  const calculationLocked = calculationRequired || calcLoading;
   const isOpen =
     location.search.includes("details=") && location.hash === "#calculator";
   const hasDiscountValue = showDiscount && String(discount ?? "").trim();
@@ -569,74 +625,93 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     };
   }
 
-  function createReservationDocumentNumber(statusData) {
-    const dynamicNumber =
-      statusData?.reservationNumber ??
-      statusData?.contractNumber ??
-      statusData?.contractId ??
-      statusData?.id;
-
-    if (dynamicNumber) {
-      return String(dynamicNumber);
-    }
-
-    const datePart = new Date()
-      .toISOString()
-      .slice(0, 16)
-      .replace(/[-:T]/g, "");
-
-    return `BRON-${home.houseNumber}-${datePart}`;
-  }
-
-  function buildReservationPdfPayload(payload, statusData) {
+  function buildReservationPdfPayload(payload) {
     const resolvedPrice = Number(calcResult?.price ?? home?.price ?? 0);
     const resolvedSize = Number(calcResult?.size ?? home?.size ?? 0);
-    const totalPrice =
+    const installments = Math.max(1, Number(payload?.installments ?? 0) || 1);
+    const initialPaymentDigits = digitsOnly(payload?.downPayment);
+    const initialPaymentValue = Number(initialPaymentDigits || 0);
+    const totalPriceValue =
       resolvedPrice > 0 && resolvedSize > 0
-        ? formatNumber(Math.round(resolvedPrice * resolvedSize))
+        ? Math.round(resolvedPrice * resolvedSize)
+        : 0;
+    const remainingAmount = Math.max(totalPriceValue - initialPaymentValue, 0);
+    const fallbackMonthPayment = Math.round(remainingAmount / installments);
+    const monthPaymentValue = Number.isFinite(Number(calcResult?.monthlyPayment))
+      ? Number(calcResult?.monthlyPayment ?? 0)
+      : fallbackMonthPayment;
+    const totalPrice =
+      totalPriceValue > 0
+        ? formatNumber(totalPriceValue)
         : undefined;
     const pricePerSquareMeter =
       resolvedPrice > 0 ? formatNumber(Math.round(resolvedPrice)) : undefined;
-    const initialPaymentDigits = digitsOnly(payload?.downPayment);
     const conditionKey = calcResult?.state ?? selectedState;
 
     return {
-      fileName: `bron-hujjati-uy-${home.houseNumber}.pdf`,
-      reservationNumber: createReservationDocumentNumber(statusData),
-      metrics: {
-        totalPrice,
-        duration: payload?.installments
-          ? `${payload.installments} oy`
+      totalPrice,
+      period: payload?.installments ? `${payload.installments} oy` : undefined,
+      size: resolvedSize > 0 ? `${resolvedSize} m²` : undefined,
+      state: states[conditionKey] ?? undefined,
+      downPayment:
+        initialPaymentDigits !== ""
+          ? formatNumber(initialPaymentDigits)
           : undefined,
-        size: resolvedSize > 0 ? `${resolvedSize} m²` : undefined,
-        condition: states[conditionKey] ?? undefined,
-        initialPayment:
-          initialPaymentDigits !== ""
-            ? formatNumber(initialPaymentDigits)
-            : undefined,
-        pricePerSquareMeter,
-        houseNumber:
-          home?.houseNumber !== undefined ? String(home.houseNumber) : undefined,
-      },
+      discount: "",
+      pricePerM2: pricePerSquareMeter,
+      monthlyPayment: formatNumber(Math.max(0, Math.round(monthPaymentValue))),
+      monthPayment: formatNumber(Math.max(0, Math.round(monthPaymentValue))),
     };
   }
 
-  function downloadPdfFile(blob, fileName) {
+  function createReservationPdfFile(blob) {
+    return new File([blob], `bron-hujjati-uy-${home.houseNumber}.pdf`, {
+      type: blob.type || "application/pdf",
+      lastModified: Date.now(),
+    });
+  }
+
+  function openPdfInNewTab(blob) {
     const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = objectUrl;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+    const preview = window.open(objectUrl, "_blank", "noopener,noreferrer");
+
+    if (!preview) {
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    }
 
     window.setTimeout(() => {
       URL.revokeObjectURL(objectUrl);
     }, 60_000);
   }
 
+  function getConfirmedStatusFromResponse(data) {
+    const candidates = [
+      data?.status,
+      data?.data?.status,
+      data?.room?.status,
+      data?.result?.status,
+    ];
+
+    const confirmed = candidates.find((value) =>
+      ["SOLD", "RESERVED", "EMPTY", "NOT"].includes(String(value ?? "").toUpperCase()),
+    );
+
+    return confirmed ? String(confirmed).toUpperCase() : null;
+  }
+
   function handleStatusAction(action) {
     if (actionLocked) return;
+
+    if (calculationLocked) {
+      toast.error("Avval hisoblashni yakunlang.");
+      return;
+    }
 
     if (home.status === "RESERVED" && action.code === "SOLD") {
       submitStatusAction(action, createDirectStatusPayload("SOLD"));
@@ -740,11 +815,41 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   }
 
   async function submitStatusAction(action, payloadOverride) {
+    if (calculationLocked) {
+      toast.error("Avval hisoblashni yakunlang.");
+      return false;
+    }
+
     dispatch({ type: "SET_PENDING_ACTION", payload: action.code });
     const payload = payloadOverride ?? createStatusPayload(action.code);
-    const result = await updateStatus(home.id, payload);
+    let requestPayload = payload;
+    let generatedReservationBlob = null;
+
+    if ((payload.status ?? action.code) === "RESERVED") {
+      const pdfResult = await renderPdf(buildReservationPdfPayload(payload));
+
+      if (!pdfResult.ok) {
+        toast.error(pdfResult.message);
+        dispatch({ type: "SET_PENDING_ACTION", payload: null });
+        return false;
+      }
+
+      generatedReservationBlob = pdfResult.blob;
+      payload.contractFile = createReservationPdfFile(pdfResult.blob);
+      requestPayload = createMultipartPayload(payload);
+    }
+
+    const result = await updateStatus(home.id, requestPayload);
     if (!result.ok) {
       toast.error(result.message);
+      dispatch({ type: "SET_PENDING_ACTION", payload: null });
+      return false;
+    }
+
+    const expectedStatus = String(payload.status ?? action.code).toUpperCase();
+    const confirmedStatus = getConfirmedStatusFromResponse(result.data);
+    if (confirmedStatus && confirmedStatus !== expectedStatus) {
+      toast.error("Status tasdiqlanmadi. Qayta urinib ko'ring.");
       dispatch({ type: "SET_PENDING_ACTION", payload: null });
       return false;
     }
@@ -757,16 +862,8 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       }),
     );
 
-    if ((payload.status ?? action.code) === "RESERVED") {
-      const pdfResult = await renderPdf(
-        buildReservationPdfPayload(payload, result.data),
-      );
-
-      if (pdfResult.ok) {
-        downloadPdfFile(pdfResult.blob, pdfResult.fileName);
-      } else {
-        toast.info("Uy bron qilindi, lekin PDF yuklab olinmadi.");
-      }
+    if ((payload.status ?? action.code) === "RESERVED" && generatedReservationBlob) {
+      openPdfInNewTab(generatedReservationBlob);
     }
 
     toast.success(
@@ -831,6 +928,14 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   useEffect(() => {
     dispatch({ type: "RESET_FOR_HOME" });
   }, [home.id]);
+
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current) {
+      dispatch({ type: "RESET_FOR_HOME" });
+    }
+
+    wasOpenRef.current = isOpen;
+  }, [isOpen]);
 
   useEffect(() => {
     if (statusDialogOpen || !statusDialogRenderedAction) return undefined;
@@ -1241,6 +1346,23 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
             </form>
 
             <div className="rounded-xl border bg-muted/20 p-3">
+              {calculationLocked && (
+                <div className="mb-3 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sky-950">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-background">
+                    <Calculator className="size-4 text-sky-700" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      Avval hisoblashni yakunlang
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-sky-800">
+                      Sotish, bron qilish yoki statusni o'zgartirishdan oldin
+                      joriy parametrlar bo'yicha hisoblashni bosing.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {actionLocked && (
                 <div className="mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-950">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-background">
@@ -1258,7 +1380,12 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 </div>
               )}
 
-              <div className="flex flex-col gap-2">
+              <div
+                className={cn(
+                  "relative flex flex-col gap-2",
+                  calculationLocked && "pointer-events-none select-none",
+                )}
+              >
                 {home &&
                   availableActions.map((action) => {
                     const {
@@ -1275,12 +1402,18 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                       <button
                         type="button"
                         key={code}
-                        disabled={actionLocked || actionInProgress}
+                        disabled={
+                          actionLocked ||
+                          calculationLocked ||
+                          actionInProgress
+                        }
                         onClick={() => handleStatusAction(action)}
                         className={cn(
                           "group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border bg-background px-4 py-4 text-left transition-colors duration-200",
-                          "hover:bg-accent/30 disabled:pointer-events-none disabled:opacity-60",
+                          "hover:bg-accent/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45 disabled:saturate-50",
                           cardTone,
+                          calculationLocked &&
+                            "hover:bg-background",
                         )}
                       >
                         <span
