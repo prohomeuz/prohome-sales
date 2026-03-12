@@ -5,6 +5,7 @@ import {
   PopoverTrigger,
 } from "@/shared/ui/popover";
 import {
+  ArrowLeft,
   ArrowRight,
   Calculator,
   Check,
@@ -29,7 +30,7 @@ import SurfaceLoader from "./loading/SurfaceLoader";
 
 const statuses = {
   SOLD: "bg-red-500",
-  RESERVED: "bg-yellow-500",
+  RESERVED: "bg-orange-500",
   EMPTY: "bg-green-500",
   NOT: "bg-slate-400",
 };
@@ -102,6 +103,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   const l = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
+  const detailsId = new URLSearchParams(l.search).get("details");
   const { copied, copy } = useClipboard({
     copiedDuring: 1000,
   });
@@ -152,15 +154,12 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   }
 
   useEffect(() => {
-    const url = new URLSearchParams(l.search);
-
-    if (url.has("details")) {
-      const id = url.get("details");
-      get(id);
+    if (detailsId) {
+      get(detailsId);
     } else {
       dispatch({ type: "CLEAR_HOME" });
     }
-  }, [l.search]);
+  }, [detailsId]);
 
   function handleCopyPhoneNumber(phone) {
     copy(phone);
@@ -186,7 +185,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
 
   if (notFound) {
     return (
-      <div className="animate-fade-in fixed inset-x-4 bottom-4 top-16 z-40 flex items-center justify-center rounded-xl border bg-background/98 p-6 shadow-2xl backdrop-blur lg:static lg:inset-auto lg:h-full lg:min-w-[24rem] lg:w-[24rem] lg:rounded-none lg:border-l lg:border-t-0 lg:bg-background lg:p-6 lg:shadow-none">
+      <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-background/98 p-6 backdrop-blur lg:static lg:inset-auto lg:h-full lg:min-w-[24rem] lg:w-[24rem] lg:border-l lg:bg-background lg:p-6 lg:backdrop-blur-none">
         <div className="tex-center flex w-full max-w-sm flex-col items-center text-center">
           <h3 className="mb-3 text-2xl font-medium">404</h3>
           <p className="text-muted-foreground mb-5">Bunday uy mavjud emas!</p>
@@ -198,7 +197,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   return (
     <>
       <div
-        className={`bg-background no-scrollbar fixed inset-x-0 bottom-0 top-12 z-40 overflow-y-auto border-t shadow-2xl transition-all duration-300 lg:static lg:h-full lg:border-l lg:border-t-0 lg:shadow-none ${
+        className={`bg-background no-scrollbar fixed inset-0 z-50 overflow-y-auto transition-all duration-300 lg:static lg:h-full lg:border-l lg:shadow-none ${
           showPanel
             ? "translate-y-0 opacity-100 lg:w-[24rem] lg:min-w-[24rem] lg:translate-x-0 lg:opacity-100 xl:w-[26rem] xl:min-w-[26rem]"
             : "pointer-events-none translate-y-8 opacity-0 lg:w-0 lg:min-w-0 lg:translate-x-full lg:translate-y-0"
@@ -233,20 +232,27 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
           <div className="pb-6 lg:pb-10">
             <div className="bg-background/95 sticky top-0 z-10 border-b backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
-                <Badge className={statuses[home.status]}>
+                <Badge className={`order-2 lg:order-1 ${statuses[home.status]}`}>
                   {uzebekTranslate[home.status]}
                 </Badge>
 
                 <Button
-                  className={"border shadow"}
+                  className={"order-1 border shadow lg:order-2"}
                   onClick={() => {
-                    navigate(`/tjm/${id}`);
+                    const params = new URLSearchParams(l.search);
+                    params.delete("details");
+                    const nextSearch = params.toString();
+                    navigate({
+                      pathname: `/tjm/${id}`,
+                      search: nextSearch ? `?${nextSearch}` : "",
+                    });
                     dispatch({ type: "CLEAR_HOME" });
                   }}
                   variant="secondary"
                   size="icon-sm"
                 >
-                  <ArrowRight />
+                  <ArrowLeft className="lg:hidden" />
+                  <ArrowRight className="hidden lg:block" />
                 </Button>
               </div>
 
@@ -320,7 +326,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
             </div>
 
             {/* Images */}
-            <div className="mb-5 px-4 pt-4 sm:px-5">
+            <div className="mb-6 px-4 pt-5 sm:px-6 md:px-8 lg:mb-5 lg:px-5 lg:pt-4">
               <PhotoProvider
                 toolbarRender={({ onScale, scale }) => {
                   return (
@@ -346,13 +352,13 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                 }}
               >
                 <PhotoView src={`/gallery/jpg/${home.image}.jpg`}>
-                  <picture>
+                  <picture className="block w-full">
                     <source
                       srcset={`/gallery/avif/${home.image}.avif`}
                       type="image/avif"
                     />
                     <img
-                      className="h-56 w-full object-contain sm:h-72 lg:h-64"
+                      className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
                       src={`/gallery/jpg/${home.image}.jpg`}
                       alt={home.size}
                     />

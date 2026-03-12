@@ -1,315 +1,430 @@
-import { Button } from "@/shared/ui/button";
-import { Download, Loader2 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { CircleDollarSign, Download, FileText, RefreshCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useContracts } from "@/shared/hooks/use-contracts";
+import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
+import { apiRequest } from "@/shared/lib/api";
+import { cn, formatNumber } from "@/shared/lib/utils";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import EmptyData from "@/widgets/EmptyData";
+import GeneralError from "@/widgets/error/GeneralError";
+import LoadTransition from "@/widgets/loading/LoadTransition";
+import LogoLoader from "@/widgets/loading/LogoLoader";
 
-const REMOTE_CONTRACT_API =
-  "https://uncompulsively-unroasted-nicolette.ngrok-free.dev";
+const PROJECT_ID = 1;
+const ALL_STATUS = "ALL";
 
-function createContract(id, overrides = {}) {
-  return {
-    id,
-    contractNumber: `SH-${new Date().getFullYear()}-${String(id).padStart(4, "0")}`,
-    contractDate: "TODAY",
-    companyName: "PROHOME DEVELOPMENT MCHJ",
-    companyAddress: "Farg'ona sh., Mustaqillik ko'chasi, 12-uy",
-    companyDirector: "Azizbek Karimov",
-    clientFullName: "Akmaljon Erkinov",
-    clientPassport: "AA1234567",
-    clientAddress: "Farg'ona vil., Farg'ona tumani, Navbahor MFY",
-    clientPhone: "+998 90 123 45 67",
-    apartmentNumber: "58",
-    apartmentArea: 54.1,
-    apartmentFloor: 5,
-    buildingAddress: "Farg'ona sh., Ilg'or MFY, MG1730401071/23",
-    totalPrice: 400660000,
-    downPayment: 0,
-    paymentMonths: 60,
-    notes: "To'lov oyma-oy bank o'tkazmasi orqali amalga oshiriladi.",
-    ...overrides,
-  };
-}
+const STATUS_BADGE_CLASS = {
+  SOLD: "bg-red-500 text-white hover:bg-red-500",
+  RESERVED: "bg-orange-500 text-white hover:bg-orange-500",
+  EMPTY: "bg-green-500 text-white hover:bg-green-500",
+  NOT: "bg-slate-400 text-white hover:bg-slate-400",
+};
 
-const MOCK_CONTRACTS = [
-  createContract(1),
-  createContract(2, {
-    clientFullName: "Dilshodbek Rasulov",
-    clientPassport: "AB7823490",
-    clientPhone: "+998 91 707 12 88",
-    apartmentNumber: "63",
-    apartmentArea: 61.8,
-    apartmentFloor: 6,
-    totalPrice: 457320000,
-    downPayment: 50000000,
-    paymentMonths: 48,
-  }),
-  createContract(3, {
-    clientFullName: "Muhlisa Ergasheva",
-    clientPassport: "AC4432281",
-    clientAddress: "Farg'ona sh., Yangi Asr ko'chasi, 15-uy",
-    clientPhone: "+998 99 880 00 44",
-    apartmentNumber: "41",
-    apartmentArea: 47.5,
-    apartmentFloor: 4,
-    totalPrice: 351500000,
-    downPayment: 25000000,
-    paymentMonths: 36,
-  }),
-  createContract(4, {
-    clientFullName: "Boburjon Tursunov",
-    clientPassport: "AD6654321",
-    clientPhone: "+998 97 532 41 00",
-    apartmentNumber: "77",
-    apartmentArea: 72.3,
-    apartmentFloor: 8,
-    totalPrice: 536120000,
-    downPayment: 120000000,
-    paymentMonths: 24,
-  }),
+const STATUS_LABEL = {
+  SOLD: "Sotilgan",
+  RESERVED: "Bron qilingan",
+  EMPTY: "Bo'sh",
+  NOT: "Sotilmaydi",
+};
+
+const STATUS_TABS = [
+  { key: ALL_STATUS, label: "Barchasi" },
+  { key: "SOLD", label: "Sotilgan" },
+  { key: "RESERVED", label: "Bron qilingan" },
 ];
 
-function formatAmount(value) {
-  return `${Number(value ?? 0).toLocaleString()} so'm`;
-}
-
-async function createContractPdf(contract) {
-  const payload = contract;
-
-  const request = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  };
-
-  const res = await fetch(`${REMOTE_CONTRACT_API}/api/contracts`, request);
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    let message = "";
-    try {
-      message = JSON.parse(text)?.error ?? "";
-    } catch {
-      message = "";
-    }
-    if (!message && text.includes("ERR_NGROK_3200")) {
-      message = "Backend endpoint offline (ngrok link eskirgan)";
-    }
-    if (!message) message = `PDF generatsiya xatosi (HTTP ${res.status})`;
-    throw new Error(message);
+function formatContractDate(value) {
+  if (!value) {
+    return { date: "Sana yo'q", time: "" };
   }
 
-  const responsePayload = await res.json();
-  if (!responsePayload?.urls?.pdf) throw new Error("PDF link qaytmadi");
-  return responsePayload.urls.pdf;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return { date: "Noma'lum sana", time: "" };
+  }
+
+  return {
+    date: new Intl.DateTimeFormat("uz-UZ", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(parsed),
+    time: new Intl.DateTimeFormat("uz-UZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(parsed),
+  };
+}
+
+function getRowKey(contract, index) {
+  return String(
+    contract?.id ??
+      contract?.contractId ??
+      contract?.contractNumber ??
+      `${contract?.contractDate ?? "contract"}-${contract?.fullName ?? index}`,
+  );
+}
+
+function resolveContractFileUrl(contractFile) {
+  if (!contractFile) return "";
+  if (contractFile.startsWith("http")) return contractFile;
+
+  const base = import.meta.env.VITE_BASE_URL ?? window.location.origin;
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = contractFile.startsWith("/")
+    ? contractFile.slice(1)
+    : contractFile;
+
+  return new URL(normalizedPath, normalizedBase).href;
+}
+
+function parseAmountValue(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+
+  if (typeof raw === "number") {
+    return Number.isFinite(raw) ? raw : null;
+  }
+
+  const normalized = String(raw).replace(/[^\d.-]/g, "");
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function resolveContractAmount(contract) {
+  const candidates = [
+    contract?.totalPrice,
+    contract?.totalAmount,
+    contract?.amount,
+    contract?.price,
+    contract?.contractAmount,
+    contract?.sum,
+    contract?.overallPrice,
+  ];
+
+  for (const candidate of candidates) {
+    const value = parseAmountValue(candidate);
+    if (value !== null) return value;
+  }
+
+  return null;
 }
 
 export default function Contracts() {
-  const [downloadingId, setDownloadingId] = useState(null);
-  const [hasVerticalScroll, setHasVerticalScroll] = useState(false);
-  const scrollRef = useRef(null);
-  const headerShadow = useMemo(
-    () =>
-      hasVerticalScroll ? "shadow-[0_6px_10px_-8px_rgba(0,0,0,0.35)]" : "",
-    [hasVerticalScroll],
+  const { contracts, error, loading, get } = useContracts(PROJECT_ID);
+  const [openingRowKey, setOpeningRowKey] = useState(null);
+  const [activeTab, setActiveTab] = useState(ALL_STATUS);
+  const { start, complete } = useStableLoadingBar({
+    color: "#5ea500",
+    height: 3,
+  });
+
+  useEffect(() => {
+    if (loading) start();
+    else complete();
+  }, [loading, start, complete]);
+
+  const stats = useMemo(() => {
+    const totalAmount = contracts.reduce((sum, item) => {
+      const amount = resolveContractAmount(item);
+      return amount === null ? sum : sum + amount;
+    }, 0);
+    const hasAmount = contracts.some((item) => resolveContractAmount(item) !== null);
+
+    return {
+      total: contracts.length,
+      sold: contracts.filter((item) => item?.status === "SOLD").length,
+      reserved: contracts.filter((item) => item?.status === "RESERVED").length,
+      totalAmount,
+      hasAmount,
+    };
+  }, [contracts]);
+
+  const statusCounts = useMemo(
+    () => ({
+      [ALL_STATUS]: contracts.length,
+      SOLD: contracts.filter((item) => item?.status === "SOLD").length,
+      RESERVED: contracts.filter((item) => item?.status === "RESERVED").length,
+      EMPTY: contracts.filter((item) => item?.status === "EMPTY").length,
+      NOT: contracts.filter((item) => item?.status === "NOT").length,
+    }),
+    [contracts],
   );
 
-  const handleDownloadContract = useCallback(async (contract) => {
-    setDownloadingId(contract.id);
+  const filteredContracts = useMemo(
+    () =>
+      activeTab === ALL_STATUS
+        ? contracts
+        : contracts.filter((item) => (item?.status ?? "NOT") === activeTab),
+    [activeTab, contracts],
+  );
+
+  const handleOpenContractFile = useCallback(async (contract, rowKey) => {
+    if (!contract?.contractFile) return;
+
+    setOpeningRowKey(rowKey);
 
     try {
-      const pdfUrl = await createContractPdf(contract);
-      window.open(pdfUrl, "_blank", "noopener,noreferrer");
-      toast.success("Shartnoma PDF ochildi");
-    } catch (err) {
-      toast.error(err?.message || "Shartnomani yuklab bo'lmadi");
+      const res = await apiRequest(resolveContractFileUrl(contract.contractFile));
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const preview = window.open("", "_blank", "noopener,noreferrer");
+
+      if (preview) {
+        preview.location.href = objectUrl;
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        anchor.click();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch {
+      toast.error("Shartnoma faylini ochib bo'lmadi");
     } finally {
-      setDownloadingId(null);
+      setOpeningRowKey(null);
     }
   }, []);
 
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setHasVerticalScroll(el.scrollTop > 2);
-  }, []);
-
   return (
-    <section className="animate-fade-in flex h-full min-h-0 flex-col p-4 sm:p-5 lg:p-6">
-      <header className="bg-primary/2 mb-6 rounded-[24px] border p-4 sm:p-5">
-        <h2 className="text-2xl font-bold">Shartnomalar</h2>
-        <p className="text-muted-foreground mt-1 text-xs">
-          Hozircha mock ma&apos;lumotlar ko&apos;rsatilmoqda.
-        </p>
-      </header>
-
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pr-1 lg:hidden">
-        <div className="grid gap-3 pb-2">
-          {MOCK_CONTRACTS.map((contract) => (
-            <article
-              key={contract.id}
-              className="rounded-[24px] border bg-background p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{contract.contractNumber}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {contract.contractDate}
-                  </p>
-                </div>
-                <Button
-                  size="icon-sm"
-                  variant="secondary"
-                  disabled={downloadingId === contract.id}
-                  onClick={() => handleDownloadContract(contract)}
-                  title="Shartnomani yuklab olish"
+    <LoadTransition
+      loading={loading}
+      className="h-full"
+      loader={
+        <LogoLoader
+          title="Shartnomalar yuklanmoqda"
+          description="Project bo'yicha shartnomalar ro'yxati tayyorlanmoqda."
+        />
+      }
+      loaderClassName="bg-background/92 backdrop-blur-sm"
+      contentClassName="h-full"
+    >
+      {error ? (
+        <GeneralError />
+      ) : (
+        <section className="animate-fade-in flex h-full min-h-0 flex-col p-4 sm:p-5 lg:p-6">
+          <header className="bg-primary/2 mb-6 flex flex-col gap-4 rounded-xl border p-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="border-primary/20 bg-primary/6 text-primary hover:bg-primary/6"
                 >
-                  {downloadingId === contract.id ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Download />
-                  )}
-                </Button>
+                  <FileText />
+                  Project #{PROJECT_ID}
+                </Badge>
               </div>
 
-              <div className="mt-4 grid gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
-                    Mijoz
-                  </p>
-                  <p className="font-medium">{contract.clientFullName}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {contract.clientPassport}
-                  </p>
-                </div>
-
-                <div className="grid gap-1 rounded-2xl border bg-muted/25 p-3">
-                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
-                    Uy ma&apos;lumoti
-                  </p>
-                  <p>Uy: {contract.apartmentNumber}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {contract.apartmentFloor}-qavat · {contract.apartmentArea} m²
-                  </p>
-                </div>
-
-                <div className="grid gap-1 rounded-2xl border bg-muted/25 p-3">
-                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
-                    To&apos;lov
-                  </p>
-                  <p className="font-medium">{formatAmount(contract.totalPrice)}</p>
-                  <p className="text-muted-foreground text-xs">
-                    Boshlang&apos;ich: {formatAmount(contract.downPayment)}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    Muddat: {contract.paymentMonths} oy
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-muted-foreground text-[11px] uppercase tracking-[0.12em]">
-                    Telefon
-                  </p>
-                  <p>{contract.clientPhone}</p>
-                </div>
+              <div>
+                <h2 className="text-2xl font-bold">Shartnomalar</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Backenddan olingan shartnomalar ro'yxati.
+                </p>
               </div>
-            </article>
-          ))}
-        </div>
-      </div>
+            </div>
 
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="hidden min-h-0 flex-1 overflow-y-auto pr-2 lg:block"
-      >
-        <div className="relative w-full">
-          <table className="w-full table-fixed text-xs">
-            <thead
-              className={`bg-background sticky top-0 z-[3] [&_tr]:border-b ${headerShadow}`}
-            >
-              <tr className="border-b">
-                <th className="text-foreground bg-background sticky left-0 z-[4] h-10 w-[14%] px-2 text-left align-middle font-medium whitespace-normal shadow-[6px_0_10px_-10px_rgba(0,0,0,0.25)]">
-                  Shartnoma
-                </th>
-                <th className="text-foreground h-10 w-[9%] px-2 text-left align-middle font-medium whitespace-normal">
-                  Sana
-                </th>
-                <th className="text-foreground h-10 w-[17%] px-2 text-left align-middle font-medium whitespace-normal">
-                  Mijoz
-                </th>
-                <th className="text-foreground h-10 w-[12%] px-2 text-left align-middle font-medium whitespace-normal">
-                  Telefon
-                </th>
-                <th className="text-foreground h-10 w-[16%] px-2 text-left align-middle font-medium whitespace-normal">
-                  Ko'chmas mulk
-                </th>
-                <th className="text-foreground h-10 w-[15%] px-2 text-left align-middle font-medium whitespace-normal">
-                  To'lov shartlari
-                </th>
-                <th className="text-foreground bg-background sticky right-0 z-[4] h-10 w-[72px] px-2 text-right align-middle font-medium whitespace-normal shadow-[-6px_0_10px_-10px_rgba(0,0,0,0.35)]">
-                  Amal
-                </th>
-              </tr>
-            </thead>
-            <tbody className="[&_tr:last-child]:border-0">
-              {MOCK_CONTRACTS.map((contract) => (
-                <tr
-                  key={contract.id}
-                  className="hover:bg-muted/50 border-b transition-colors"
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <Button onClick={get} variant="secondary" size="sm" disabled={loading}>
+                <RefreshCcw className={cn(loading && "animate-spin")} />
+                Yangilash
+              </Button>
+            </div>
+          </header>
+
+          {contracts.length > 0 ? (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm">
+              <div className="border-b px-4 py-4 sm:px-5">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <Card className="gap-0 border-primary/10 bg-primary/5 py-0 shadow-none">
+                    <CardContent className="p-4">
+                      <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                        Umumiy summa
+                      </p>
+                      <div className="mt-3 flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-background text-primary shadow-sm">
+                          <CircleDollarSign className="size-5" />
+                        </div>
+                        <p className="font-mono text-lg font-semibold tracking-[-0.03em]">
+                          {stats.hasAmount
+                            ? `${formatNumber(stats.totalAmount)} UZS`
+                            : "---"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="gap-0 border-red-200/70 bg-red-50/60 py-0 shadow-none">
+                    <CardContent className="p-4">
+                      <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                        Sotilgan
+                      </p>
+                      <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
+                        {stats.sold}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="gap-0 border-orange-200/70 bg-orange-50/70 py-0 shadow-none">
+                    <CardContent className="p-4">
+                      <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
+                        Bron qilingan
+                      </p>
+                      <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
+                        {stats.reserved}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="mt-4"
                 >
-                  <td className="bg-background sticky left-0 z-[2] p-2 align-middle whitespace-normal shadow-[6px_0_10px_-10px_rgba(0,0,0,0.22)]">
-                    <p className="font-medium">{contract.contractNumber}</p>
-                    <p className="text-muted-foreground text-[11px]">
-                      {contract.clientPassport}
-                    </p>
-                  </td>
-                  <td className="p-2 align-middle whitespace-normal">
-                    {contract.contractDate}
-                  </td>
-                  <td className="p-2 align-middle break-words whitespace-normal">
-                    {contract.clientFullName}
-                  </td>
-                  <td className="p-2 align-middle break-words whitespace-normal">
-                    {contract.clientPhone}
-                  </td>
-                  <td className="p-2 align-middle break-words whitespace-normal">
-                    <p>Uy: {contract.apartmentNumber}</p>
-                    <p className="text-muted-foreground text-[11px]">
-                      {contract.apartmentFloor}-qavat · {contract.apartmentArea}{" "}
-                      m²
-                    </p>
-                  </td>
-                  <td className="p-2 align-middle whitespace-normal">
-                    <p>{formatAmount(contract.totalPrice)}</p>
-                    <p className="text-muted-foreground text-[11px]">
-                      Boshlang'ich: {formatAmount(contract.downPayment)}
-                    </p>
-                    <p className="text-muted-foreground text-[11px]">
-                      Muddat: {contract.paymentMonths} oy
-                    </p>
-                  </td>
-                  <td className="bg-background sticky right-0 z-[2] w-[72px] p-2 text-right align-middle shadow-[-6px_0_10px_-10px_rgba(0,0,0,0.28)]">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      disabled={downloadingId === contract.id}
-                      onClick={() => handleDownloadContract(contract)}
-                      title="Shartnomani yuklab olish"
-                    >
-                      {downloadingId === contract.id ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        <Download />
-                      )}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+                  <TabsList>
+                    {STATUS_TABS.map((tab) => (
+                      <TabsTrigger key={tab.key} value={tab.key}>
+                        <Badge
+                          variant="outline"
+                          className="border-current/10 bg-background/70 px-1.5 py-0 text-[10px]"
+                        >
+                          {statusCounts[tab.key] ?? 0}
+                        </Badge>
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {filteredContracts.length > 0 ? (
+                <div className="no-scrollbar min-h-0 flex-1 overflow-auto">
+                  <Table className="min-w-[760px]">
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="bg-background/95 sticky top-0 z-10 w-14 backdrop-blur-sm">
+                          #
+                        </TableHead>
+                        <TableHead className="bg-background/95 sticky top-0 z-10 min-w-[18rem] backdrop-blur-sm">
+                          Mijoz
+                        </TableHead>
+                        <TableHead className="bg-background/95 sticky top-0 z-10 min-w-[10rem] backdrop-blur-sm">
+                          Holati
+                        </TableHead>
+                        <TableHead className="bg-background/95 sticky top-0 z-10 min-w-[12rem] backdrop-blur-sm">
+                          Sana
+                        </TableHead>
+                        <TableHead className="bg-background/95 sticky top-0 z-10 min-w-[10rem] text-right backdrop-blur-sm">
+                          Fayl
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {filteredContracts.map((contract, index) => {
+                        const rowKey = getRowKey(contract, index);
+                        const date = formatContractDate(contract?.contractDate);
+                        const status = contract?.status ?? "NOT";
+                        const amount = resolveContractAmount(contract);
+                        const fullName =
+                          contract?.fullName?.trim() || "Mijoz ko'rsatilmagan";
+                        const hasFile = Boolean(contract?.contractFile);
+                        const isOpening = openingRowKey === rowKey;
+
+                        return (
+                          <TableRow key={rowKey}>
+                            <TableCell className="font-mono text-xs text-muted-foreground">
+                              {index + 1}
+                            </TableCell>
+
+                            <TableCell className="min-w-[18rem]">
+                              <div className="space-y-1">
+                                <p className="font-medium">{fullName}</p>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                  <span>
+                                    {hasFile ? "Fayl yuklangan" : "Fayl biriktirilmagan"}
+                                  </span>
+                                  {amount !== null ? (
+                                    <span className="font-mono">
+                                      {formatNumber(amount)} UZS
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <Badge className={STATUS_BADGE_CLASS[status] ?? STATUS_BADGE_CLASS.NOT}>
+                                {STATUS_LABEL[status] ?? status}
+                              </Badge>
+                            </TableCell>
+
+                            <TableCell>
+                              <div className="space-y-1">
+                                <p className="font-medium">{date.date}</p>
+                                {date.time ? (
+                                  <p className="text-xs text-muted-foreground">
+                                    {date.time}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                              {hasFile ? (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  disabled={isOpening}
+                                  onClick={() =>
+                                    handleOpenContractFile(contract, rowKey)
+                                  }
+                                >
+                                  <Download className={cn(isOpening && "animate-bounce")} />
+                                  {isOpening ? "Ochilmoqda" : "Ochish"}
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  Fayl yo'q
+                                </span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex min-h-0 flex-1 p-4">
+                  <EmptyData text="Tanlangan status bo'yicha shartnoma topilmadi." />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 rounded-xl border bg-background/70 p-4">
+              <EmptyData text="Project bo'yicha hozircha hech qanday shartnoma topilmadi." />
+            </div>
+          )}
+        </section>
+      )}
+    </LoadTransition>
   );
 }
