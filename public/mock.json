@@ -1,2547 +1,1868 @@
 {
-  "maxFloor": 12,
+  "maxFloor": 16,
   "blocks": {
-    "A": {
-      "floor": 12,
+    "11-BLOK": {
+      "floor": 16,
       "appartment": [
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 60,
-            "price": 6500000
+            "image": "52.91-left",
+            "houseNumber": 106,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 59,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 107,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 58,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 108,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
+            "image": "44.35",
+            "houseNumber": 109,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 110,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 111,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 112,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 99,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 100,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 101,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 102,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 103,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 104,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 105,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 92,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 93,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 94,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 95,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 96,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 97,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 98,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 85,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 86,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 87,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 88,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 89,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 90,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 91,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 78,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 79,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 80,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 81,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 82,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 83,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 84,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 71,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 72,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 73,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 74,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 75,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 76,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 77,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 64,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 65,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 66,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 67,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 68,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 69,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 70,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
             "houseNumber": 57,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 56,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 58,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 59,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 60,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 61,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 62,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 63,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 55,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 54,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 53,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 52,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 51,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
+            "image": "52.91-left",
             "houseNumber": 50,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 49,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 51,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 48,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 52,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 47,
-            "price": 6500000
+            "image": "44.35",
+            "houseNumber": 53,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 46,
-            "price": 6500000
+            "image": "51.29-right",
+            "houseNumber": 54,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 55,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 56,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 45,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 44,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
+            "image": "52.91-left",
             "houseNumber": 43,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 42,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 44,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 41,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 45,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 46,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 47,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 48,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 49,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 40,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 39,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 38,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 37,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
+            "image": "52.91-left",
             "houseNumber": 36,
-            "price": 7500000
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 37,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 38,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 39,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 40,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 41,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 42,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 35,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 34,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 33,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 32,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 31,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 30,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
+            "image": "52.91-left",
             "houseNumber": 29,
-            "price": 7500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 28,
-            "price": 7500000
+            "image": "54.19-left",
+            "houseNumber": 30,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 27,
-            "price": 7500000
+            "image": "51.29-left",
+            "houseNumber": 31,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 26,
-            "price": 7500000
+            "image": "44.35",
+            "houseNumber": 32,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 33,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 34,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 35,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 25,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 24,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 23,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
+            "image": "52.91-left",
             "houseNumber": 22,
-            "price": 7500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 21,
-            "price": 7500000
+            "image": "54.19-left",
+            "houseNumber": 23,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 24,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 25,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 26,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 27,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 28,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 20,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 19,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 18,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 17,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 16,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
+            "image": "52.91-left",
             "houseNumber": 15,
-            "price": 8500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 14,
-            "price": 8500000
+            "image": "54.19-left",
+            "houseNumber": 16,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 13,
-            "price": 8500000
+            "image": "51.29-left",
+            "houseNumber": 17,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 12,
-            "price": 8500000
+            "image": "44.35",
+            "houseNumber": 18,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 11,
-            "price": 8500000
+            "image": "51.29-right",
+            "houseNumber": 19,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 20,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 21,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 10,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 9,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
+            "image": "52.91-left",
             "houseNumber": 8,
-            "price": 8500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 7,
-            "price": 8500000
+            "image": "54.19-left",
+            "houseNumber": 9,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 6,
-            "price": 8500000
+            "image": "51.29-left",
+            "houseNumber": 10,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 11,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 12,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 13,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 14,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-left",
-            "houseNumber": 5,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-left",
-            "houseNumber": 4,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-right",
-            "houseNumber": 3,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-right",
-            "houseNumber": 2,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "NOT",
-            "image": "44.51",
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
             "houseNumber": 1,
-            "price": 8500000
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 2,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 3,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 4,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 5,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 6,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 7,
+            "price": 550
           }
         ]
       ]
     },
-    "B": {
-      "floor": 12,
+    "15-BLOK": {
+      "floor": 16,
       "appartment": [
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 60,
-            "price": 6500000
+            "image": "52.91-left",
+            "houseNumber": 106,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 59,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 107,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 58,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 108,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
+            "image": "44.35",
+            "houseNumber": 109,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 110,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 111,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 112,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 99,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 100,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 101,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 102,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 103,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 104,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 105,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 92,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 93,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 94,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 95,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 96,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 97,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 98,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 85,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 86,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 87,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 88,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 89,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 90,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 91,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 78,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 79,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 80,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 81,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 82,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 83,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 84,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 71,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 72,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 73,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 74,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 75,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 76,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 77,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
+            "houseNumber": 64,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 65,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 66,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 67,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 68,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 69,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 70,
+            "price": 550
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
             "houseNumber": 57,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 56,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 55,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 54,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 53,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 52,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 51,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 50,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 49,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 48,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 47,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 46,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 45,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 44,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 43,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 42,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 41,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 40,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 39,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 38,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 37,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 36,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 35,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 34,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 33,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 32,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 31,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 30,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 29,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 28,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 27,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 26,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 25,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 24,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 23,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 22,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 21,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 20,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 19,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 18,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 17,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 16,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 15,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 14,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 13,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 12,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 11,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 10,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 9,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 8,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 7,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 6,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-left",
-            "houseNumber": 5,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-left",
-            "houseNumber": 4,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-right",
-            "houseNumber": 3,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-right",
-            "houseNumber": 2,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "NOT",
-            "image": "44.51",
-            "houseNumber": 1,
-            "price": 8500000
-          }
-        ]
-      ]
-    },
-    "C": {
-      "floor": 12,
-      "appartment": [
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 60,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 59,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
+            "image": "54.19-left",
             "houseNumber": 58,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 57,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 56,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 55,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 54,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 53,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 52,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 51,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 50,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 49,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 48,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 47,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 46,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 45,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 44,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 43,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 42,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 41,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 40,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 39,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 38,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 37,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 36,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 35,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 34,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 33,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 32,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 31,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 30,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 29,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 28,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 27,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 26,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 25,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 24,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 23,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 22,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 21,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 20,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 19,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 18,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 17,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 16,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 15,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 14,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 13,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 12,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 11,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 10,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 9,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 8,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 7,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 6,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-left",
-            "houseNumber": 5,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-left",
-            "houseNumber": 4,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-right",
-            "houseNumber": 3,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-right",
-            "houseNumber": 2,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "NOT",
-            "image": "44.51",
-            "houseNumber": 1,
-            "price": 8500000
-          }
-        ]
-      ]
-    },
-    "D": {
-      "floor": 12,
-      "appartment": [
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 60,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
+            "image": "51.29-left",
             "houseNumber": 59,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 58,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 57,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 56,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 55,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 54,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 53,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 52,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 51,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 50,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 49,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 48,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 47,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 46,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 45,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 44,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 43,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 42,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 41,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 40,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 39,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 38,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 37,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 36,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 35,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 34,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 33,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 32,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 31,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 30,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 29,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 28,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 27,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 26,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 25,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 24,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 23,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 22,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 21,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 20,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 19,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 18,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 17,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 16,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 15,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 14,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 13,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 12,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 11,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 10,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 9,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 8,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 7,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 6,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-left",
-            "houseNumber": 5,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-left",
-            "houseNumber": 4,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-right",
-            "houseNumber": 3,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-right",
-            "houseNumber": 2,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "NOT",
-            "image": "44.51",
-            "houseNumber": 1,
-            "price": 8500000
-          }
-        ]
-      ]
-    },
-    "Q": {
-      "floor": 12,
-      "appartment": [
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
+            "image": "44.35",
             "houseNumber": 60,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 59,
-            "price": 6500000
+            "image": "51.29-right",
+            "houseNumber": 61,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 58,
-            "price": 6500000
+            "image": "54.19-right",
+            "houseNumber": 62,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 57,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 56,
-            "price": 6500000
+            "image": "52.91-right",
+            "houseNumber": 63,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 55,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 54,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 53,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 52,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 51,
-            "price": 6500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
+            "image": "52.91-left",
             "houseNumber": 50,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 49,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 51,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 48,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 52,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 47,
-            "price": 6500000
+            "image": "44.35",
+            "houseNumber": 53,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 46,
-            "price": 6500000
+            "image": "51.29-right",
+            "houseNumber": 54,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 55,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 56,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 45,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 44,
-            "price": 6500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
+            "image": "52.91-left",
             "houseNumber": 43,
-            "price": 6500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 42,
-            "price": 6500000
+            "image": "54.19-left",
+            "houseNumber": 44,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 41,
-            "price": 6500000
+            "image": "51.29-left",
+            "houseNumber": 45,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 46,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 47,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 48,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 49,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 40,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 39,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 38,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 37,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
+            "image": "52.91-left",
             "houseNumber": 36,
-            "price": 7500000
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 37,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 38,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 39,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 40,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 41,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 42,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 35,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 34,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 33,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 32,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 31,
-            "price": 7500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 30,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
+            "image": "52.91-left",
             "houseNumber": 29,
-            "price": 7500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 28,
-            "price": 7500000
+            "image": "54.19-left",
+            "houseNumber": 30,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 27,
-            "price": 7500000
+            "image": "51.29-left",
+            "houseNumber": 31,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 26,
-            "price": 7500000
+            "image": "44.35",
+            "houseNumber": 32,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 33,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 34,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 35,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 25,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 24,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 23,
-            "price": 7500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
+            "image": "52.91-left",
             "houseNumber": 22,
-            "price": 7500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 21,
-            "price": 7500000
+            "image": "54.19-left",
+            "houseNumber": 23,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 24,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 25,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 26,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 27,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 28,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 20,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 19,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 18,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 17,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 16,
-            "price": 8500000
-          }
-        ],
-        [
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "EMPTY",
-            "image": "61.64-left",
+            "image": "52.91-left",
             "houseNumber": 15,
-            "price": 8500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 14,
-            "price": 8500000
+            "image": "54.19-left",
+            "houseNumber": 16,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 54.1,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "54.1-right",
-            "houseNumber": 13,
-            "price": 8500000
+            "image": "51.29-left",
+            "houseNumber": 17,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 44.35,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 12,
-            "price": 8500000
+            "image": "44.35",
+            "houseNumber": 18,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 11,
-            "price": 8500000
+            "image": "51.29-right",
+            "houseNumber": 19,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 20,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 21,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
+            "room": 1,
+            "size": 52.91,
             "status": "EMPTY",
-            "image": "61.64-left",
-            "houseNumber": 10,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-left",
-            "houseNumber": 9,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "EMPTY",
-            "image": "54.1-right",
+            "image": "52.91-left",
             "houseNumber": 8,
-            "price": 8500000
+            "price": 550
           },
           {
             "room": 2,
-            "size": 61.64,
+            "size": 54.19,
             "status": "EMPTY",
-            "image": "61.64-right",
-            "houseNumber": 7,
-            "price": 8500000
+            "image": "54.19-left",
+            "houseNumber": 9,
+            "price": 550
           },
           {
             "room": 2,
-            "size": 44.51,
+            "size": 51.29,
             "status": "EMPTY",
-            "image": "44.51",
-            "houseNumber": 6,
-            "price": 8500000
+            "image": "51.29-left",
+            "houseNumber": 10,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 11,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 12,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 13,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 14,
+            "price": 550
           }
         ],
         [
           {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-left",
-            "houseNumber": 5,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-left",
-            "houseNumber": 4,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 54.1,
-            "status": "NOT",
-            "image": "54.1-right",
-            "houseNumber": 3,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 61.64,
-            "status": "NOT",
-            "image": "61.64-right",
-            "houseNumber": 2,
-            "price": 8500000
-          },
-          {
-            "room": 2,
-            "size": 44.51,
-            "status": "NOT",
-            "image": "44.51",
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-left",
             "houseNumber": 1,
-            "price": 8500000
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-left",
+            "houseNumber": 2,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-left",
+            "houseNumber": 3,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": "44.35",
+            "houseNumber": 4,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": "51.29-right",
+            "houseNumber": 5,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": "54.19-right",
+            "houseNumber": 6,
+            "price": 550
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": "52.91-right",
+            "houseNumber": 7,
+            "price": 550
           }
         ]
       ]
