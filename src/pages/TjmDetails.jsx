@@ -1,16 +1,20 @@
-import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
-import { useProjectStructure } from "@/shared/hooks/use-project-structure";
-import { cn, formatNumber } from "@/shared/lib/utils";
+import { ArrowLeft, Check, Copy, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/shared/ui/badge";
-import { buttonVariants } from "@/shared/ui/button";
+import { buttonVariants, Button } from "@/shared/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import GeneralError from "@/widgets/error/GeneralError";
 import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
-import { ArrowLeft, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useProjectStructure } from "@/shared/hooks/use-project-structure";
+import { cn, formatNumber } from "@/shared/lib/utils";
+import HomeDetails from "@/widgets/HomeDetails";
+import { useClipboard } from "../shared/hooks/use-clipboard";
+
+const CURRENCY_URL = `${import.meta.env.VITE_API_CURRENCY}/json/USD/`;
 
 const STATUS_CLASS = {
   SOLD: "bg-red-600",
@@ -46,6 +50,7 @@ export default function TjmDetails() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const [currency, setCurrency] = useState(null);
   const {
     structure: home,
     notFound,
@@ -53,6 +58,7 @@ export default function TjmDetails() {
     loading,
     updateRoomStatus,
   } = useProjectStructure(id);
+  const { copy, copied } = useClipboard();
   const searchParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
@@ -118,6 +124,16 @@ export default function TjmDetails() {
     [updateSearch],
   );
 
+  useEffect(() => {
+    fetch(CURRENCY_URL)
+      .then((res) => res.json())
+      .then((data) => setCurrency(data[0]));
+  }, []);
+
+  function handleCopy() {
+    copy(currency.Rate);
+  }
+
   return (
     <LoadTransition
       loading={loading}
@@ -152,7 +168,7 @@ export default function TjmDetails() {
         <section className="animate-fade-in flex h-full min-h-0 w-full flex-col overflow-hidden">
           <section className="flex h-full min-h-0 w-full flex-col">
             <div className="bg-background/95 flex w-full flex-col border-b backdrop-blur-sm">
-              <div className="flex flex-wrap items-center gap-4 px-4 py-4 sm:px-5 lg:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-5 lg:px-6">
                 <Link
                   className={buttonVariants({
                     size: "sm",
@@ -164,15 +180,35 @@ export default function TjmDetails() {
                   Orqaga
                 </Link>
 
-                <div className="ml-auto flex flex-wrap justify-end gap-2">
-                  {Object.entries(STATUS_CLASS).map(([key, value]) => (
-                    <Badge
-                      key={key}
-                      className={`text-primary-foreground ${value}`}
-                    >
-                      {STATUS_LABEL[key]}
-                    </Badge>
-                  ))}
+                <div className="flex items-center gap-8">
+                  {currency && (
+                    <div className="bg-accent relative flex items-center gap-2 rounded border p-2 text-xs font-medium shadow">
+                      {currency.Rate} UZS
+                      <span
+                        className="inline-block size-3 cursor-pointer"
+                        onClick={handleCopy}
+                      >
+                        {copied ? (
+                          <Check className="size-3" />
+                        ) : (
+                          <Copy className="size-3" />
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-12">
+                    <div className="ml-auto flex flex-wrap justify-end gap-2">
+                      {Object.entries(STATUS_CLASS).map(([key, value]) => (
+                        <Badge
+                          key={key}
+                          className={`text-primary-foreground ${value}`}
+                        >
+                          {STATUS_LABEL[key]}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,10 +328,9 @@ export default function TjmDetails() {
                                                     Narxi:
                                                   </h4>
                                                   <span className="font-mono">
-                                                    {(h.price * h.size).toFixed(
-                                                      2,
-                                                    )}{" "}
-                                                    USD
+                                                    {formatNumber(
+                                                      h.price * h.size,
+                                                    )}
                                                   </span>
                                                 </div>
                                                 <div className="flex gap-1">
@@ -303,7 +338,7 @@ export default function TjmDetails() {
                                                     m<sup>2</sup>:
                                                   </h4>
                                                   <span className="font-mono">
-                                                    {formatNumber(h.price)} USD
+                                                    {formatNumber(h.price)}
                                                   </span>
                                                 </div>
                                               </div>
