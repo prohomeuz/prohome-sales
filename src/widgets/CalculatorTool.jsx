@@ -1,5 +1,5 @@
-import { useRoomStatus } from "@/shared/hooks/use-room-status";
 import { useRenderPdf } from "@/shared/hooks/use-render-pdf";
+import { useRoomStatus } from "@/shared/hooks/use-room-status";
 import useSound from "@/shared/hooks/use-sound";
 import {
   cn,
@@ -36,9 +36,7 @@ import {
 } from "@/shared/ui/input-group";
 import { Label } from "@/shared/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
-import { NoiseBackground } from "@/shared/ui/noise-background";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
-import { SparklesText } from "@/shared/ui/sparkles-text";
 import { Spinner } from "@/shared/ui/spinner";
 import { Textarea } from "@/shared/ui/textarea";
 import confetti from "canvas-confetti";
@@ -148,8 +146,7 @@ const actionButtons = [
     submitLabel: "Sotuvga qaytarish",
     successText: "Uy qayta sotuvga chiqarildi.",
     icon: RotateCcw,
-    cardTone:
-      "border-sky-500/18 hover:border-sky-500/35 hover:bg-sky-500/4",
+    cardTone: "border-sky-500/18 hover:border-sky-500/35 hover:bg-sky-500/4",
     accentTone: "bg-sky-500/85",
     iconTone: "border-sky-500/20 bg-sky-500/15 text-sky-600 dark:text-sky-300",
   },
@@ -385,9 +382,10 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const summaryCards = useMemo(() => {
     const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
     const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
-    const totalPrice = resolvedPrice > 0 && resolvedSize > 0
-      ? formatNumber(resolvedPrice * resolvedSize)
-      : "---";
+    const totalPrice =
+      resolvedPrice > 0 && resolvedSize > 0
+        ? formatNumber(resolvedPrice * resolvedSize)
+        : "---";
     const cards = [
       {
         key: "price",
@@ -544,10 +542,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     const fallbackInstallments = String(
       Number(
         digitsOnly(
-          home?.customer?.installments ??
-            calcResult.months ??
-            period ??
-            1,
+          home?.customer?.installments ?? calcResult.months ?? period ?? 1,
         ),
       ) || 1,
     );
@@ -616,7 +611,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
             : undefined,
         pricePerSquareMeter,
         houseNumber:
-          home?.houseNumber !== undefined ? String(home.houseNumber) : undefined,
+          home?.houseNumber !== undefined
+            ? String(home.houseNumber)
+            : undefined,
       },
     };
   }
@@ -692,10 +689,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       }
       if (!String(statusForm.downPayment ?? "").trim()) {
         nextErrors.downPayment = "Boshlang'ich to'lovni kiriting!";
-      } else if (
-        !Number.isFinite(downPaymentValue) ||
-        downPaymentValue <= 0
-      ) {
+      } else if (!Number.isFinite(downPaymentValue) || downPaymentValue <= 0) {
         nextErrors.downPayment = "Boshlang'ich to'lov 0 dan katta bo'lsin!";
       }
       if (!String(statusForm.installments ?? "").trim()) {
@@ -855,7 +849,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       direction={"top"}
     >
       <DrawerContent className="h-full min-h-screen overflow-y-auto lg:overflow-hidden">
-        <div className="bg-background/95 sticky top-0 z-30 flex justify-end px-4 pb-2 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:px-6 sm:pt-5 lg:hidden">
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/90 sticky top-0 z-30 flex justify-end px-4 pt-4 pb-2 backdrop-blur sm:px-6 sm:pt-5 lg:hidden">
           <DrawerClose
             onClick={handleClose}
             className={buttonVariants({
@@ -878,9 +872,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
           <X />
         </DrawerClose>
 
-        <div className="flex min-h-full flex-col gap-6 px-4 pb-6 pt-16 sm:px-6 lg:h-full lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
+        <div className="flex min-h-full flex-col gap-6 px-4 pt-16 pb-6 sm:px-6 lg:h-full lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
           <div
-            className={`no-scrollbar relative w-full overflow-visible lg:min-h-0 lg:h-full lg:w-[64%] lg:flex-1 lg:overflow-y-auto lg:pr-2 ${
+            className={`no-scrollbar relative w-full overflow-visible lg:h-full lg:min-h-0 lg:w-[64%] lg:flex-1 lg:overflow-y-auto lg:pr-2 ${
               calcLoading ? "pointer-events-none" : ""
             }`}
           >
@@ -897,16 +891,20 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
               loaderClassName="bg-background/72 backdrop-blur-[2px]"
               contentClassName="min-h-full"
             >
-            <div className="animate-fade-in bg-background/95 sticky top-[4.5rem] z-10 mb-6 w-full rounded-xl border px-4 py-5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/90 sm:top-[4.75rem] sm:mb-8 sm:px-6 sm:py-6 lg:top-2 lg:shadow-none">
-              <h3 className="bg-background text-muted-foreground absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded px-2">
-                Oyiga
-              </h3>
-              <h2 className={"font-mono text-3xl font-bold sm:text-4xl lg:text-5xl"}>
-                {formatNumber(calcResult.monthlyPayment)}
-              </h2>
-            </div>
+              <div className="animate-fade-in bg-background/95 supports-[backdrop-filter]:bg-background/90 sticky top-[4.5rem] z-10 mb-6 w-full rounded-xl border px-4 py-5 shadow-sm backdrop-blur sm:top-[4.75rem] sm:mb-8 sm:px-6 sm:py-6 lg:top-2 lg:shadow-none">
+                <h3 className="bg-background text-muted-foreground absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded px-2">
+                  Oyiga
+                </h3>
+                <h2
+                  className={
+                    "font-mono text-3xl font-bold sm:text-4xl lg:text-5xl"
+                  }
+                >
+                  {formatNumber(calcResult.monthlyPayment)}
+                </h2>
+              </div>
 
-            <div className="animate-fade-in mb-5">
+              {/* <div className="animate-fade-in mb-5">
               {calcResult.bonus.length > 0 && (
                 <div className="text-primary-foreground animate-fade-in mb-5 flex w-full flex-col overflow-hidden rounded-xl border-3 border-green-500 sm:flex-row">
                   <div className="flex items-center justify-center bg-green-500 px-4 py-3 text-2xl font-bold sm:text-4xl">
@@ -1017,89 +1015,83 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                   );
                 })}
               </div>
-            </div>
-            <div className="mb-5">
-              <PhotoProvider
-                onVisibleChange={(visible) => {
-                  dispatch({ type: "SET_GALLERY_SHOW", payload: visible });
-                }}
-                toolbarRender={({ onScale, scale }) => {
-                  return (
-                    <div className="mr-5 flex">
-                      <div className="group h-11 w-11 p-2.5">
-                        <CircleMinus
-                          className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                          onClick={() => {
-                            onScale(scale - 1);
-                          }}
-                        />
+            </div> */}
+              <div className="mb-5">
+                <PhotoProvider
+                  onVisibleChange={(visible) => {
+                    dispatch({ type: "SET_GALLERY_SHOW", payload: visible });
+                  }}
+                  toolbarRender={({ onScale, scale }) => {
+                    return (
+                      <div className="mr-5 flex">
+                        <div className="group h-11 w-11 p-2.5">
+                          <CircleMinus
+                            className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                              onScale(scale - 1);
+                            }}
+                          />
+                        </div>
+                        <div className="group h-11 w-11 p-2.5">
+                          <CirclePlus
+                            className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                              onScale(scale + 1);
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="group h-11 w-11 p-2.5">
-                        <CirclePlus
-                          className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                          onClick={() => {
-                            onScale(scale + 1);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }}
-              >
-                <PhotoView src={`/gallery/jpg/${home.image}.jpg`}>
-                  <picture>
-                    <source
-                      srcset={`/gallery/avif/${home.image}.avif`}
-                      type="image/avif"
-                    />
+                    );
+                  }}
+                >
+                  <PhotoView src={`/gallery/png/${home.image}.png`}>
                     <img
-                      className="w-full"
-                      src={`/gallery/jpg/${home.image}.jpg`}
+                      className="object-contain"
+                      src={`/gallery/png/${home.image}.png`}
                       alt={home.image}
                     />
-                  </picture>
-                </PhotoView>
-              </PhotoProvider>
-            </div>
+                  </PhotoView>
+                </PhotoProvider>
+              </div>
 
-            <Alert className="relative mb-10 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-              <Layers2 className="text-amber-600 dark:text-amber-400" />
-              <AlertTitle className="text-amber-900 dark:text-amber-100">
-                Infra tuzilma
-              </AlertTitle>
-              <AlertDescription className="mb-3 text-amber-800 dark:text-amber-200">
-                Bino maktab, bog'cha, masjid va 10 dan ziyod savdo-sotiq
-                do'konlariga judayam yaqin joylashgan.
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Maktab
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Masjid
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Bog'cha
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Do'konlar
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Yonilg'i shaxobchasi
-              </AlertDescription>
-              <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                <CircleCheckBig size={12} /> Mashina yuvish joyi
-              </AlertDescription>
-            </Alert>
+              <Alert className="relative mb-10 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <Layers2 className="text-amber-600 dark:text-amber-400" />
+                <AlertTitle className="text-amber-900 dark:text-amber-100">
+                  Infra tuzilma
+                </AlertTitle>
+                <AlertDescription className="mb-3 text-amber-800 dark:text-amber-200">
+                  Bino maktab, bog'cha, masjid va 10 dan ziyod savdo-sotiq
+                  do'konlariga judayam yaqin joylashgan.
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Maktab
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Masjid
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Bog'cha
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Do'konlar
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Yonilg'i shaxobchasi
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> Mashina yuvish joyi
+                </AlertDescription>
+              </Alert>
 
-            {/* Timeline  */}
-            <AppartmentTimeLine />
+              {/* Timeline  */}
+              <AppartmentTimeLine />
             </LoadTransition>
           </div>
 
-          <div className="no-scrollbar flex w-full flex-col gap-6 overflow-visible lg:h-full lg:w-[36%] lg:min-w-[23rem] lg:max-w-[26rem] lg:overflow-y-auto lg:pl-2">
+          <div className="no-scrollbar flex w-full flex-col gap-6 overflow-visible lg:h-full lg:w-[36%] lg:max-w-[26rem] lg:min-w-[23rem] lg:overflow-y-auto lg:pl-2">
             <form
               onSubmit={handleCalc}
-              className="mx-auto flex w-full flex-col gap-5 rounded-xl border bg-background p-4 sm:p-5"
+              className="bg-background mx-auto flex w-full flex-col gap-5 rounded-xl border p-4 sm:p-5"
             >
               {showDiscount && (
                 <div className="py-0">
@@ -1240,10 +1232,10 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
               </Button>
             </form>
 
-            <div className="rounded-xl border bg-muted/20 p-3">
+            <div className="bg-muted/20 rounded-xl border p-3">
               {actionLocked && (
                 <div className="mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-950">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-background">
+                  <span className="bg-background flex size-8 shrink-0 items-center justify-center rounded-md">
                     <Lock className="size-4 text-amber-700" />
                   </span>
                   <div className="min-w-0">
@@ -1278,7 +1270,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                         disabled={actionLocked || actionInProgress}
                         onClick={() => handleStatusAction(action)}
                         className={cn(
-                          "group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border bg-background px-4 py-4 text-left transition-colors duration-200",
+                          "group bg-background relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border px-4 py-4 text-left transition-colors duration-200",
                           "hover:bg-accent/30 disabled:pointer-events-none disabled:opacity-60",
                           cardTone,
                         )}
@@ -1307,7 +1299,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                           </span>
                         </span>
 
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover:text-foreground">
+                        <span className="text-muted-foreground group-hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-md transition-colors">
                           {pendingAction === code && actionInProgress ? (
                             <LoaderCircle className="size-4 animate-spin" />
                           ) : (

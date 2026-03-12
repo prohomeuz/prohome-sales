@@ -1,9 +1,11 @@
+import { useClipboard } from "@/shared/hooks/use-clipboard";
+import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
+import { formatNumber } from "@/shared/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/ui/popover";
+import { Badge } from "@/shared/ui/badge";
+import { Button, buttonVariants } from "@/shared/ui/button";
+import { NoiseBackground } from "@/shared/ui/noise-background";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,12 +20,6 @@ import {
 import { useEffect, useReducer } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
-import { Button, buttonVariants } from "@/shared/ui/button";
-import { useClipboard } from "@/shared/hooks/use-clipboard";
-import { formatNumber } from "@/shared/lib/utils";
-import { Badge } from "@/shared/ui/badge";
-import { NoiseBackground } from "@/shared/ui/noise-background";
 import CalculatorTool from "./CalculatorTool";
 import LoadTransition from "./loading/LoadTransition";
 import SurfaceLoader from "./loading/SurfaceLoader";
@@ -185,7 +181,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
 
   if (notFound) {
     return (
-      <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-background/98 p-6 backdrop-blur lg:static lg:inset-auto lg:h-full lg:min-w-[24rem] lg:w-[24rem] lg:border-l lg:bg-background lg:p-6 lg:backdrop-blur-none">
+      <div className="animate-fade-in bg-background/98 lg:bg-background fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur lg:static lg:inset-auto lg:h-full lg:w-[24rem] lg:min-w-[24rem] lg:border-l lg:p-6 lg:backdrop-blur-none">
         <div className="tex-center flex w-full max-w-sm flex-col items-center text-center">
           <h3 className="mb-3 text-2xl font-medium">404</h3>
           <p className="text-muted-foreground mb-5">Bunday uy mavjud emas!</p>
@@ -229,210 +225,212 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
               </div>
             </div>
           ) : home ? (
-          <div className="pb-6 lg:pb-10">
-            <div className="bg-background/95 sticky top-0 z-10 border-b backdrop-blur-sm">
-              <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
-                <Badge className={`order-2 lg:order-1 ${statuses[home.status]}`}>
-                  {uzebekTranslate[home.status]}
-                </Badge>
+            <div className="pb-6 lg:pb-10">
+              <div className="bg-background/95 sticky top-0 z-10 border-b backdrop-blur-sm">
+                <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
+                  <Badge
+                    className={`order-2 lg:order-1 ${statuses[home.status]}`}
+                  >
+                    {uzebekTranslate[home.status]}
+                  </Badge>
 
-                <Button
-                  className={"order-1 border shadow lg:order-2"}
-                  onClick={() => {
-                    const params = new URLSearchParams(l.search);
-                    params.delete("details");
-                    const nextSearch = params.toString();
-                    navigate({
-                      pathname: `/tjm/${id}`,
-                      search: nextSearch ? `?${nextSearch}` : "",
-                    });
-                    dispatch({ type: "CLEAR_HOME" });
-                  }}
-                  variant="secondary"
-                  size="icon-sm"
-                >
-                  <ArrowLeft className="lg:hidden" />
-                  <ArrowRight className="hidden lg:block" />
-                </Button>
+                  <Button
+                    className={"order-1 border shadow lg:order-2"}
+                    onClick={() => {
+                      const params = new URLSearchParams(l.search);
+                      params.delete("details");
+                      const nextSearch = params.toString();
+                      navigate({
+                        pathname: `/tjm/${id}`,
+                        search: nextSearch ? `?${nextSearch}` : "",
+                      });
+                      dispatch({ type: "CLEAR_HOME" });
+                    }}
+                    variant="secondary"
+                    size="icon-sm"
+                  >
+                    <ArrowLeft className="lg:hidden" />
+                    <ArrowRight className="hidden lg:block" />
+                  </Button>
+                </div>
+
+                <div className="px-4 pb-4 sm:px-5">
+                  {home.customer && (
+                    <div className="animate-fade-in mb-5">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            className={"w-full"}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Info />
+                            Info
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start">
+                          <NoiseBackground
+                            className={"rounded p-2"}
+                            gradientColors={[]}
+                            animating={false}
+                            noiseIntensity={0.3}
+                          >
+                            <dl className="flex flex-col gap-2 font-mono text-xs">
+                              <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                                <dt>ISM</dt>
+                                <dd className="font-medium">
+                                  {home.customer.firstName}
+                                </dd>
+                              </div>
+                              <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                                <dt>FAMILIYA</dt>
+                                <dd className="font-medium">
+                                  {home.customer.lastName}
+                                </dd>
+                              </div>
+                              <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                                <dt>TEL</dt>
+                                <dd className="relative flex items-center gap-1 font-medium select-none">
+                                  {home.customer.phone}
+                                  <Button
+                                    onClick={() => {
+                                      handleCopyPhoneNumber(
+                                        home.customer.phone,
+                                      );
+                                    }}
+                                    size="sm"
+                                    variant="ghost"
+                                  >
+                                    {copied ? (
+                                      <Check className="size-3" />
+                                    ) : (
+                                      <Copy className="size-3" />
+                                    )}
+                                  </Button>
+                                </dd>
+                              </div>
+                            </dl>
+                          </NoiseBackground>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <i className="font-mono text-sm sm:text-base">
+                      № {home.houseNumber}
+                    </i>
+
+                    <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
+                      {(home.price * home.size).toFixed(1)} USD
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="px-4 pb-4 sm:px-5">
-                {home.customer && (
-                  <div className="animate-fade-in mb-5">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          className={"w-full"}
-                          variant="secondary"
-                          size="sm"
-                        >
-                          <Info />
-                          Info
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent align="start">
-                        <NoiseBackground
-                          className={"rounded p-2"}
-                          gradientColors={[]}
-                          animating={false}
-                          noiseIntensity={0.3}
-                        >
-                          <dl className="flex flex-col gap-2 font-mono text-xs">
-                            <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                              <dt>ISM</dt>
-                              <dd className="font-medium">
-                                {home.customer.firstName}
-                              </dd>
-                            </div>
-                            <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                              <dt>FAMILIYA</dt>
-                              <dd className="font-medium">
-                                {home.customer.lastName}
-                              </dd>
-                            </div>
-                            <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                              <dt>TEL</dt>
-                              <dd className="relative flex items-center gap-1 font-medium select-none">
-                                {home.customer.phone}
-                                <Button
-                                  onClick={() => {
-                                    handleCopyPhoneNumber(home.customer.phone);
-                                  }}
-                                  size="sm"
-                                  variant="ghost"
-                                >
-                                  {copied ? (
-                                    <Check className="size-3" />
-                                  ) : (
-                                    <Copy className="size-3" />
-                                  )}
-                                </Button>
-                              </dd>
-                            </div>
-                          </dl>
-                        </NoiseBackground>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <i className="font-mono text-sm sm:text-base">№ {home.houseNumber}</i>
+              {/* Images */}
+              <div className="mb-6 px-4 pt-5 sm:px-6 md:px-8 lg:mb-5 lg:px-5 lg:pt-4">
+                <PhotoProvider
+                  toolbarRender={({ onScale, scale }) => {
+                    return (
+                      <div className="mr-5 flex">
+                        <div className="group h-11 w-11 p-2.5">
+                          <CircleMinus
+                            className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                              onScale(scale - 1);
+                            }}
+                          />
+                        </div>
+                        <div className="group h-11 w-11 p-2.5">
+                          <CirclePlus
+                            className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                              onScale(scale + 1);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }}
+                >
+                  <PhotoView src={`/gallery/png/${home.image}.png`}>
+                    <img
+                      className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                      src={`/gallery/png/${home.image}.png`}
+                      alt={home.size}
+                    />
+                  </PhotoView>
+                </PhotoProvider>
+              </div>
 
-                  <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
-                    {formatNumber(home.price * home.size)} UZS
-                  </span>
+              <div className="mb-5 px-4 sm:px-5">
+                <NoiseBackground
+                  className={"rounded p-2"}
+                  gradientColors={[]}
+                  animating={false}
+                  noiseIntensity={0.3}
+                >
+                  <dl className="flex flex-col gap-2 font-mono">
+                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                      <dt className="text-xs">BLOK</dt>
+                      <dd className="font-medium">{home.block}</dd>
+                    </div>
+                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                      <dt className="text-xs">QAVAT</dt>
+                      <dd className="font-medium">{home.floorNumber}</dd>
+                    </div>
+                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                      <dt className="text-xs">MAYDON</dt>
+                      <dd className="font-medium">
+                        {home.size} m <sup>2</sup>
+                      </dd>
+                    </div>
+                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                      <dt className="text-xs">XONA</dt>
+                      <dd className="font-medium">{home.room}</dd>
+                    </div>
+                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                      <dt className="text-xs">
+                        M<sup>2</sup>
+                      </dt>
+                      <dd className="font-medium">
+                        {formatNumber(home.price)}
+                      </dd>
+                    </div>
+                  </dl>
+                </NoiseBackground>
+              </div>
+
+              <div className="mb-5 px-4 sm:px-5">
+                {home.status === "NOT" && (
+                  <Alert className="relative mb-10 border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900">
+                    <MessageSquareWarning className="text-slate-600 dark:text-slate-400" />
+                    <AlertTitle className="text-slate-900 dark:text-slate-100">
+                      Ushbu uy sotilmaydi
+                    </AlertTitle>
+                    <AlertDescription className="mb-3 text-xs text-slate-700 dark:text-slate-300">
+                      {home.description
+                        ? home.description
+                        : "Ushbu uy NTJ yoki boshqa sababga ko'ra sotilmaydi"}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="bg-background/95 sticky bottom-0 px-4 pt-2 pb-4 backdrop-blur-sm sm:px-5 lg:static lg:bg-transparent lg:p-0">
+                <div className="lg:px-5">
+                  <a
+                    className={`${buttonVariants({
+                      variant: "secondary",
+                    })} w-full shadow-sm`}
+                    href="#calculator"
+                  >
+                    <Calculator />
+                    Hisoblash
+                  </a>
                 </div>
               </div>
             </div>
-
-            {/* Images */}
-            <div className="mb-6 px-4 pt-5 sm:px-6 md:px-8 lg:mb-5 lg:px-5 lg:pt-4">
-              <PhotoProvider
-                toolbarRender={({ onScale, scale }) => {
-                  return (
-                    <div className="mr-5 flex">
-                      <div className="group h-11 w-11 p-2.5">
-                        <CircleMinus
-                          className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                          onClick={() => {
-                            onScale(scale - 1);
-                          }}
-                        />
-                      </div>
-                      <div className="group h-11 w-11 p-2.5">
-                        <CirclePlus
-                          className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                          onClick={() => {
-                            onScale(scale + 1);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }}
-              >
-                <PhotoView src={`/gallery/jpg/${home.image}.jpg`}>
-                  <picture className="block w-full">
-                    <source
-                      srcset={`/gallery/avif/${home.image}.avif`}
-                      type="image/avif"
-                    />
-                    <img
-                      className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                      src={`/gallery/jpg/${home.image}.jpg`}
-                      alt={home.size}
-                    />
-                  </picture>
-                </PhotoView>
-              </PhotoProvider>
-            </div>
-
-            <div className="mb-5 px-4 sm:px-5">
-              <NoiseBackground
-                className={"rounded p-2"}
-                gradientColors={[]}
-                animating={false}
-                noiseIntensity={0.3}
-              >
-                <dl className="flex flex-col gap-2 font-mono">
-                  <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                    <dt className="text-xs">BLOK</dt>
-                    <dd className="font-medium">{home.block}</dd>
-                  </div>
-                  <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                    <dt className="text-xs">QAVAT</dt>
-                    <dd className="font-medium">{home.floorNumber}</dd>
-                  </div>
-                  <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                    <dt className="text-xs">MAYDON</dt>
-                    <dd className="font-medium">
-                      {home.size} m <sup>2</sup>
-                    </dd>
-                  </div>
-                  <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                    <dt className="text-xs">XONA</dt>
-                    <dd className="font-medium">{home.room}</dd>
-                  </div>
-                  <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                    <dt className="text-xs">
-                      M<sup>2</sup>
-                    </dt>
-                    <dd className="font-medium">{formatNumber(home.price)}</dd>
-                  </div>
-                </dl>
-              </NoiseBackground>
-            </div>
-
-            <div className="mb-5 px-4 sm:px-5">
-              {home.status === "NOT" && (
-                <Alert className="relative mb-10 border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900">
-                  <MessageSquareWarning className="text-slate-600 dark:text-slate-400" />
-                  <AlertTitle className="text-slate-900 dark:text-slate-100">
-                    Ushbu uy sotilmaydi
-                  </AlertTitle>
-                  <AlertDescription className="mb-3 text-xs text-slate-700 dark:text-slate-300">
-                    {home.description
-                      ? home.description
-                      : "Ushbu uy NTJ yoki boshqa sababga ko'ra sotilmaydi"}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-
-            <div className="sticky bottom-0 bg-background/95 px-4 pb-4 pt-2 backdrop-blur-sm sm:px-5 lg:static lg:bg-transparent lg:p-0">
-              <div className="lg:px-5">
-                <a
-                  className={`${buttonVariants({
-                    variant: "secondary",
-                  })} w-full shadow-sm`}
-                  href="#calculator"
-                >
-                  <Calculator />
-                  Hisoblash
-                </a>
-              </div>
-            </div>
-          </div>
           ) : null}
         </LoadTransition>
       </div>

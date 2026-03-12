@@ -1,13 +1,13 @@
+import { useAppStore } from "@/entities/session/model";
+import { PageFallback } from "@/shared/ui/suspense-fallback";
+import Bug from "@/widgets/error/Bug";
+import MainLayout from "@/widgets/layout/main-layout";
 import { useMemo } from "react";
 import {
   createBrowserRouter,
   Navigate,
   RouterProvider,
 } from "react-router-dom";
-import { useAppStore } from "@/entities/session/model";
-import Bug from "@/widgets/error/Bug";
-import { PageFallback } from "@/shared/ui/suspense-fallback";
-import MainLayout from "@/widgets/layout/main-layout";
 
 function lazyRoute(importer, getProps) {
   return async () => {
@@ -94,23 +94,27 @@ export default function App() {
       createBrowserRouter([
         {
           path: "/",
-          element: user
-            ? <MainLayout />
-            : <Navigate to="/login" replace />,
+          element: user ? <MainLayout /> : <Navigate to="/login" replace />,
           children: getRoleRoutes(user?.role),
           errorElement: <Bug />,
         },
         {
           path: "/tjm/:id",
+          errorElement: <Bug />,
           lazy: lazyRoute(() => import("@/pages/TjmDetails")),
         },
         {
           path: "/login",
+          errorElement: <Bug />,
           lazy: lazyRoute(() => import("@/pages/Login")),
         },
         {
           path: "*",
-          lazy: lazyRoute(() => import("@/pages/NotFound"), () => ({ user })),
+          lazy: lazyRoute(
+            () => import("@/pages/NotFound"),
+            () => ({ user }),
+          ),
+          errorElement: <Bug />,
         },
       ]),
     [user],

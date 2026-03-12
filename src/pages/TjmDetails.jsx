@@ -6,6 +6,7 @@ import { buttonVariants, Button } from "@/shared/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import GeneralError from "@/widgets/error/GeneralError";
+import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
 import { useProjectStructure } from "@/shared/hooks/use-project-structure";
@@ -16,8 +17,8 @@ import { useClipboard } from "../shared/hooks/use-clipboard";
 const CURRENCY_URL = `${import.meta.env.VITE_API_CURRENCY}/json/USD/`;
 
 const STATUS_CLASS = {
-  SOLD: "bg-red-500",
-  RESERVED: "bg-orange-500",
+  SOLD: "bg-red-600",
+  RESERVED: "bg-orange-400",
   EMPTY: "bg-green-500",
   NOT: "bg-slate-400",
 };
@@ -225,7 +226,7 @@ export default function TjmDetails() {
                 </div>
               ) : (
                 <div className="no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [--room-tile-gap:0.5rem] [--room-tile-size:2rem] sm:[--room-tile-size:2.25rem]">
-                  <div className="bg-background sticky top-0 z-10 mb-6 flex w-max min-w-full items-start border-b py-4">
+                  <div className="bg-background sticky top-0 z-20 mb-6 flex w-max min-w-full items-start border-b py-4">
                     <div className="w-10 shrink-0 sm:w-11" />
                     <div className="flex gap-8 sm:gap-12 lg:gap-16 xl:gap-20">
                       {blockLayouts.map(({ blockName, widthStyle }) => (
