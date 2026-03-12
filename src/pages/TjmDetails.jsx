@@ -1,17 +1,16 @@
-import { ArrowLeft, Check, Copy, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Badge } from "@/shared/ui/badge";
-import { buttonVariants, Button } from "@/shared/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
+import { useProjectStructure } from "@/shared/hooks/use-project-structure";
+import { cn, formatNumber } from "@/shared/lib/utils";
+import { Badge } from "@/shared/ui/badge";
+import { buttonVariants } from "@/shared/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import GeneralError from "@/widgets/error/GeneralError";
 import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
-import { useProjectStructure } from "@/shared/hooks/use-project-structure";
-import { cn, formatNumber } from "@/shared/lib/utils";
-import HomeDetails from "@/widgets/HomeDetails";
+import { ArrowLeft, Check, Copy, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useClipboard } from "../shared/hooks/use-clipboard";
 
 const CURRENCY_URL = `${import.meta.env.VITE_API_CURRENCY}/json/USD/`;
