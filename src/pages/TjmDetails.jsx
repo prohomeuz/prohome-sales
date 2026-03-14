@@ -8,12 +8,9 @@ import GeneralError from "@/widgets/error/GeneralError";
 import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
-import { ArrowLeft, Check, Copy, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { useClipboard } from "../shared/hooks/use-clipboard";
-
-const CURRENCY_URL = `${import.meta.env.VITE_API_CURRENCY}/json/USD/`;
 
 const STATUS_CLASS = {
   SOLD: "bg-red-600",
@@ -49,7 +46,6 @@ export default function TjmDetails() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [currency, setCurrency] = useState(null);
   const {
     structure: home,
     notFound,
@@ -57,7 +53,6 @@ export default function TjmDetails() {
     loading,
     updateRoomStatus,
   } = useProjectStructure(id);
-  const { copy, copied } = useClipboard();
   const searchParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
@@ -123,16 +118,6 @@ export default function TjmDetails() {
     [updateSearch],
   );
 
-  useEffect(() => {
-    fetch(CURRENCY_URL)
-      .then((res) => res.json())
-      .then((data) => setCurrency(data[0]));
-  }, []);
-
-  function handleCopy() {
-    copy(currency.Rate);
-  }
-
   return (
     <LoadTransition
       loading={loading}
@@ -180,22 +165,6 @@ export default function TjmDetails() {
                 </Link>
 
                 <div className="flex items-center gap-8">
-                  {currency && (
-                    <div className="bg-accent relative flex items-center gap-2 rounded border p-2 text-xs font-medium shadow">
-                      {currency.Rate} UZS
-                      <span
-                        className="inline-block size-3 cursor-pointer"
-                        onClick={handleCopy}
-                      >
-                        {copied ? (
-                          <Check className="size-3" />
-                        ) : (
-                          <Copy className="size-3" />
-                        )}
-                      </span>
-                    </div>
-                  )}
-
                   <div className="flex items-center gap-12">
                     <div className="ml-auto flex flex-wrap justify-end gap-2">
                       {Object.entries(STATUS_CLASS).map(([key, value]) => (
