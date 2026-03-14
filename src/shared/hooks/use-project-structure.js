@@ -5,6 +5,30 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/shared/lib/api";
 
+const STATUS_TO_STAT_KEY = {
+  SOLD: "totalSold",
+  RESERVED: "totalReserved",
+  EMPTY: "totalEmpty",
+  NOT: "totalNot",
+};
+
+function adjustStatistics(stats, fromStatus, toStatus) {
+  if (!stats || fromStatus === toStatus) return stats;
+
+  const fromKey = STATUS_TO_STAT_KEY[fromStatus];
+  const toKey = STATUS_TO_STAT_KEY[toStatus];
+  const next = { ...stats };
+
+  if (fromKey && typeof next[fromKey] === "number") {
+    next[fromKey] = Math.max(0, next[fromKey] - 1);
+  }
+  if (toKey && typeof next[toKey] === "number") {
+    next[toKey] = Math.max(0, next[toKey] + 1);
+  }
+
+  return next;
+}
+
 export function useProjectStructure(id) {
   const [structure, setStructure] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -54,15 +78,20 @@ export function useProjectStructure(id) {
       if (!prev?.blocks) return prev;
 
       let hasChanges = false;
+      let previousStatus = null;
+      let nextStatus = null;
       const nextBlocks = Object.fromEntries(
         Object.entries(prev.blocks).map(([blockName, block]) => {
           let blockChanged = false;
+          let blockNextStats = block?.statistics;
           const nextAppartment = (block?.appartment ?? []).map((floorRooms) => {
             let floorChanged = false;
             const nextFloorRooms = floorRooms.map((room) => {
               if (String(room.id) !== String(roomId)) return room;
               floorChanged = true;
               hasChanges = true;
+              previousStatus = room.status;
+              nextStatus = patch?.status ?? room.status;
               return { ...room, ...patch };
             });
 
@@ -70,14 +99,40 @@ export function useProjectStructure(id) {
             return floorChanged ? nextFloorRooms : floorRooms;
           });
 
-          return [
-            blockName,
-            blockChanged ? { ...block, appartment: nextAppartment } : block,
-          ];
+          if (
+            blockChanged &&
+            previousStatus &&
+            nextStatus &&
+            previousStatus !== nextStatus
+          ) {
+            blockNextStats = adjustStatistics(
+              block?.statistics,
+              previousStatus,
+              nextStatus,
+            );
+          }
+
+          if (!blockChanged) {
+            return [blockName, block];
+          }
+
+          const nextBlock = { ...block, appartment: nextAppartment };
+          if (blockNextStats !== undefined) {
+            nextBlock.statistics = blockNextStats;
+          }
+
+          return [blockName, nextBlock];
         }),
       );
 
-      return hasChanges ? { ...prev, blocks: nextBlocks } : prev;
+      const nextTotalStatistics =
+        previousStatus && nextStatus && previousStatus !== nextStatus
+          ? adjustStatistics(prev?.totalStatistics, previousStatus, nextStatus)
+          : prev?.totalStatistics;
+
+      return hasChanges
+        ? { ...prev, blocks: nextBlocks, totalStatistics: nextTotalStatistics }
+        : prev;
     });
   }, []);
 
