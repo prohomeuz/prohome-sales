@@ -1,3 +1,4 @@
+import { useAppStore } from "@/entities/session/model";
 import { useClipboard } from "@/shared/hooks/use-clipboard";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { formatNumber } from "@/shared/lib/utils";
@@ -7,6 +8,7 @@ import { Button, buttonVariants } from "@/shared/ui/button";
 import { NoiseBackground } from "@/shared/ui/noise-background";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
   ArrowLeft,
   ArrowRight,
@@ -108,6 +110,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   const searchParams = new URLSearchParams(l.search);
   const detailsId = searchParams.get("details");
   const imageTabParam = searchParams.get("img");
+  const currencyUsd = useAppStore((state) => state.currencyUsd);
   const { copied, copy } = useClipboard({
     copiedDuring: 1000,
   });
@@ -376,10 +379,42 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       № {home.houseNumber}
                     </i>
 
-                    <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
-                      {(home.price * home.size).toFixed(1)} USD
-                    </span>
+                    {currencyUsd?.rate ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="bg-primary text-primary-foreground cursor-help rounded-md px-3 py-1 text-xs leading-none shadow-sm">
+                            {(home.price * home.size).toFixed(1)} USD
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="text-xs">
+                            <span className="font-semibold">
+                              {formatNumber(
+                                (home.price * home.size).toFixed(1),
+                              )}{" "}
+                              USD
+                            </span>{" "}
+                            ={" "}
+                            <span className="font-mono font-semibold">
+                              {formatNumber(
+                                Math.round(
+                                  Number(home.price) *
+                                    Number(home.size) *
+                                    Number(currencyUsd.rate),
+                                ),
+                              )}{" "}
+                              so&apos;m
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
+                        {(home.price * home.size).toFixed(1)} USD
+                      </span>
+                    )}
                   </div>
+                  <div className="mt-3 flex justify-end" />
                 </div>
               </div>
 
@@ -513,14 +548,45 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       <dt className="text-xs">XONA</dt>
                       <dd className="font-medium">{home.room}</dd>
                     </div>
-                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                      <dt className="text-xs">
-                        M<sup>2</sup>
-                      </dt>
-                      <dd className="font-medium">
-                        {formatNumber(home.price)}
-                      </dd>
-                    </div>
+                    {currencyUsd?.rate ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="bg-background flex cursor-help flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                            <dt className="text-xs">
+                              M<sup>2</sup>
+                            </dt>
+                            <dd className="font-medium">
+                              {formatNumber(home.price)} USD
+                            </dd>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="pointer-events-none">
+                          <div className="text-xs">
+                            <span className="font-semibold">
+                              {formatNumber(home.price)} USD
+                            </span>{" "}
+                            ={" "}
+                            <span className="font-mono font-semibold">
+                              {formatNumber(
+                                Math.round(
+                                  Number(home.price) * Number(currencyUsd.rate),
+                                ),
+                              )}{" "}
+                              so&apos;m
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                        <dt className="text-xs">
+                          M<sup>2</sup>
+                        </dt>
+                        <dd className="font-medium">
+                          {formatNumber(home.price)} USD
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 </NoiseBackground>
               </div>

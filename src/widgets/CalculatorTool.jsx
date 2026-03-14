@@ -10,6 +10,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button, buttonVariants } from "@/shared/ui/button";
+import CurrencyBadge from "@/shared/ui/currency-badge";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +54,7 @@ import {
   CirclePlus,
   Coins,
   FileText,
+  Gift,
   Grid2X2,
   HandCoins,
   Layers2,
@@ -167,7 +169,7 @@ const INITIAL_CALC_RESULT = {
   monthlyPayment: 0,
   downPayment: 0,
   months: 60,
-  bonus: [],
+  bonus: false,
 };
 
 function normalizePhone(raw) {
@@ -287,6 +289,7 @@ function createCalculatorInitialState() {
     statusForm: createEmptyStatusForm(),
     statusErrors: {},
     pendingAction: null,
+    bonusDialogOpen: false,
   };
 }
 
@@ -354,6 +357,10 @@ function calculatorReducer(state, action) {
       return { ...state, statusErrors: action.payload };
     case "SET_PENDING_ACTION":
       return { ...state, pendingAction: action.payload };
+    case "OPEN_BONUS_DIALOG":
+      return { ...state, bonusDialogOpen: true };
+    case "CLOSE_BONUS_DIALOG":
+      return { ...state, bonusDialogOpen: false };
     case "RESET":
       return {
         ...createCalculatorInitialState(),
@@ -394,6 +401,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     statusForm,
     statusErrors,
     pendingAction,
+    bonusDialogOpen,
   } = state;
   const activeAction = statusDialogAction ?? statusDialogRenderedAction;
   const ActiveActionIcon = activeAction?.icon;
@@ -407,6 +415,10 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     const allowedCodes = ACTIONS_BY_STATUS[home.status] ?? [];
     return actionButtons.filter((action) => allowedCodes.includes(action.code));
   }, [home.status]);
+  const bonusItems = useMemo(
+    () => (Array.isArray(calcResult.bonus) ? calcResult.bonus : []),
+    [calcResult.bonus],
+  );
   const summaryCards = useMemo(() => {
     const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
     const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
@@ -495,7 +507,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       if (req.status === 200) {
         const data = await req.json();
         dispatch({ type: "SET_CALC_RESULT", payload: data });
-        if (data.bonus.length > 0) win();
+        const hasBonusReward =
+          data?.bonus === true ||
+          (Array.isArray(data?.bonus) && data.bonus.length > 0);
+        if (hasBonusReward) {
+          win();
+          dispatch({ type: "OPEN_BONUS_DIALOG" });
+        }
       } else if (req.status === 400) {
         toast.error(
           "Boshlang'ich to'lov uyning umumiy summasidan katta bo'lishi mumkin emas!",
@@ -624,6 +642,11 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     dispatch({ type: "CLOSE_STATUS_DIALOG" });
   }
 
+  function handleBonusDialog(nextOpen) {
+    if (nextOpen) return;
+    dispatch({ type: "CLOSE_BONUS_DIALOG" });
+  }
+
   function handleStatusField(field, value) {
     dispatch({ type: "SET_STATUS_FIELD", payload: { field, value } });
   }
@@ -731,10 +754,23 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   }
 
   function win() {
+    const originY = 0.6;
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
+      particleCount: 90,
+      spread: 80,
+      origin: { y: originY },
+    });
+    confetti({
+      particleCount: 50,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: originY },
+    });
+    confetti({
+      particleCount: 50,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: originY },
     });
     sound();
   }
@@ -850,10 +886,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 >
                   {formatNumber(calcResult.monthlyPayment)}
                 </h2>
+                <div className="mt-4 flex justify-end">
+                  <CurrencyBadge className="text-[11px]" />
+                </div>
               </div>
 
               {/* <div className="animate-fade-in mb-5">
-              {calcResult.bonus.length > 0 && (
+              {bonusItems.length > 0 && (
                 <div className="text-primary-foreground animate-fade-in mb-5 flex w-full flex-col overflow-hidden rounded-xl border-3 border-green-500 sm:flex-row">
                   <div className="flex items-center justify-center bg-green-500 px-4 py-3 text-2xl font-bold sm:text-4xl">
                     Bonus:
@@ -890,7 +929,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                         );
                       }}
                     >
-                      {calcResult.bonus.map((b) => {
+                      {bonusItems.map((b) => {
                         return (
                           <PhotoView key={b} src={`/bonus/png/${b}.png`}>
                             <div className="flex min-w-0 flex-col items-center gap-2 rounded-lg bg-background/80 p-2">
@@ -1346,6 +1385,34 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
           </div>
         </div>
       </DrawerContent>
+
+      <Dialog open={bonusDialogOpen} onOpenChange={handleBonusDialog}>
+        <DialogContent className="max-w-[520px]">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="bg-emerald-100 text-emerald-700 flex size-14 items-center justify-center rounded-full">
+              <Gift className="size-6" />
+            </div>
+            <DialogHeader className="items-center gap-2 text-center">
+              <DialogTitle className="text-xl sm:text-2xl">
+                Tabriklaymiz!
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6">
+                Siz 2 kishilik umra safari yo&apos;llanmasini yutib olish
+                imkoniyatiga ega bo&apos;ldingiz.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-emerald-50 text-emerald-800 w-full rounded-xl border border-emerald-100 px-4 py-3 text-sm">
+              Bu imkoniyat uyning 30% boshlang&apos;ich to&apos;lovi
+              bajarilgani uchun taqdim etildi.
+            </div>
+            <DialogFooter className="sm:justify-center">
+              <Button type="button" onClick={() => handleBonusDialog(false)}>
+                Tushunarli
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={statusDialogOpen} onOpenChange={handleStatusDialog}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
