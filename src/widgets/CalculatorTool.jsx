@@ -964,7 +964,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 })}
               </div>
             </div> */}
-              <div className="mb-5">
+              <div className="mb-5 flex">
                 <PhotoProvider
                   onVisibleChange={(visible) => {
                     dispatch({ type: "SET_GALLERY_SHOW", payload: visible });
@@ -992,16 +992,49 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                     );
                   }}
                 >
-                  <PhotoView src={`/gallery/png/${home.image}.png`}>
-                    <img
-                      className="object-contain"
-                      src={`/gallery/png/${home.image}.png`}
-                      alt={home.image}
-                    />
+                  <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
+                    <picture>
+                      <source
+                        srcset={`/gallery/avif/${home.image[0]}.avif`}
+                        type="image/avif"
+                      />
+                      <img
+                        className="object-contain"
+                        src={`/gallery/png/${home.image[0]}.png`}
+                        alt={home.size}
+                      />
+                    </picture>
+                  </PhotoView>
+                  <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
+                    <picture>
+                      <source
+                        srcset={`/gallery/avif/${home.image[1]}.avif`}
+                        type="image/avif"
+                      />
+                      <img
+                        className="object-contain"
+                        src={`/gallery/png/${home.image[1]}.png`}
+                        alt={home.size}
+                      />
+                    </picture>
+                  </PhotoView>
+                  <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
+                    <picture>
+                      <source
+                        srcset={`/gallery/avif/${home.image[2]}.avif`}
+                        type="image/avif"
+                      />
+                      <img
+                        className="object-contain"
+                        src={`/gallery/png/${home.image[2]}.png`}
+                        alt={home.size}
+                      />
+                    </picture>
                   </PhotoView>
                 </PhotoProvider>
               </div>
 
+              {/* Ramazon chegirmasi */}
               <Alert className="relative mb-10 border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
                 <CircleCheckBig className="text-blue-600 dark:text-blue-400" />
                 <AlertTitle className="text-blue-900 dark:text-blue-100">
@@ -1037,6 +1070,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 </AlertDescription>
               </Alert>
 
+              {/* Infratuzilma */}
               <Alert className="relative mb-10 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
                 <Layers2 className="text-amber-600 dark:text-amber-400" />
                 <AlertTitle className="text-amber-900 dark:text-amber-100">

@@ -3,10 +3,36 @@ import { cn } from "@/shared/lib/utils";
 
 const TabsContext = React.createContext(null);
 
-function Tabs({ className, value, onValueChange, ...props }) {
+function Tabs({
+  className,
+  value,
+  defaultValue,
+  onValueChange,
+  ...props
+}) {
+  const isControlled = value !== undefined;
+  const [internalValue, setInternalValue] = React.useState(defaultValue);
+
+  React.useEffect(() => {
+    if (!isControlled && defaultValue !== undefined) {
+      setInternalValue(defaultValue);
+    }
+  }, [defaultValue, isControlled]);
+
+  const resolvedValue = isControlled ? value : internalValue;
+  const handleValueChange = React.useCallback(
+    (nextValue) => {
+      if (!isControlled) {
+        setInternalValue(nextValue);
+      }
+      onValueChange?.(nextValue);
+    },
+    [isControlled, onValueChange],
+  );
+
   const contextValue = React.useMemo(
-    () => ({ value, onValueChange }),
-    [onValueChange, value],
+    () => ({ value: resolvedValue, onValueChange: handleValueChange }),
+    [handleValueChange, resolvedValue],
   );
 
   return (
