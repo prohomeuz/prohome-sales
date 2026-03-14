@@ -6,6 +6,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { NoiseBackground } from "@/shared/ui/noise-background";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
   ArrowLeft,
   ArrowRight,
@@ -353,13 +354,69 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                     );
                   }}
                 >
-                  <PhotoView src={`/gallery/png/${home.image}.png`}>
-                    <img
-                      className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                      src={`/gallery/png/${home.image}.png`}
-                      alt={home.size}
-                    />
-                  </PhotoView>
+                  <Tabs defaultValue="2D">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="2D" className="flex-1 justify-center">
+                        2D
+                      </TabsTrigger>
+                      <TabsTrigger value="3D" className="flex-1 justify-center">
+                        3D
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="PLAN"
+                        className="flex-1 justify-center"
+                      >
+                        Plan
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="2D">
+                      <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[0]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[0]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+
+                    <TabsContent value="3D">
+                      <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[1]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[1]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+
+                    <TabsContent value="PLAN">
+                      <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[2]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[2]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+                  </Tabs>
                 </PhotoProvider>
               </div>
 
