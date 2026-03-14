@@ -10,15 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
   ArrowLeft,
   ArrowRight,
+  Box,
   Calculator,
   Check,
   CircleMinus,
   CirclePlus,
   Copy,
   Info,
+  LayoutGrid,
   MessageSquareWarning,
+  Square,
 } from "lucide-react";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CalculatorTool from "./CalculatorTool";
@@ -38,6 +41,8 @@ const uzebekTranslate = {
   EMPTY: "Bo'sh",
   NOT: "Sotilmaydi",
 };
+
+const IMAGE_TABS = ["2D", "3D", "PLAN"];
 
 const INITIAL_HOME_DETAILS_STATE = {
   home: null,
@@ -100,7 +105,9 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   const l = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const detailsId = new URLSearchParams(l.search).get("details");
+  const searchParams = new URLSearchParams(l.search);
+  const detailsId = searchParams.get("details");
+  const imageTabParam = searchParams.get("img");
   const { copied, copy } = useClipboard({
     copiedDuring: 1000,
   });
@@ -109,6 +116,9 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
     INITIAL_HOME_DETAILS_STATE,
   );
   const { home, notFound, error, pdfLoading, getLoading } = state;
+  const [activeImageTab, setActiveImageTab] = useState(
+    IMAGE_TABS.includes(imageTabParam) ? imageTabParam : "2D",
+  );
   const showPanel = Boolean(home || getLoading || notFound || error);
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
@@ -157,6 +167,50 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
       dispatch({ type: "CLEAR_HOME" });
     }
   }, [detailsId]);
+
+  useEffect(() => {
+    if (detailsId || !imageTabParam) return;
+
+    const params = new URLSearchParams(l.search);
+    params.delete("img");
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: l.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true },
+    );
+  }, [detailsId, imageTabParam, l.pathname, l.search, navigate]);
+
+  useEffect(() => {
+    if (!imageTabParam) {
+      setActiveImageTab("2D");
+      return;
+    }
+
+    if (IMAGE_TABS.includes(imageTabParam)) {
+      setActiveImageTab(imageTabParam);
+    }
+  }, [imageTabParam]);
+
+  function handleImageTabChange(value) {
+    if (!IMAGE_TABS.includes(value)) {
+      return;
+    }
+
+    setActiveImageTab(value);
+    const params = new URLSearchParams(l.search);
+    params.set("img", value);
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: l.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true },
+    );
+  }
 
   function handleCopyPhoneNumber(phone) {
     copy(phone);
@@ -240,6 +294,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                     onClick={() => {
                       const params = new URLSearchParams(l.search);
                       params.delete("details");
+                      params.delete("img");
                       const nextSearch = params.toString();
                       navigate({
                         pathname: `/tjm/${id}`,
@@ -354,18 +409,30 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                     );
                   }}
                 >
-                  <Tabs defaultValue="2D">
+                  <Tabs
+                    value={activeImageTab}
+                    onValueChange={handleImageTabChange}
+                  >
                     <TabsList className="w-full">
-                      <TabsTrigger value="2D" className="flex-1 justify-center">
+                      <TabsTrigger
+                        value="2D"
+                        className="flex-1 justify-center gap-2"
+                      >
+                        <Square className="size-4" />
                         2D
                       </TabsTrigger>
-                      <TabsTrigger value="3D" className="flex-1 justify-center">
+                      <TabsTrigger
+                        value="3D"
+                        className="flex-1 justify-center gap-2"
+                      >
+                        <Box className="size-4" />
                         3D
                       </TabsTrigger>
                       <TabsTrigger
                         value="PLAN"
-                        className="flex-1 justify-center"
+                        className="flex-1 justify-center gap-2"
                       >
+                        <LayoutGrid className="size-4" />
                         Plan
                       </TabsTrigger>
                     </TabsList>
