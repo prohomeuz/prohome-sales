@@ -193,10 +193,10 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   return (
     <>
       <div
-        className={`bg-background no-scrollbar fixed inset-0 z-50 overflow-y-auto transition-all duration-300 lg:static lg:h-full lg:border-l lg:shadow-none ${
+        className={`bg-background no-scrollbar fixed inset-0 z-50 transition-all duration-300 lg:static lg:h-full lg:border-l lg:shadow-none ${
           showPanel
-            ? "translate-y-0 opacity-100 lg:w-[24rem] lg:min-w-[24rem] lg:translate-x-0 lg:opacity-100 xl:w-[26rem] xl:min-w-[26rem]"
-            : "pointer-events-none translate-y-8 opacity-0 lg:w-0 lg:min-w-0 lg:translate-x-full lg:translate-y-0"
+            ? "translate-y-0 overflow-y-auto opacity-100 lg:w-[24rem] lg:min-w-[24rem] lg:translate-x-0 lg:opacity-100 xl:w-[26rem] xl:min-w-[26rem]"
+            : "pointer-events-none translate-y-8 overflow-hidden opacity-0 lg:w-0 lg:min-w-0 lg:translate-x-full lg:translate-y-0"
         }`}
       >
         <LoadTransition
@@ -255,7 +255,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                 </div>
 
                 <div className="px-4 pb-4 sm:px-5">
-                  {home.customer && (
+                  {home.customer && home.status !== "EMPTY" && (
                     <div className="animate-fade-in mb-5">
                       <Popover>
                         <PopoverTrigger asChild>
