@@ -1,3 +1,4 @@
+import { useAppStore } from "@/entities/session/model";
 import { useClipboard } from "@/shared/hooks/use-clipboard";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { formatNumber } from "@/shared/lib/utils";
@@ -6,18 +7,23 @@ import { Badge } from "@/shared/ui/badge";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { NoiseBackground } from "@/shared/ui/noise-background";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
   ArrowLeft,
   ArrowRight,
+  Box,
   Calculator,
   Check,
   CircleMinus,
   CirclePlus,
   Copy,
   Info,
+  LayoutGrid,
   MessageSquareWarning,
+  Square,
 } from "lucide-react";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CalculatorTool from "./CalculatorTool";
@@ -37,6 +43,8 @@ const uzebekTranslate = {
   EMPTY: "Bo'sh",
   NOT: "Sotilmaydi",
 };
+
+const IMAGE_TABS = ["2D", "3D", "PLAN"];
 
 const INITIAL_HOME_DETAILS_STATE = {
   home: null,
@@ -99,7 +107,10 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   const l = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const detailsId = new URLSearchParams(l.search).get("details");
+  const searchParams = new URLSearchParams(l.search);
+  const detailsId = searchParams.get("details");
+  const imageTabParam = searchParams.get("img");
+  const currencyUsd = useAppStore((state) => state.currencyUsd);
   const { copied, copy } = useClipboard({
     copiedDuring: 1000,
   });
@@ -108,6 +119,9 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
     INITIAL_HOME_DETAILS_STATE,
   );
   const { home, notFound, error, pdfLoading, getLoading } = state;
+  const [activeImageTab, setActiveImageTab] = useState(
+    IMAGE_TABS.includes(imageTabParam) ? imageTabParam : "2D",
+  );
   const showPanel = Boolean(home || getLoading || notFound || error);
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
@@ -156,6 +170,50 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
       dispatch({ type: "CLEAR_HOME" });
     }
   }, [detailsId]);
+
+  useEffect(() => {
+    if (detailsId || !imageTabParam) return;
+
+    const params = new URLSearchParams(l.search);
+    params.delete("img");
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: l.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true },
+    );
+  }, [detailsId, imageTabParam, l.pathname, l.search, navigate]);
+
+  useEffect(() => {
+    if (!imageTabParam) {
+      setActiveImageTab("2D");
+      return;
+    }
+
+    if (IMAGE_TABS.includes(imageTabParam)) {
+      setActiveImageTab(imageTabParam);
+    }
+  }, [imageTabParam]);
+
+  function handleImageTabChange(value) {
+    if (!IMAGE_TABS.includes(value)) {
+      return;
+    }
+
+    setActiveImageTab(value);
+    const params = new URLSearchParams(l.search);
+    params.set("img", value);
+    const nextSearch = params.toString();
+    navigate(
+      {
+        pathname: l.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true },
+    );
+  }
 
   function handleCopyPhoneNumber(phone) {
     copy(phone);
@@ -239,6 +297,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                     onClick={() => {
                       const params = new URLSearchParams(l.search);
                       params.delete("details");
+                      params.delete("img");
                       const nextSearch = params.toString();
                       navigate({
                         pathname: `/tjm/${id}`,
@@ -320,10 +379,42 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       № {home.houseNumber}
                     </i>
 
-                    <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
-                      {(home.price * home.size).toFixed(1)} USD
-                    </span>
+                    {currencyUsd?.rate ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="bg-primary text-primary-foreground cursor-help rounded-md px-3 py-1 text-xs leading-none shadow-sm">
+                            {(home.price * home.size).toFixed(1)} USD
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="text-xs">
+                            <span className="font-semibold">
+                              {formatNumber(
+                                (home.price * home.size).toFixed(1),
+                              )}{" "}
+                              USD
+                            </span>{" "}
+                            ={" "}
+                            <span className="font-mono font-semibold">
+                              {formatNumber(
+                                Math.round(
+                                  Number(home.price) *
+                                    Number(home.size) *
+                                    Number(currencyUsd.rate),
+                                ),
+                              )}{" "}
+                              so&apos;m
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="bg-primary text-primary-foreground rounded-md px-3 py-1 text-xs leading-none shadow-sm">
+                        {(home.price * home.size).toFixed(1)} USD
+                      </span>
+                    )}
                   </div>
+                  <div className="mt-3 flex justify-end" />
                 </div>
               </div>
 
@@ -353,13 +444,81 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                     );
                   }}
                 >
-                  <PhotoView src={`/gallery/png/${home.image}.png`}>
-                    <img
-                      className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                      src={`/gallery/png/${home.image}.png`}
-                      alt={home.size}
-                    />
-                  </PhotoView>
+                  <Tabs
+                    value={activeImageTab}
+                    onValueChange={handleImageTabChange}
+                  >
+                    <TabsList className="w-full">
+                      <TabsTrigger
+                        value="2D"
+                        className="flex-1 justify-center gap-2"
+                      >
+                        <Square className="size-4" />
+                        2D
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="3D"
+                        className="flex-1 justify-center gap-2"
+                      >
+                        <Box className="size-4" />
+                        3D
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="PLAN"
+                        className="flex-1 justify-center gap-2"
+                      >
+                        <LayoutGrid className="size-4" />
+                        Plan
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="2D">
+                      <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[0]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[0]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+
+                    <TabsContent value="3D">
+                      <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[1]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[1]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+
+                    <TabsContent value="PLAN">
+                      <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
+                        <picture>
+                          <source
+                            srcset={`/gallery/avif/${home.image[2]}.avif`}
+                            type="image/avif"
+                          />
+                          <img
+                            className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                            src={`/gallery/png/${home.image[2]}.png`}
+                            alt={home.size}
+                          />
+                        </picture>
+                      </PhotoView>
+                    </TabsContent>
+                  </Tabs>
                 </PhotoProvider>
               </div>
 
@@ -389,14 +548,45 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       <dt className="text-xs">XONA</dt>
                       <dd className="font-medium">{home.room}</dd>
                     </div>
-                    <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
-                      <dt className="text-xs">
-                        M<sup>2</sup>
-                      </dt>
-                      <dd className="font-medium">
-                        {formatNumber(home.price)}
-                      </dd>
-                    </div>
+                    {currencyUsd?.rate ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="bg-background flex cursor-help flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                            <dt className="text-xs">
+                              M<sup>2</sup>
+                            </dt>
+                            <dd className="font-medium">
+                              {formatNumber(home.price)} USD
+                            </dd>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="pointer-events-none">
+                          <div className="text-xs">
+                            <span className="font-semibold">
+                              {formatNumber(home.price)} USD
+                            </span>{" "}
+                            ={" "}
+                            <span className="font-mono font-semibold">
+                              {formatNumber(
+                                Math.round(
+                                  Number(home.price) * Number(currencyUsd.rate),
+                                ),
+                              )}{" "}
+                              so&apos;m
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                        <dt className="text-xs">
+                          M<sup>2</sup>
+                        </dt>
+                        <dd className="font-medium">
+                          {formatNumber(home.price)} USD
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 </NoiseBackground>
               </div>
