@@ -12,21 +12,22 @@ import {
 const time = [
   {
     id: 1,
-    date: "Sentabr 2024",
+    date: "2024",
     title: "Qurilish boshlandi",
-    description: "200 ga yaqin jamoa bilan qurilishni boshladik.",
+    description: "Xitoylik investorlar ishni boshlashdi",
   },
   {
     id: 2,
     date: "Hozir",
     title: "Jarayonda",
-    description: "Ustalarimiz maroq bilan ishlashmoqda",
+    description: "Wenny Estatening mohir ustalari maroq bilan ishlashmoqda",
   },
   {
     id: 3,
-    date: "Dekabr 2027",
-    title: "Kalit topshiriladi",
-    description: "InshaAllah yangi uylarni hayrli qilsin",
+    date: "Dekabr 2026",
+    title: "Kalit topshirish marosimi",
+    description:
+      "Barcha uylar kadastr hujjatlari bilan birgalikda topshiriladi",
   },
 ];
 
@@ -41,7 +42,7 @@ export default function ApparmentTimeLine() {
         >
           <TimelineHeader>
             <TimelineSeparator className="group-data-[orientation=horizontal]/timeline:top-8" />
-            <TimelineDate className="mb-10 font-bold text-sm">
+            <TimelineDate className="mb-10 text-sm font-bold">
               {item.date}
             </TimelineDate>
             <TimelineTitle>{item.title}</TimelineTitle>
