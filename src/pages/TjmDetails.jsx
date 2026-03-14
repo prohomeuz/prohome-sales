@@ -3,13 +3,20 @@ import { useProjectStructure } from "@/shared/hooks/use-project-structure";
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { buttonVariants } from "@/shared/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import GeneralError from "@/widgets/error/GeneralError";
 import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import LogoLoader from "@/widgets/loading/LogoLoader";
 import { ArrowLeft, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 const STATUS_CLASS = {
@@ -58,6 +65,7 @@ export default function TjmDetails() {
     [location.search],
   );
   const activeDetailsId = searchParams.get("details");
+  const [selectedBlock, setSelectedBlock] = useState("all");
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
     height: 3,
@@ -66,6 +74,63 @@ export default function TjmDetails() {
     () => Object.entries(home?.blocks ?? {}),
     [home?.blocks],
   );
+  const blockOptions = useMemo(
+    () => blocksEntries.map(([blockName]) => blockName),
+    [blocksEntries],
+  );
+  const totalStatistics = home?.totalStatistics ?? null;
+  const activeStatistics = useMemo(() => {
+    if (!home) return null;
+    if (selectedBlock === "all") return totalStatistics;
+    return home?.blocks?.[selectedBlock]?.statistics ?? null;
+  }, [home, selectedBlock, totalStatistics]);
+  const resolvedStatistics = activeStatistics ??
+    totalStatistics ?? {
+      total: 0,
+      totalEmpty: 0,
+      totalReserved: 0,
+      totalSold: 0,
+      totalNot: 0,
+    };
+  const statisticsCards = useMemo(() => {
+    return [
+      {
+        key: "total",
+        label: "Jami",
+        value: resolvedStatistics.total,
+        tone: "border-slate-200/70 bg-slate-50/70 text-slate-700",
+        dot: "bg-slate-500",
+      },
+      {
+        key: "totalEmpty",
+        label: "Bo'sh",
+        value: resolvedStatistics.totalEmpty,
+        tone: "border-green-200/70 bg-green-50/70 text-green-700",
+        dot: "bg-green-500",
+      },
+      {
+        key: "totalReserved",
+        label: "Bron qilingan",
+        value: resolvedStatistics.totalReserved,
+        tone: "border-orange-200/70 bg-orange-50/70 text-orange-700",
+        dot: "bg-orange-400",
+      },
+      {
+        key: "totalSold",
+        label: "Sotilgan",
+        value: resolvedStatistics.totalSold,
+        tone: "border-red-200/70 bg-red-50/70 text-red-700",
+        dot: "bg-red-600",
+      },
+      {
+        key: "totalNot",
+        label: "Sotilmaydi",
+        value: resolvedStatistics.totalNot,
+        tone: "border-slate-200/70 bg-slate-50/70 text-slate-600",
+        dot: "bg-slate-400",
+      },
+    ];
+  }, [resolvedStatistics]);
   const blockLayouts = useMemo(
     () =>
       blocksEntries.map(([blockName, block]) => {
@@ -94,6 +159,12 @@ export default function TjmDetails() {
     if (loading) start();
     else complete();
   }, [loading, start, complete]);
+  useEffect(() => {
+    if (selectedBlock === "all") return;
+    if (!blockOptions.includes(selectedBlock)) {
+      setSelectedBlock("all");
+    }
+  }, [blockOptions, selectedBlock]);
 
   const updateSearch = useCallback(
     (patch, options = {}) => {
@@ -179,6 +250,51 @@ export default function TjmDetails() {
                   </div>
                 </div>
               </div>
+              <div className="border-border/60 border-t">
+                <div className="flex flex-col gap-3 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:px-6">
+                  <div className="w-full sm:max-w-xs">
+                    <Select
+                      value={selectedBlock}
+                      onValueChange={(value) => setSelectedBlock(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Barchasi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Barchasi</SelectItem>
+                        {blockOptions.map((blockName) => (
+                          <SelectItem key={blockName} value={blockName}>
+                            {blockName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {!!statisticsCards.length && (
+                    <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                      {statisticsCards.map((stat) => (
+                        <div
+                          key={stat.key}
+                          className={cn(
+                            "flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs sm:text-sm",
+                            stat.tone,
+                          )}
+                        >
+                          <span className="flex items-center gap-2 font-medium">
+                            <span
+                              className={cn("size-2 rounded-full", stat.dot)}
+                            />
+                            <span className="truncate">{stat.label}</span>
+                          </span>
+                          <span className="font-mono text-sm font-semibold">
+                            {formatNumber(stat.value ?? 0)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex min-h-0 w-full flex-1 overflow-hidden">
@@ -194,7 +310,7 @@ export default function TjmDetails() {
                 </div>
               ) : (
                 <div className="no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [--room-tile-gap:0.5rem] [--room-tile-size:2rem] sm:[--room-tile-size:2.25rem]">
-                  <div className="bg-background sticky top-0 z-20 mb-6 flex w-max min-w-full items-start border-b py-4">
+                  <div className="bg-background sticky top-0 z-30 mb-6 flex w-max min-w-full items-start border-b py-4">
                     <div className="w-10 shrink-0 sm:w-11" />
                     <div className="flex gap-8 sm:gap-12 lg:gap-16 xl:gap-20">
                       {blockLayouts.map(({ blockName, widthStyle }) => (

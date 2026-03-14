@@ -1,4 +1,3 @@
-import { useRenderPdf } from "@/shared/hooks/use-render-pdf";
 import { useRoomStatus } from "@/shared/hooks/use-room-status";
 import useSound from "@/shared/hooks/use-sound";
 import {
@@ -154,6 +153,8 @@ const actionButtons = [
 
 const paymentPeriods = [12, 24, 36, 48, 60];
 const UZ_PHONE = /^\+998\d{9}$/;
+const MIN_INSTALLMENTS = 12;
+const MAX_INSTALLMENTS = 240;
 const STATUS_DIALOG_CLOSE_DELAY = 220;
 const DEFAULT_CALC_STATE = "BOX";
 const ACTIONS_BY_STATUS = {
@@ -175,6 +176,32 @@ function normalizePhone(raw) {
 
 function digitsOnly(raw) {
   return String(raw ?? "").replace(/\D/g, "");
+}
+
+function formatUzPhoneDisplay(raw) {
+  const digits = digitsOnly(raw);
+
+  if (!digits) return "";
+
+  let local = digits.startsWith("998") ? digits.slice(3) : digits;
+  local = local.slice(0, 9);
+
+  const part1 = local.slice(0, 2);
+  const part2 = local.slice(2, 5);
+  const part3 = local.slice(5, 7);
+  const part4 = local.slice(7, 9);
+
+  let result = "+998";
+
+  if (part1) {
+    result += ` (${part1}`;
+    if (part1.length === 2) result += ")";
+  }
+  if (part2) result += ` ${part2}`;
+  if (part3) result += ` ${part3}`;
+  if (part4) result += ` ${part4}`;
+
+  return result;
 }
 
 function getPositiveNumericString(...candidates) {
@@ -217,15 +244,15 @@ function getInitialStatusForm(home, nextStatus, defaults) {
       ) || "0";
     const currentInstallments =
       Number(
-        defaults?.calcResult?.months ??
-          defaults?.period ??
+        defaults?.period ??
+          defaults?.calcResult?.months ??
           customer?.installments ??
           60,
       ) || 60;
 
     form.firstName = customer.firstName ?? "";
     form.lastName = customer.lastName ?? "";
-    form.phone = customer.phone ?? "";
+    form.phone = formatUzPhoneDisplay(customer.phone ?? "");
     form.description = home?.description ?? "";
     form.downPayment = formatNumber(currentDownPayment);
     form.installments = String(currentInstallments);
@@ -298,6 +325,8 @@ function calculatorReducer(state, action) {
         ...state,
         statusDialogOpen: false,
         statusDialogAction: null,
+        statusForm: createEmptyStatusForm(),
+        statusErrors: {},
         pendingAction: null,
       };
     case "CLEAR_STATUS_DIALOG":
@@ -342,7 +371,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const dialogResetTimerRef = useRef();
   const { sound } = useSound("/win.mp3");
   const { updateStatus, loading: statusLoading } = useRoomStatus();
-  const { renderPdf, loading: pdfLoading } = useRenderPdf();
   const location = useLocation();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(
@@ -369,7 +397,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   } = state;
   const activeAction = statusDialogAction ?? statusDialogRenderedAction;
   const ActiveActionIcon = activeAction?.icon;
-  const actionInProgress = statusLoading || pdfLoading;
+  const actionInProgress = statusLoading;
   const actionLocked =
     (home?.canBeSold ?? home?.customer?.canBeSold ?? true) === false;
   const isOpen =
@@ -564,74 +592,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     };
   }
 
-  function createReservationDocumentNumber(statusData) {
-    const dynamicNumber =
-      statusData?.reservationNumber ??
-      statusData?.contractNumber ??
-      statusData?.contractId ??
-      statusData?.id;
-
-    if (dynamicNumber) {
-      return String(dynamicNumber);
-    }
-
-    const datePart = new Date()
-      .toISOString()
-      .slice(0, 16)
-      .replace(/[-:T]/g, "");
-
-    return `BRON-${home.houseNumber}-${datePart}`;
-  }
-
-  function buildReservationPdfPayload(payload, statusData) {
-    const resolvedPrice = Number(calcResult?.price ?? home?.price ?? 0);
-    const resolvedSize = Number(calcResult?.size ?? home?.size ?? 0);
-    const totalPrice =
-      resolvedPrice > 0 && resolvedSize > 0
-        ? formatNumber(Math.round(resolvedPrice * resolvedSize))
-        : undefined;
-    const pricePerSquareMeter =
-      resolvedPrice > 0 ? formatNumber(Math.round(resolvedPrice)) : undefined;
-    const initialPaymentDigits = digitsOnly(payload?.downPayment);
-    const conditionKey = calcResult?.state ?? selectedState;
-
-    return {
-      fileName: `bron-hujjati-uy-${home.houseNumber}.pdf`,
-      reservationNumber: createReservationDocumentNumber(statusData),
-      metrics: {
-        totalPrice,
-        duration: payload?.installments
-          ? `${payload.installments} oy`
-          : undefined,
-        size: resolvedSize > 0 ? `${resolvedSize} m²` : undefined,
-        condition: states[conditionKey] ?? undefined,
-        initialPayment:
-          initialPaymentDigits !== ""
-            ? formatNumber(initialPaymentDigits)
-            : undefined,
-        pricePerSquareMeter,
-        houseNumber:
-          home?.houseNumber !== undefined
-            ? String(home.houseNumber)
-            : undefined,
-      },
-    };
-  }
-
-  function downloadPdfFile(blob, fileName) {
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = objectUrl;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-
-    window.setTimeout(() => {
-      URL.revokeObjectURL(objectUrl);
-    }, 60_000);
-  }
-
   function handleStatusAction(action) {
     if (actionLocked) return;
 
@@ -673,7 +633,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
     if (actionCode === "SOLD" || actionCode === "RESERVED") {
       const phone = normalizePhone(statusForm.phone);
-      const downPaymentValue = Number(digitsOnly(statusForm.downPayment));
       const installments = Number(digitsOnly(statusForm.installments));
 
       if (!statusForm.firstName.trim()) {
@@ -687,15 +646,16 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       } else if (!UZ_PHONE.test(phone)) {
         nextErrors.phone = "Telefon +998xxxxxxxxx formatda bo'lsin!";
       }
-      if (!String(statusForm.downPayment ?? "").trim()) {
-        nextErrors.downPayment = "Boshlang'ich to'lovni kiriting!";
-      } else if (!Number.isFinite(downPaymentValue) || downPaymentValue <= 0) {
-        nextErrors.downPayment = "Boshlang'ich to'lov 0 dan katta bo'lsin!";
-      }
+      // Down payment can be 0 or empty; backend should handle defaults.
       if (!String(statusForm.installments ?? "").trim()) {
         nextErrors.installments = "Muddatni kiriting!";
-      } else if (!Number.isFinite(installments) || installments <= 0) {
-        nextErrors.installments = "Muddat 0 dan katta bo'lsin!";
+      } else if (!Number.isFinite(installments)) {
+        nextErrors.installments = "Muddatni to'g'ri kiriting!";
+      } else if (
+        installments < MIN_INSTALLMENTS ||
+        installments > MAX_INSTALLMENTS
+      ) {
+        nextErrors.installments = `Muddat ${MIN_INSTALLMENTS}-${MAX_INSTALLMENTS} oy oralig'ida bo'lsin!`;
       }
     }
 
@@ -750,18 +710,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
         description: payload.description ?? "",
       }),
     );
-
-    if ((payload.status ?? action.code) === "RESERVED") {
-      const pdfResult = await renderPdf(
-        buildReservationPdfPayload(payload, result.data),
-      );
-
-      if (pdfResult.ok) {
-        downloadPdfFile(pdfResult.blob, pdfResult.fileName);
-      } else {
-        toast.info("Uy bron qilindi, lekin PDF yuklab olinmadi.");
-      }
-    }
 
     toast.success(
       (payload.status ?? action.code) === "RESERVED"
@@ -1468,9 +1416,12 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                           id="status-phone"
                           value={statusForm.phone}
                           onChange={(evt) => {
-                            handleStatusField("phone", evt.target.value);
+                            handleStatusField(
+                              "phone",
+                              formatUzPhoneDisplay(evt.target.value),
+                            );
                           }}
-                          placeholder="+998901234567"
+                          placeholder="+998 (__) ___ __ __"
                           className="pl-9"
                         />
                       </div>
@@ -1515,12 +1466,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                       <Input
                         id="status-installments"
                         type="number"
-                        min={1}
+                        min={MIN_INSTALLMENTS}
+                        max={MAX_INSTALLMENTS}
                         value={statusForm.installments}
                         onChange={(evt) => {
                           handleStatusField(
                             "installments",
-                            digitsOnly(evt.target.value),
+                            normalizePeriod(evt.target.value),
                           );
                         }}
                         placeholder="60"
@@ -1534,7 +1486,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
                     {activeAction.code === "SOLD" && (
                       <div className="grid gap-2">
-                        {hasDiscountValue ? (
+                        {hasDiscountValue && (
                           <>
                             <Label htmlFor="status-discountValue">
                               Chegirma
@@ -1551,13 +1503,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                               placeholder="100 000 yoki 5%"
                             />
                           </>
-                        ) : (
-                          <div className="bg-muted/40 rounded-xl border px-3 py-3 text-xs">
-                            <p className="font-medium">Chegirma berilmagan</p>
-                            <p className="text-muted-foreground mt-1 leading-5">
-                              Sotish oqimida chegirma mavjud bo'lsa yuboriladi.
-                            </p>
-                          </div>
                         )}
                       </div>
                     )}
@@ -1635,7 +1580,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                   {pendingAction === activeAction.code && actionInProgress ? (
                     <>
                       <Spinner />
-                      {pdfLoading ? "PDF tayyorlanmoqda..." : "Saqlanmoqda..."}
+                      Saqlanmoqda...
                     </>
                   ) : (
                     activeAction.submitLabel
