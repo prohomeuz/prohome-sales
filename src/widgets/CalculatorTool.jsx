@@ -1054,32 +1054,82 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 </PhotoProvider>
               </div>
 
+              <Alert className="relative mb-10 border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                <CircleCheckBig className="text-blue-600 dark:text-blue-400" />
+                <AlertTitle className="text-blue-900 dark:text-blue-100">
+                  Ramazon oyi uchun maxsus chegirma
+                </AlertTitle>
+                <AlertDescription className="mb-3 text-blue-800 dark:text-blue-200">
+                  Ramazon oyi xaridlari uchun quyidagi texnikalar mutlaqa bepul
+                  taqdim qilinadi.
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  Muzlatgich
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  Konditsioner
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  Gaz plita
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  Blender
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  Chanyutgich
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                  <CircleCheckBig size={12} />
+                  <strong>50 dan ziyod</strong> xonadon uchun zaruriy texnikalar
+                </AlertDescription>
+              </Alert>
+
               <Alert className="relative mb-10 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
                 <Layers2 className="text-amber-600 dark:text-amber-400" />
                 <AlertTitle className="text-amber-900 dark:text-amber-100">
-                  Infra tuzilma
+                  Infra tuzilma va avfzalliklar
                 </AlertTitle>
                 <AlertDescription className="mb-3 text-amber-800 dark:text-amber-200">
-                  Bino maktab, bog'cha, masjid va 10 dan ziyod savdo-sotiq
-                  do'konlariga judayam yaqin joylashgan.
+                  Bino maktab, bog'cha, bepul avtoturargohlar, o'yingohlar va
+                  savdo majmuolariga judayam yaqin joylashgan.
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Maktab
+                  <CircleCheckBig size={12} />
+                  Kuniga <strong>148 ming</strong> so'm to'lov evaziga xonodon
+                  sohibi bo'lish
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Masjid
+                  <CircleCheckBig size={12} />
+                  <strong>30%</strong> boshlang'ich to'lov qilganlar uchun{" "}
+                  <strong>2 kishilik umra safari</strong>
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Bog'cha
+                  <CircleCheckBig size={12} /> <strong>9 ballik</strong>{" "}
+                  zilzilagacha chidamli bino
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Do'konlar
+                  <CircleCheckBig size={12} />
+                  <strong>Xitoylik</strong> investorlar tomonidan qurilgan
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Yonilg'i shaxobchasi
+                  <CircleCheckBig size={12} />
+                  <strong>Jahon bazor</strong>ining yonginasida
                 </AlertDescription>
                 <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
-                  <CircleCheckBig size={12} /> Mashina yuvish joyi
+                  <CircleCheckBig size={12} /> <strong>Katta yo'l</strong>ning
+                  bo'yida
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> <strong>Zamonaviy</strong> loyiha
+                </AlertDescription>
+                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                  <CircleCheckBig size={12} /> <strong>Oila</strong> uchun
+                  to'g'ri tanlov
                 </AlertDescription>
               </Alert>
 
