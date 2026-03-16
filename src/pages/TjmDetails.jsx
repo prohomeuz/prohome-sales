@@ -36,8 +36,8 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const STATUS_CLASS = {
-  SOLD: "bg-red-600",
-  RESERVED: "bg-orange-400",
+  SOLD: "bg-red-700",
+  RESERVED: "bg-yellow-400",
   EMPTY: "bg-green-500",
   NOT: "bg-slate-400",
 };
@@ -707,6 +707,7 @@ export default function TjmDetails() {
                   </div>
                 </div>
               </div>
+
               <div className="border-border/60 border-t">
                 <div className="flex flex-col gap-3 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:px-6">
                   <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
