@@ -1,3 +1,4 @@
+import { useAppStore } from "@/entities/session/model";
 import { useRoomStatus } from "@/shared/hooks/use-room-status";
 import useSound from "@/shared/hooks/use-sound";
 import {
@@ -66,7 +67,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -171,6 +172,42 @@ const INITIAL_CALC_RESULT = {
   months: 60,
   bonus: false,
 };
+const PDF_SERVICE_URL =
+  import.meta.env.VITE_PDF_SERVICE_URL ??
+  (import.meta.env.DEV
+    ? "/pdf-service/bron"
+    : "https://contract.prohome.uz/bron");
+const UZ_MONTHS = [
+  "yanvar",
+  "fevral",
+  "mart",
+  "aprel",
+  "may",
+  "iyun",
+  "iyul",
+  "avgust",
+  "sentyabr",
+  "oktabr",
+  "noyabr",
+  "dekabr",
+];
+
+function formatCreatedDate(date) {
+  const d = date instanceof Date ? date : new Date(date ?? Date.now());
+  if (Number.isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const day = d.getDate();
+  const month = UZ_MONTHS[d.getMonth()] ?? "";
+  return `${year}-yil ${day}-${month}`;
+}
+
+function sanitizeFileName(value) {
+  return String(value ?? "bron-hujjat")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .slice(0, 140);
+}
 
 function normalizePhone(raw) {
   return String(raw ?? "").replace(/[^\d+]/g, "");
@@ -378,8 +415,10 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const dialogResetTimerRef = useRef();
   const { sound } = useSound("/win.mp3");
   const { updateStatus, loading: statusLoading } = useRoomStatus();
+  const fetchCurrencyUsd = useAppStore((state) => state.fetchCurrencyUsd);
   const location = useLocation();
   const navigate = useNavigate();
+  const [contractFileLoading, setContractFileLoading] = useState(false);
   const [state, dispatch] = useReducer(
     calculatorReducer,
     undefined,
@@ -405,7 +444,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   } = state;
   const activeAction = statusDialogAction ?? statusDialogRenderedAction;
   const ActiveActionIcon = activeAction?.icon;
-  const actionInProgress = statusLoading;
+  const actionInProgress = statusLoading || contractFileLoading;
   const actionLocked =
     (home?.canBeSold ?? home?.customer?.canBeSold ?? true) === false;
   const isOpen =
@@ -719,7 +758,98 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   async function submitStatusAction(action, payloadOverride) {
     dispatch({ type: "SET_PENDING_ACTION", payload: action.code });
     const payload = payloadOverride ?? createStatusPayload(action.code);
-    const result = await updateStatus(home.id, payload);
+    const nextStatus = payload.status ?? action.code;
+    let nextPayload = payload;
+
+    if (nextStatus === "RESERVED") {
+      setContractFileLoading(true);
+      try {
+        if (!useAppStore.getState().currencyUsd?.rate) {
+          await fetchCurrencyUsd?.();
+        }
+
+        const currencyRate = Number(useAppStore.getState().currencyUsd?.rate);
+        if (!Number.isFinite(currencyRate) || currencyRate <= 0) {
+          throw new Error("Dollar kursi topilmadi.");
+        }
+
+        const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+        const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+        const totalUsd =
+          resolvedPrice > 0 && resolvedSize > 0
+            ? resolvedPrice * resolvedSize
+            : 0;
+        const totalSom = Math.round(totalUsd * currencyRate);
+        const pricePerMetrSom = Math.round(resolvedPrice * currencyRate);
+        const downPaymentSom = Number(digitsOnly(payload.downPayment)) || 0;
+        const monthlySom = Number(calcResult.monthlyPayment) || 0;
+
+        const customerName = `${payload.firstName} ${payload.lastName}`.trim();
+        const fileName = sanitizeFileName(
+          `${customerName || "Mijoz"} bron hujjat`,
+        );
+
+        const pdfReqBody = {
+          CREATED: formatCreatedDate(new Date()),
+          FILE_NAME: fileName,
+          ROOM: `${home.room ?? ""}x`,
+          BLOCK: String(home.block ?? ""),
+          FLOOR: `${home.floorNumber ?? ""}-QAVAT`,
+          HOUSE_NUMBER: `Nº ${home.houseNumber ?? ""} XONADON`,
+          PRICE_PER_METR: formatNumber(pricePerMetrSom),
+          MONTHLY_PAYMENT: formatNumber(Math.round(monthlySom)),
+          PERIOD: `${payload.installments} oy`,
+          SIZE: String(resolvedSize || home.size || ""),
+          STATE: states[selectedState] ?? "",
+          DOWN_PAYMENT: formatNumber(downPaymentSom),
+          TOTAL_PRICE: formatNumber(totalSom),
+          "2D": home.image?.[0] ? `${home.image[0]}.png` : "",
+          "3D": home.image?.[1] ? `${home.image[1]}.png` : "",
+          PLAN: home.image?.[2] ? `${home.image[2]}.png` : "",
+        };
+
+        const pdfForm = new URLSearchParams();
+        Object.entries(pdfReqBody).forEach(([key, value]) => {
+          pdfForm.append(key, value ?? "");
+        });
+
+        const pdfRes = await fetch(PDF_SERVICE_URL, {
+          method: "POST",
+          headers: {
+            Accept: "application/pdf",
+          },
+          body: pdfForm,
+        });
+
+        if (!pdfRes.ok) {
+          throw new Error("PDF yaratib bo'lmadi.");
+        }
+
+        const pdfBlob = await pdfRes.blob();
+        if (!pdfBlob || pdfBlob.size === 0) {
+          throw new Error("PDF bo'sh qaytdi.");
+        }
+
+        const pdfFile = new File([pdfBlob], `${fileName}.pdf`, {
+          type: "application/pdf",
+        });
+
+        nextPayload = {
+          ...payload,
+          contractFile: pdfFile,
+        };
+      } catch (error) {
+        toast.error(error?.message || "PDF yaratishda xatolik!", {
+          position: "bottom-left",
+        });
+        dispatch({ type: "SET_PENDING_ACTION", payload: null });
+        setContractFileLoading(false);
+        return false;
+      }
+    }
+
+    const result = await updateStatus(home.id, nextPayload);
+    setContractFileLoading(false);
     if (!result.ok) {
       toast.error(result.message);
       dispatch({ type: "SET_PENDING_ACTION", payload: null });
@@ -729,15 +859,13 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     await Promise.resolve(
       onStatusUpdated?.({
         roomId: home.id,
-        nextStatus: payload.status ?? action.code,
+        nextStatus,
         description: payload.description ?? "",
       }),
     );
 
     toast.success(
-      (payload.status ?? action.code) === "RESERVED"
-        ? "Uy bron qilindi."
-        : action.successText,
+      nextStatus === "RESERVED" ? "Uy bron qilindi." : action.successText,
     );
     handleClose({ clearDetails: true });
     dispatch({ type: "SET_PENDING_ACTION", payload: null });
@@ -1389,7 +1517,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       <Dialog open={bonusDialogOpen} onOpenChange={handleBonusDialog}>
         <DialogContent className="max-w-[520px]">
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="bg-emerald-100 text-emerald-700 flex size-14 items-center justify-center rounded-full">
+            <div className="flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
               <Gift className="size-6" />
             </div>
             <DialogHeader className="items-center gap-2 text-center">
@@ -1401,9 +1529,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 imkoniyatiga ega bo&apos;ldingiz.
               </DialogDescription>
             </DialogHeader>
-            <div className="bg-emerald-50 text-emerald-800 w-full rounded-xl border border-emerald-100 px-4 py-3 text-sm">
-              Bu imkoniyat uyning 30% boshlang&apos;ich to&apos;lovi
-              bajarilgani uchun taqdim etildi.
+            <div className="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              Bu imkoniyat uyning 30% boshlang&apos;ich to&apos;lovi bajarilgani
+              uchun taqdim etildi.
             </div>
             <DialogFooter className="sm:justify-center">
               <Button type="button" onClick={() => handleBonusDialog(false)}>

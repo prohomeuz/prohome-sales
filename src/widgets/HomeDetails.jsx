@@ -20,6 +20,7 @@ import {
   Copy,
   Info,
   LayoutGrid,
+  Link,
   MessageSquareWarning,
   Square,
 } from "lucide-react";
@@ -31,8 +32,8 @@ import LoadTransition from "./loading/LoadTransition";
 import SurfaceLoader from "./loading/SurfaceLoader";
 
 const statuses = {
-  SOLD: "bg-red-500",
-  RESERVED: "bg-orange-500",
+  SOLD: "bg-red-700",
+  RESERVED: "bg-yellow-400",
   EMPTY: "bg-green-500",
   NOT: "bg-slate-400",
 };
@@ -367,6 +368,21 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                                     )}
                                   </Button>
                                 </dd>
+                              </div>
+                              <div className="bg-background flex flex-row-reverse items-center justify-between rounded px-3 py-1 shadow">
+                                <dd className="font-medium">
+                                  <a
+                                    className={buttonVariants({
+                                      variant: "link",
+                                      size: "sm",
+                                    })}
+                                    target="_blank"
+                                    href={`${import.meta.env.VITE_BASE_URL}/api/v1/docs/${home.contractFile}`}
+                                  >
+                                    <Link /> Ko'rish
+                                  </a>
+                                </dd>
+                                <dt>SHARTNOMA</dt>
                               </div>
                             </dl>
                           </NoiseBackground>

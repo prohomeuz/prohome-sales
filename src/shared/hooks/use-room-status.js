@@ -10,6 +10,16 @@ function appendFormValue(formData, key, value) {
     return;
   }
 
+  if (typeof File !== "undefined" && value instanceof File) {
+    formData.append(key, value, value.name);
+    return;
+  }
+
+  if (typeof Blob !== "undefined" && value instanceof Blob) {
+    formData.append(key, value);
+    return;
+  }
+
   formData.append(key, String(value));
 }
 
