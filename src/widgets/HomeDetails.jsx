@@ -487,7 +487,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                         Plan
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="2D">
+                    <TabsContent value="2D" forceMount>
                       <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
                         <picture>
                           <source
@@ -503,7 +503,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       </PhotoView>
                     </TabsContent>
 
-                    <TabsContent value="3D">
+                    <TabsContent value="3D" forceMount>
                       <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
                         <picture>
                           <source
@@ -519,7 +519,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
                       </PhotoView>
                     </TabsContent>
 
-                    <TabsContent value="PLAN">
+                    <TabsContent value="PLAN" forceMount>
                       <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
                         <picture>
                           <source

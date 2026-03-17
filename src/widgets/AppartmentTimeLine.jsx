@@ -12,7 +12,7 @@ import {
 const time = [
   {
     id: 1,
-    date: "2024",
+    date: "2025",
     title: "Qurilish boshlandi",
     description: "Xitoylik investorlar ishni boshlashdi",
   },
@@ -20,14 +20,14 @@ const time = [
     id: 2,
     date: "Hozir",
     title: "Jarayonda",
-    description: "Wenny Estatening mohir ustalari maroq bilan ishlashmoqda",
+    description: "Wenny Estate ustalari ishlashmoqda",
   },
   {
     id: 3,
     date: "Dekabr 2026",
     title: "Kalit topshirish marosimi",
     description:
-      "Barcha uylar kadastr hujjatlari bilan birgalikda topshiriladi",
+      "To'liq to'lov qilganlar uchun uylar kadastr hujjatlari bilan birgalikda topshiriladi",
   },
 ];
 
