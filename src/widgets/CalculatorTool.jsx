@@ -98,6 +98,44 @@ const uzbekTranslate = {
   "electric-plate": "Elektr plita",
 };
 
+const PAYMENT_BONUS_RULES = [
+  {
+    key: "full-payment",
+    minDownPayment: Infinity,
+    discountPerM2: 1_000_000,
+    items: ["refrigerator", "washing-machine"],
+    qualifier: "100% to'lov",
+  },
+  {
+    key: "120m",
+    minDownPayment: 120_000_000,
+    discountPerM2: 600_000,
+    items: ["refrigerator", "electric-plate"],
+    qualifier: "120 000 000 so'm to'lov",
+  },
+  {
+    key: "90m",
+    minDownPayment: 90_000_000,
+    discountPerM2: 600_000,
+    items: ["refrigerator"],
+    qualifier: "90 000 000 so'm to'lov",
+  },
+  {
+    key: "60m",
+    minDownPayment: 60_000_000,
+    discountPerM2: 400_000,
+    items: ["washing-machine"],
+    qualifier: "60 000 000 so'm to'lov",
+  },
+  {
+    key: "30m",
+    minDownPayment: 30_000_000,
+    discountPerM2: 200_000,
+    items: ["electric-plate"],
+    qualifier: "30 000 000 so'm to'lov",
+  },
+];
+
 const statusBadgeClass = {
   SOLD: "bg-red-500",
   RESERVED: "bg-orange-500",
@@ -182,6 +220,7 @@ const INITIAL_CALC_RESULT = {
   downPayment: 0,
   months: 60,
   bonus: false,
+  umra: false,
 };
 const LazyGenplanViewerButton = lazy(() => import("./GenplanViewerButton"));
 const LazyDiscountViewerSlider = lazy(() => import("./DiscountViewerSlider"));
@@ -218,6 +257,43 @@ function sanitizeFileName(value) {
     .slice(0, 140);
 }
 
+function getBonusItemLabel(item) {
+  return uzbekTranslate[item] ?? item;
+}
+
+function formatBonusItems(items) {
+  return items.map(getBonusItemLabel).join(" + ");
+}
+
+function resolvePaymentBonus({ downPayment, totalPrice }) {
+  const normalizedDownPayment = Number(downPayment) || 0;
+  const normalizedTotalPrice = Number(totalPrice) || 0;
+
+  if (normalizedDownPayment <= 0) return null;
+
+  if (
+    normalizedTotalPrice > 0 &&
+    normalizedDownPayment >= normalizedTotalPrice
+  ) {
+    const fullPaymentRule = PAYMENT_BONUS_RULES[0];
+    return {
+      ...fullPaymentRule,
+      title: formatBonusItems(fullPaymentRule.items),
+    };
+  }
+
+  const matchedRule = PAYMENT_BONUS_RULES.find(
+    (rule) => normalizedDownPayment >= rule.minDownPayment,
+  );
+
+  if (!matchedRule || matchedRule.key === "full-payment") return null;
+
+  return {
+    ...matchedRule,
+    title: formatBonusItems(matchedRule.items),
+  };
+}
+
 function extractContractFileFromResponse(data) {
   if (!data || typeof data !== "object") return "";
 
@@ -251,6 +327,22 @@ function resolveContractFileDocUrl(contractFile) {
   }
 
   return `${base}/api/v1/docs/${normalizedPath}`;
+}
+
+function openExternalDocument(url) {
+  if (!url || typeof document === "undefined") return false;
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  return true;
 }
 
 function normalizePhone(raw) {
@@ -356,6 +448,7 @@ function getInitialStatusForm(home, nextStatus, defaults) {
 function createCalculatorInitialState() {
   return {
     calcResult: INITIAL_CALC_RESULT,
+    calcVersion: 0,
     selectedState: DEFAULT_CALC_STATE,
     showDiscount: false,
     discountType: "discountPerM2",
@@ -379,7 +472,11 @@ function calculatorReducer(state, action) {
     case "SET_CALC_LOADING":
       return { ...state, calcLoading: action.payload };
     case "SET_CALC_RESULT":
-      return { ...state, calcResult: action.payload };
+      return {
+        ...state,
+        calcResult: action.payload,
+        calcVersion: state.calcVersion + 1,
+      };
     case "SET_SELECTED_STATE":
       return { ...state, selectedState: action.payload };
     case "TOGGLE_DISCOUNT":
@@ -482,6 +579,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   );
   const {
     calcResult,
+    calcVersion,
     selectedState,
     showDiscount,
     discountType,
@@ -510,10 +608,31 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     const allowedCodes = ACTIONS_BY_STATUS[home.status] ?? [];
     return actionButtons.filter((action) => allowedCodes.includes(action.code));
   }, [home.status]);
-  const bonusItems = useMemo(
-    () => (Array.isArray(calcResult.bonus) ? calcResult.bonus : []),
-    [calcResult.bonus],
-  );
+  const paymentBonus = useMemo(() => {
+    const usdRate = Number(currencyUsd?.rate);
+    const hasUsdRate = Number.isFinite(usdRate) && usdRate > 0;
+    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+    const totalSom =
+      hasUsdRate && resolvedPrice > 0 && resolvedSize > 0
+        ? Math.round(resolvedPrice * resolvedSize * usdRate)
+        : 0;
+    const resolvedDownPayment = Number(digitsOnly(calcResult.downPayment)) || 0;
+
+    return resolvePaymentBonus({
+      downPayment: resolvedDownPayment,
+      totalPrice: totalSom,
+    });
+  }, [
+    calcResult.downPayment,
+    calcResult.price,
+    calcResult.size,
+    currencyUsd?.rate,
+    home.price,
+    home.size,
+  ]);
+  const bonusItems = useMemo(() => paymentBonus?.items ?? [], [paymentBonus]);
+  const hasUmraBonus = calcResult.umra === true;
   const summaryCards = useMemo(() => {
     const usdRate = Number(currencyUsd?.rate);
     const hasUsdRate = Number.isFinite(usdRate) && usdRate > 0;
@@ -523,13 +642,28 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       resolvedPrice > 0 && resolvedSize > 0 ? resolvedPrice * resolvedSize : 0;
     const totalSom = hasUsdRate ? Math.round(totalUsd * usdRate) : 0;
     const metrSom = hasUsdRate ? Math.round(resolvedPrice * usdRate) : 0;
+    const bonusDiscountTotal =
+      paymentBonus && resolvedSize > 0
+        ? paymentBonus.discountPerM2 * resolvedSize
+        : 0;
+    const metrSomWithBonus =
+      paymentBonus && metrSom > 0
+        ? Math.max(metrSom - paymentBonus.discountPerM2, 0)
+        : 0;
+    const totalSomWithBonus =
+      paymentBonus && totalSom > 0
+        ? Math.max(totalSom - bonusDiscountTotal, 0)
+        : 0;
     const cards = [
       {
         key: "price",
         label: "Umumiy narx",
-        value: totalUsd > 0 ? `${formatNumber(totalUsd)} USD` : "---",
-        subValue:
-          hasUsdRate && totalSom > 0 ? `${formatNumber(totalSom)} so'm` : null,
+        value:
+          totalUsd > 0 ? `${formatNumber(totalUsd.toFixed(1))} USD` : "---",
+        subValues:
+          hasUsdRate && totalSom > 0
+            ? [`= ${formatNumber(totalSom)} so'm`]
+            : [],
         icon: CircleDollarSign,
         mono: true,
       },
@@ -579,15 +713,28 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
           </>
         ),
         value: resolvedPrice > 0 ? `${formatNumber(resolvedPrice)} USD` : "---",
-        subValue:
-          hasUsdRate && metrSom > 0 ? `${formatNumber(metrSom)} so'm` : null,
+        subValues: [
+          hasUsdRate && metrSom > 0 ? `= ${formatNumber(metrSom)} so'm` : null,
+          paymentBonus
+            ? `Chegirma: ${formatNumber(paymentBonus.discountPerM2)} so'm / m²`
+            : null,
+          bonusDiscountTotal > 0
+            ? `Jami chegirma: ${formatNumber(Math.round(bonusDiscountTotal))} so'm`
+            : null,
+          metrSomWithBonus > 0
+            ? `Bonus bilan: ${formatNumber(metrSomWithBonus)} so'm / m²`
+            : null,
+          totalSomWithBonus > 0
+            ? `Jami bonus bilan: ${formatNumber(totalSomWithBonus)} so'm`
+            : null,
+        ].filter(Boolean),
         icon: Coins,
         mono: true,
       },
     );
 
     return cards;
-  }, [calcResult, currencyUsd?.rate, home.price, home.size]);
+  }, [calcResult, currencyUsd?.rate, home.price, home.size, paymentBonus]);
 
   //   API
   async function calc(url) {
@@ -607,14 +754,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     if (req) {
       if (req.status === 200) {
         const data = await req.json();
+        console.log(data);
+
         dispatch({ type: "SET_CALC_RESULT", payload: data });
-        const hasBonusReward =
-          data?.bonus === true ||
-          (Array.isArray(data?.bonus) && data.bonus.length > 0);
-        if (hasBonusReward) {
-          win();
-          dispatch({ type: "OPEN_BONUS_DIALOG" });
-        }
       } else if (req.status === 400) {
         toast.error(
           "Boshlang'ich to'lov uyning umumiy summasidan katta bo'lishi mumkin emas!",
@@ -989,13 +1131,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       const contractFileUrl = resolveContractFileDocUrl(contractFile);
 
       if (contractFileUrl) {
-        const tab = window.open(
-          contractFileUrl,
-          "_blank",
-          "noopener,noreferrer",
-        );
+        const opened = openExternalDocument(contractFileUrl);
 
-        if (!tab) {
+        if (!opened) {
           toast.info(
             "Shartnomani ochish uchun brauzerda pop-up ruxsatini yoqing.",
             { position: "bottom-left" },
@@ -1091,6 +1229,12 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       fetchCurrencyUsd?.();
     }
   }, [currencyUsd?.rate, fetchCurrencyUsd]);
+
+  useEffect(() => {
+    if (!calcVersion || (!paymentBonus && !hasUmraBonus)) return;
+    win();
+    dispatch({ type: "OPEN_BONUS_DIALOG" });
+  }, [calcVersion, hasUmraBonus, paymentBonus]);
 
   useEffect(() => {
     if (isOpen) return;
@@ -1316,100 +1460,173 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                       >
                         {card.value}
                       </h4>
-                      {card.subValue ? (
-                        <p className="text-muted-foreground mt-0.5 text-xs font-medium">
-                          = {card.subValue}
-                        </p>
-                      ) : null}
+                      {Array.isArray(card.subValues) &&
+                      card.subValues.length > 0
+                        ? card.subValues.map((subValue, index) => (
+                            <p
+                              key={`${card.key}-${index}`}
+                              className={cn(
+                                "mt-0.5 text-xs font-medium",
+                                index === 0
+                                  ? "text-muted-foreground"
+                                  : "text-emerald-700",
+                              )}
+                            >
+                              {subValue}
+                            </p>
+                          ))
+                        : null}
                     </div>
                   );
                 })}
               </div>
 
-              {/* <div className="animate-fade-in mb-5">
-              {bonusItems.length > 0 && (
-                <div className="text-primary-foreground animate-fade-in mb-5 flex w-full flex-col overflow-hidden rounded-xl border-3 border-green-500 sm:flex-row">
-                  <div className="flex items-center justify-center bg-green-500 px-4 py-3 text-2xl font-bold sm:text-4xl">
-                    Bonus:
+              {hasUmraBonus ? (
+                <div className="animate-fade-in mb-5 overflow-hidden rounded-2xl border border-amber-300/70 bg-gradient-to-r from-amber-50 via-white to-yellow-50 shadow-sm">
+                  <div className="border-b border-amber-200/80 px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white">
+                          <Plane className="size-3.5" />
+                          Umra imkoniyati
+                        </div>
+                        <h3 className="text-lg font-semibold text-amber-950 sm:text-xl">
+                          2 kishilik Umra safari yutib olish imkoniyati
+                        </h3>
+                        <p className="mt-1 text-sm text-amber-800">
+                          Boshlang&apos;ich to&apos;lovingiz ushbu aksiya
+                          shartiga mos keldi. Batafsil ma&apos;lumotni savdo
+                          bo&apos;limidan olishingiz mumkin.
+                        </p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="border-amber-200 bg-amber-100 text-amber-900"
+                      >
+                        Maxsus aksiya
+                      </Badge>
+                    </div>
                   </div>
 
-                  <div className="grid w-full grid-cols-2 gap-4 px-4 py-4 sm:grid-cols-3 sm:px-6">
-                    <PhotoProvider
-                      onVisibleChange={(visible) => {
-                        dispatch({
-                          type: "SET_GALLERY_SHOW",
-                          payload: visible,
-                        });
-                      }}
-                      toolbarRender={({ onScale, scale }) => {
-                        return (
-                          <div className="mr-5 flex">
-                            <div className="group h-11 w-11 p-2.5">
-                              <CircleMinus
-                                className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                                onClick={() => {
-                                  onScale(scale - 1);
-                                }}
-                              />
-                            </div>
-                            <div className="group h-11 w-11 p-2.5">
-                              <CirclePlus
-                                className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
-                                onClick={() => {
-                                  onScale(scale + 1);
-                                }}
-                              />
-                            </div>
+                  <div className="px-4 py-4 sm:px-5">
+                    <div className="rounded-2xl border border-amber-200 bg-white/90 p-4 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                          <Gift className="size-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-amber-950">
+                            Bonusli xarid uchun qo&apos;shimcha imkoniyat
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-amber-800">
+                            Hisoblash natijasiga ko&apos;ra siz 2 kishilik Umra
+                            safari yo&apos;llanmasini yutib olish imkoniyatiga
+                            ega bo&apos;ldingiz.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {paymentBonus ? (
+                <div className="animate-fade-in mb-5 overflow-hidden rounded-2xl border border-emerald-300/70 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 shadow-sm">
+                  <div className="border-b border-emerald-200/80 px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white">
+                          <Gift className="size-3.5" />
+                          Bonus chiqdi
+                        </div>
+                        <h3 className="text-lg font-semibold text-emerald-950 sm:text-xl">
+                          {paymentBonus.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-emerald-800">
+                          {paymentBonus.qualifier} asosida ushbu sovg'alar
+                          taqdim etiladi.
+                        </p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="border-emerald-200 bg-emerald-100 text-emerald-900"
+                      >
+                        +{formatNumber(paymentBonus.discountPerM2)}/m
+                        <sup>2</sup> chegirma
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <PhotoProvider
+                    onVisibleChange={(visible) => {
+                      dispatch({
+                        type: "SET_GALLERY_SHOW",
+                        payload: visible,
+                      });
+                    }}
+                    toolbarRender={({ onScale, scale }) => {
+                      return (
+                        <div className="mr-5 flex">
+                          <div className="group h-11 w-11 p-2.5">
+                            <CircleMinus
+                              className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                              onClick={() => {
+                                onScale(scale - 1);
+                              }}
+                            />
                           </div>
-                        );
-                      }}
-                    >
-                      {bonusItems.map((b) => {
+                          <div className="group h-11 w-11 p-2.5">
+                            <CirclePlus
+                              className="cursor-pointer opacity-70 transition-opacity group-hover:opacity-100"
+                              onClick={() => {
+                                onScale(scale + 1);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    }}
+                  >
+                    <div className="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
+                      {bonusItems.map((bonusItem) => {
+                        const bonusLabel = getBonusItemLabel(bonusItem);
+
                         return (
-                          <PhotoView key={b} src={`/bonus/png/${b}.png`}>
-                            <div className="flex min-w-0 flex-col items-center gap-2 rounded-lg bg-background/80 p-2">
-                              <picture>
+                          <PhotoView
+                            key={bonusItem}
+                            src={`/bonus/png/${bonusItem}.png`}
+                          >
+                            <button
+                              type="button"
+                              className="group flex min-w-0 cursor-zoom-in items-center gap-3 rounded-xl border border-emerald-200 bg-white/90 p-3 text-left transition hover:border-emerald-400 hover:shadow-sm"
+                            >
+                              <picture className="flex size-20 shrink-0 items-center justify-center rounded-lg bg-emerald-50 p-2">
                                 <source
-                                  srcset={`/bonus/avif/${b}.avif`}
+                                  srcSet={`/bonus/avif/${bonusItem}.avif`}
                                   type="image/avif"
                                 />
                                 <img
-                                  className="h-24 w-full object-contain"
-                                  src={`/bonus/png/${b}.png`}
-                                  alt={b}
+                                  className="h-full w-full object-contain"
+                                  src={`/bonus/png/${bonusItem}.png`}
+                                  alt={bonusLabel}
                                 />
                               </picture>
-                              <span className="text-foreground text-center text-xs">
-                                {uzbekTranslate[b]}
+                              <span className="min-w-0">
+                                <span className="block text-sm font-semibold text-slate-900">
+                                  {bonusLabel}
+                                </span>
+                                <span className="mt-1 block text-xs text-slate-500">
+                                  Rasmni kattalashtirish uchun bosing
+                                </span>
                               </span>
-                            </div>
+                            </button>
                           </PhotoView>
                         );
                       })}
-                    </PhotoProvider>
-                  </div>
+                    </div>
+                  </PhotoProvider>
                 </div>
-              )}
-
-              {calcResult.totalDiscount ? (
-                <NoiseBackground
-                  containerClassName="mb-10 w-full rounded-xl p-4"
-                  speed={0.4}
-                >
-                  <div className="bg-background inline-flex w-full flex-col items-start gap-4 rounded-xl p-4 sm:flex-row sm:items-end sm:gap-5">
-                    <CircleCheckBig
-                      className="text-green-600"
-                      width={40}
-                      height={40}
-                    />
-                    <SparklesText className="text-3xl sm:text-4xl lg:text-5xl" sparklesCount={5}>
-                      {formatNumber(calcResult.totalDiscount)}
-                    </SparklesText>
-                    <p>so'm foydadasiz hurmatli mijoz!</p>
-                  </div>
-                </NoiseBackground>
               ) : null}
-            </div> */}
               <div className="mb-5 flex">
                 <PhotoProvider
                   onVisibleChange={(visible) => {
@@ -1815,17 +2032,41 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
             </div>
             <DialogHeader className="items-center gap-2 text-center">
               <DialogTitle className="text-xl sm:text-2xl">
-                Tabriklaymiz!
+                Bonus qo'lga kiritildi
               </DialogTitle>
               <DialogDescription className="text-sm leading-6">
-                Siz 2 kishilik umra safari yo&apos;llanmasini yutib olish
-                imkoniyatiga ega bo&apos;ldingiz.
+                {paymentBonus && hasUmraBonus
+                  ? `${paymentBonus.qualifier} asosida sovg'a va qo'shimcha Umra imkoniyati taqdim etiladi.`
+                  : paymentBonus
+                    ? `${paymentBonus.qualifier} asosida ${paymentBonus.title.toLowerCase()} sovg'a sifatida beriladi.`
+                    : "Boshlang'ich to'lovingiz maxsus bonus shartiga mos keldi."}
               </DialogDescription>
             </DialogHeader>
-            <div className="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Bu imkoniyat uyning 30% boshlang&apos;ich to&apos;lovi bajarilgani
-              uchun taqdim etildi.
-            </div>
+            {paymentBonus ? (
+              <div className="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                Qo'shimcha chegirma: +{formatNumber(paymentBonus.discountPerM2)}
+                /m<sup>2</sup>.
+              </div>
+            ) : null}
+            {hasUmraBonus ? (
+              <div className="w-full rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-yellow-50 p-4 text-left shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <Plane className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-amber-950">
+                      2 kishilik Umra safari imkoniyati
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-amber-800">
+                      Siz Umra safari yo'llanmasini yutib olish imkoniyatiga ega
+                      bo'ldingiz. Batafsil ma'lumotni savdo bo'limidan
+                      olishingiz mumkin.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <DialogFooter className="sm:justify-center">
               <Button type="button" onClick={() => handleBonusDialog(false)}>
                 Tushunarli
