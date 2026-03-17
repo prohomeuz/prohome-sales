@@ -42,6 +42,7 @@ import { Spinner } from "@/shared/ui/spinner";
 import { Textarea } from "@/shared/ui/textarea";
 import confetti from "canvas-confetti";
 import {
+  ArrowLeft,
   ArrowUpRight,
   BadgeCheck,
   BadgePercent,
@@ -58,16 +59,26 @@ import {
   Gift,
   Grid2X2,
   HandCoins,
-  Layers2,
+  Images,
   LoaderCircle,
   Lock,
   MessageSquareText,
   Phone,
+  Plane,
   RotateCcw,
+  ShieldCheck,
   UserRound,
-  X,
 } from "lucide-react";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -172,11 +183,9 @@ const INITIAL_CALC_RESULT = {
   months: 60,
   bonus: false,
 };
-const PDF_SERVICE_URL =
-  import.meta.env.VITE_PDF_SERVICE_URL ??
-  (import.meta.env.DEV
-    ? "/pdf-service/bron"
-    : "https://contract.prohome.uz/bron");
+const LazyGenplanViewerButton = lazy(() => import("./GenplanViewerButton"));
+const LazyDiscountViewerSlider = lazy(() => import("./DiscountViewerSlider"));
+const PDF_SERVICE_URL = "https://contract.prohome.uz/bron";
 const UZ_MONTHS = [
   "yanvar",
   "fevral",
@@ -207,6 +216,41 @@ function sanitizeFileName(value) {
     .replace(/[\\/:*?"<>|]/g, "-")
     .replace(/\s+/g, " ")
     .slice(0, 140);
+}
+
+function extractContractFileFromResponse(data) {
+  if (!data || typeof data !== "object") return "";
+
+  const directContractFile = data?.contractFile;
+  const nestedDataContractFile = data?.data?.contractFile;
+  const roomContractFile = data?.room?.contractFile;
+  const resultContractFile = data?.result?.contractFile;
+
+  return (
+    directContractFile ??
+    nestedDataContractFile ??
+    roomContractFile ??
+    resultContractFile ??
+    ""
+  );
+}
+
+function resolveContractFileDocUrl(contractFile) {
+  if (!contractFile) return "";
+  const raw = String(contractFile).trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  const base = (
+    import.meta.env.VITE_BASE_URL ?? window.location.origin
+  ).replace(/\/+$/, "");
+  const normalizedPath = raw.replace(/^\/+/, "");
+
+  if (normalizedPath.startsWith("api/v1/docs/")) {
+    return `${base}/${normalizedPath}`;
+  }
+
+  return `${base}/api/v1/docs/${normalizedPath}`;
 }
 
 function normalizePhone(raw) {
@@ -349,6 +393,9 @@ function calculatorReducer(state, action) {
     case "SET_DISCOUNT":
       return { ...state, discount: action.payload };
     case "SET_GALLERY_SHOW":
+      if (state.galleryShow === action.payload) {
+        return state;
+      }
       return { ...state, galleryShow: action.payload };
     case "OPEN_STATUS_DIALOG":
       return {
@@ -416,9 +463,18 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   const { sound } = useSound("/win.mp3");
   const { updateStatus, loading: statusLoading } = useRoomStatus();
   const fetchCurrencyUsd = useAppStore((state) => state.fetchCurrencyUsd);
+  const currencyUsd = useAppStore((state) => state.currencyUsd);
   const location = useLocation();
   const navigate = useNavigate();
   const [contractFileLoading, setContractFileLoading] = useState(false);
+  const [genplanViewerLoaded, setGenplanViewerLoaded] = useState(false);
+  const [genplanOpenSignal, setGenplanOpenSignal] = useState(0);
+  const [umraViewerLoaded, setUmraViewerLoaded] = useState(false);
+  const [umraOpenSignal, setUmraOpenSignal] = useState(0);
+  const [confidenceViewerLoaded, setConfidenceViewerLoaded] = useState(false);
+  const [confidenceOpenSignal, setConfidenceOpenSignal] = useState(0);
+  const [discountViewerLoaded, setDiscountViewerLoaded] = useState(false);
+  const [discountOpenSignal, setDiscountOpenSignal] = useState(0);
   const [state, dispatch] = useReducer(
     calculatorReducer,
     undefined,
@@ -459,17 +515,21 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     [calcResult.bonus],
   );
   const summaryCards = useMemo(() => {
+    const usdRate = Number(currencyUsd?.rate);
+    const hasUsdRate = Number.isFinite(usdRate) && usdRate > 0;
     const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
     const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
-    const totalPrice =
-      resolvedPrice > 0 && resolvedSize > 0
-        ? formatNumber(resolvedPrice * resolvedSize)
-        : "---";
+    const totalUsd =
+      resolvedPrice > 0 && resolvedSize > 0 ? resolvedPrice * resolvedSize : 0;
+    const totalSom = hasUsdRate ? Math.round(totalUsd * usdRate) : 0;
+    const metrSom = hasUsdRate ? Math.round(resolvedPrice * usdRate) : 0;
     const cards = [
       {
         key: "price",
         label: "Umumiy narx",
-        value: totalPrice,
+        value: totalUsd > 0 ? `${formatNumber(totalUsd)} USD` : "---",
+        subValue:
+          hasUsdRate && totalSom > 0 ? `${formatNumber(totalSom)} so'm` : null,
         icon: CircleDollarSign,
         mono: true,
       },
@@ -518,14 +578,16 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
             M<sup>2</sup>
           </>
         ),
-        value: formatNumber(home.price),
+        value: resolvedPrice > 0 ? `${formatNumber(resolvedPrice)} USD` : "---",
+        subValue:
+          hasUsdRate && metrSom > 0 ? `${formatNumber(metrSom)} so'm` : null,
         icon: Coins,
         mono: true,
       },
     );
 
     return cards;
-  }, [calcResult, home.price, home.size]);
+  }, [calcResult, currencyUsd?.rate, home.price, home.size]);
 
   //   API
   async function calc(url) {
@@ -593,7 +655,9 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     const formData = getFormData(evt.currentTarget);
 
     Object.entries(formData).forEach(([key, value]) => {
-      url.searchParams.append(key, value.replaceAll(/\s+/g, ""));
+      const normalizedValue =
+        key === "months" ? normalizePeriod(value) || "12" : value;
+      url.searchParams.append(key, normalizedValue.replaceAll(/\s+/g, ""));
     });
 
     calc(url.href);
@@ -601,6 +665,18 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
   function handlePeriod(p) {
     dispatch({ type: "SET_PERIOD", payload: p });
+  }
+
+  function handlePeriodInputChange(evt) {
+    const digits = String(evt.target.value ?? "")
+      .replace(/\D/g, "")
+      .slice(0, 3);
+    handlePeriod(digits);
+  }
+
+  function handlePeriodInputBlur(evt) {
+    const normalized = normalizePeriod(evt.target.value);
+    handlePeriod(normalized || "12");
   }
 
   function handleDownPayment(evt) {
@@ -685,6 +761,58 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     if (nextOpen) return;
     dispatch({ type: "CLOSE_BONUS_DIALOG" });
   }
+
+  function handleOpenGenplan() {
+    setGenplanViewerLoaded(true);
+    setGenplanOpenSignal((prev) => prev + 1);
+  }
+
+  function handleOpenUmra() {
+    setUmraViewerLoaded(true);
+    setUmraOpenSignal((prev) => prev + 1);
+  }
+
+  function handleOpenConfidence() {
+    setConfidenceViewerLoaded(true);
+    setConfidenceOpenSignal((prev) => prev + 1);
+  }
+
+  function handleOpenDiscountViewer() {
+    setDiscountViewerLoaded(true);
+    setDiscountOpenSignal((prev) => prev + 1);
+  }
+
+  const handleGenplanVisibleChange = useCallback((visible) => {
+    const nextVisible = Boolean(visible);
+    dispatch({ type: "SET_GALLERY_SHOW", payload: nextVisible });
+    if (!nextVisible) {
+      setGenplanOpenSignal(0);
+    }
+  }, []);
+
+  const handleDiscountVisibleChange = useCallback((visible) => {
+    const nextVisible = Boolean(visible);
+    dispatch({ type: "SET_GALLERY_SHOW", payload: nextVisible });
+    if (!nextVisible) {
+      setDiscountOpenSignal(0);
+    }
+  }, []);
+
+  const handleUmraVisibleChange = useCallback((visible) => {
+    const nextVisible = Boolean(visible);
+    dispatch({ type: "SET_GALLERY_SHOW", payload: nextVisible });
+    if (!nextVisible) {
+      setUmraOpenSignal(0);
+    }
+  }, []);
+
+  const handleConfidenceVisibleChange = useCallback((visible) => {
+    const nextVisible = Boolean(visible);
+    dispatch({ type: "SET_GALLERY_SHOW", payload: nextVisible });
+    if (!nextVisible) {
+      setConfidenceOpenSignal(0);
+    }
+  }, []);
 
   function handleStatusField(field, value) {
     dispatch({ type: "SET_STATUS_FIELD", payload: { field, value } });
@@ -856,6 +984,26 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       return false;
     }
 
+    if (nextStatus === "RESERVED") {
+      const contractFile = extractContractFileFromResponse(result.data);
+      const contractFileUrl = resolveContractFileDocUrl(contractFile);
+
+      if (contractFileUrl) {
+        const tab = window.open(
+          contractFileUrl,
+          "_blank",
+          "noopener,noreferrer",
+        );
+
+        if (!tab) {
+          toast.info(
+            "Shartnomani ochish uchun brauzerda pop-up ruxsatini yoqing.",
+            { position: "bottom-left" },
+          );
+        }
+      }
+    }
+
     await Promise.resolve(
       onStatusUpdated?.({
         roomId: home.id,
@@ -939,6 +1087,25 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   }, [home.id]);
 
   useEffect(() => {
+    if (!currencyUsd?.rate) {
+      fetchCurrencyUsd?.();
+    }
+  }, [currencyUsd?.rate, fetchCurrencyUsd]);
+
+  useEffect(() => {
+    if (isOpen) return;
+    dispatch({ type: "SET_GALLERY_SHOW", payload: false });
+    setGenplanOpenSignal(0);
+    setGenplanViewerLoaded(false);
+    setUmraOpenSignal(0);
+    setUmraViewerLoaded(false);
+    setConfidenceOpenSignal(0);
+    setConfidenceViewerLoaded(false);
+    setDiscountOpenSignal(0);
+    setDiscountViewerLoaded(false);
+  }, [isOpen]);
+
+  useEffect(() => {
     if (statusDialogOpen || !statusDialogRenderedAction) return undefined;
 
     dialogResetTimerRef.current = window.setTimeout(() => {
@@ -960,33 +1127,137 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
       }}
       direction={"top"}
     >
-      <DrawerContent className="h-full min-h-screen overflow-y-auto lg:overflow-hidden">
-        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/90 sticky top-0 z-30 flex justify-end px-4 pt-4 pb-2 backdrop-blur sm:px-6 sm:pt-5 lg:hidden">
+      <DrawerContent
+        className={cn(
+          "flex h-full min-h-screen flex-col lg:overflow-hidden",
+          galleryShow ? "overflow-hidden" : "overflow-y-auto",
+        )}
+      >
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/90 sticky top-0 z-30 flex items-center justify-between gap-3 px-4 pt-4 pb-2 backdrop-blur sm:px-6 sm:pt-5">
           <DrawerClose
             onClick={handleClose}
             className={buttonVariants({
               variant: "secondary",
-              size: "icon-sm",
+              size: "sm",
             })}
           >
-            <X />
+            <ArrowLeft />
+            Orqaga
           </DrawerClose>
+
+          <div className="flex items-center gap-1 sm:gap-2">
+            {umraViewerLoaded ? (
+              <Suspense
+                fallback={
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    disabled
+                    className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                  >
+                    <Plane className="size-4" />
+                    Umra safari
+                  </Button>
+                }
+              >
+                <LazyGenplanViewerButton
+                  title="Umra safari"
+                  Icon={Plane}
+                  folder="umra"
+                  imageIds={[1, 2]}
+                  openSignal={umraOpenSignal}
+                  onViewerVisibleChange={handleUmraVisibleChange}
+                />
+              </Suspense>
+            ) : (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                onClick={handleOpenUmra}
+              >
+                <Plane className="size-4" />
+                Umra safari
+              </Button>
+            )}
+
+            {confidenceViewerLoaded ? (
+              <Suspense
+                fallback={
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    disabled
+                    className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                  >
+                    <ShieldCheck className="size-4" />
+                    Ishonch yorlig'i
+                  </Button>
+                }
+              >
+                <LazyGenplanViewerButton
+                  title="Ishonch yorlig'i"
+                  Icon={ShieldCheck}
+                  folder="confidence"
+                  imageIds={[1, 2]}
+                  openSignal={confidenceOpenSignal}
+                  onViewerVisibleChange={handleConfidenceVisibleChange}
+                />
+              </Suspense>
+            ) : (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                onClick={handleOpenConfidence}
+              >
+                <ShieldCheck className="size-4" />
+                Ishonch yorlig'i
+              </Button>
+            )}
+
+            {genplanViewerLoaded ? (
+              <Suspense
+                fallback={
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    disabled
+                    className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                  >
+                    <Images className="size-4" />
+                    Genplan
+                  </Button>
+                }
+              >
+                <LazyGenplanViewerButton
+                  openSignal={genplanOpenSignal}
+                  onViewerVisibleChange={handleGenplanVisibleChange}
+                />
+              </Suspense>
+            ) : (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-sm font-semibold whitespace-nowrap"
+                onClick={handleOpenGenplan}
+              >
+                <Images className="size-4" />
+                Genplan
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Close  */}
-        <DrawerClose
-          onClick={handleClose}
-          className={`${buttonVariants({
-            variant: "secondary",
-            size: "icon-sm",
-          })} absolute top-5 right-5 z-20 hidden border shadow lg:inline-flex`}
-        >
-          <X />
-        </DrawerClose>
-
-        <div className="flex min-h-full flex-col gap-6 px-4 pt-16 pb-6 sm:px-6 lg:h-full lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 px-4 pt-6 pb-6 sm:px-6 lg:flex-row lg:gap-8 lg:overflow-hidden lg:px-8 lg:pb-8">
           <div
-            className={`no-scrollbar relative w-full overflow-visible lg:h-full lg:min-h-0 lg:w-[64%] lg:flex-1 lg:overflow-y-auto lg:pr-2 ${
+            className={`no-scrollbar relative w-full overflow-visible lg:min-h-0 lg:w-[64%] lg:flex-1 lg:overflow-y-auto lg:pr-2 lg:pb-2 ${
               calcLoading ? "pointer-events-none" : ""
             }`}
           >
@@ -1017,6 +1288,42 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                 <div className="mt-4 flex justify-end">
                   <CurrencyBadge className="text-[11px]" />
                 </div>
+              </div>
+
+              <div
+                id="shu"
+                className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3"
+              >
+                {summaryCards.map((card) => {
+                  const Icon = card.icon;
+
+                  return (
+                    <div
+                      key={card.key}
+                      className="bg-primary/2 w-full rounded border p-2"
+                    >
+                      <div className="mb-2 flex items-center gap-1">
+                        <Icon />
+                        <span className="text-muted-foreground text-xs">
+                          {card.label}
+                        </span>
+                      </div>
+                      <h4
+                        className={cn(
+                          "text-lg font-medium",
+                          card.mono ? "font-mono" : "tracking-normal",
+                        )}
+                      >
+                        {card.value}
+                      </h4>
+                      {card.subValue ? (
+                        <p className="text-muted-foreground mt-0.5 text-xs font-medium">
+                          = {card.subValue}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* <div className="animate-fade-in mb-5">
@@ -1102,34 +1409,6 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
                   </div>
                 </NoiseBackground>
               ) : null}
-
-              <div
-                id="shu"
-                className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3"
-              >
-                {summaryCards.map((card) => {
-                  const Icon = card.icon;
-
-                  return (
-                    <div key={card.key} className="bg-primary/2 w-full rounded border p-2">
-                      <div className="mb-2 flex items-center gap-1">
-                        <Icon />
-                        <span className="text-muted-foreground text-xs">
-                          {card.label}
-                        </span>
-                      </div>
-                      <h4
-                        className={cn(
-                          "text-lg font-medium",
-                          card.mono ? "font-mono" : "tracking-normal",
-                        )}
-                      >
-                        {card.value}
-                      </h4>
-                    </div>
-                  );
-                })}
-              </div>
             </div> */}
               <div className="mb-5 flex">
                 <PhotoProvider
@@ -1203,35 +1482,34 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
               {/* Ramazon chegirmasi */}
               <Alert className="relative mb-10 border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-                <CircleCheckBig className="text-blue-600 dark:text-blue-400" />
-                <AlertTitle className="text-blue-900 dark:text-blue-100">
+                <AlertTitle className="text-2xl text-blue-900 dark:text-blue-100">
                   Ramazon oyi uchun maxsus chegirma
                 </AlertTitle>
-                <AlertDescription className="mb-3 text-blue-800 dark:text-blue-200">
-                  Ramazon oyi xaridlari uchun quyidagi texnikalar mutlaqa bepul
-                  taqdim qilinadi.
+                <AlertDescription className="mb-3 text-lg text-blue-800 dark:text-blue-200">
+                  Ramazon oyi xaridlari uchun quyidagi texnikalardan biri
+                  mutlaqo bepul taqdim qilinadi.
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   Muzlatgich
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   Konditsioner
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   Gaz plita
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   Blender
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   Chanyutgich
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center text-base text-blue-800 dark:text-blue-200">
                   <CircleCheckBig size={12} />
                   <strong>50 dan ziyod</strong> xonadon uchun zaruriy texnikalar
                 </AlertDescription>
@@ -1239,44 +1517,43 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
 
               {/* Infratuzilma */}
               <Alert className="relative mb-10 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-                <Layers2 className="text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="text-amber-900 dark:text-amber-100">
+                <AlertTitle className="text-2xl text-amber-900 dark:text-amber-100">
                   Infra tuzilma va avfzalliklar
                 </AlertTitle>
-                <AlertDescription className="mb-3 text-amber-800 dark:text-amber-200">
+                <AlertDescription className="mb-3 text-lg text-amber-800 dark:text-amber-200">
                   Bino maktab, bog'cha, bepul avtoturargohlar, o'yingohlar va
                   savdo majmuolariga judayam yaqin joylashgan.
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} />
                   Kuniga <strong>148 ming</strong> so'm to'lov evaziga xonodon
                   sohibi bo'lish
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} />
                   <strong>30%</strong> boshlang'ich to'lov qilganlar uchun{" "}
                   <strong>2 kishilik umra safari</strong>
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} /> <strong>9 ballik</strong>{" "}
                   zilzilagacha chidamli bino
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} />
                   <strong>Xitoylik</strong> investorlar tomonidan qurilgan
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} />
                   <strong>Jahon bazor</strong>ining yonginasida
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} /> <strong>Katta yo'l</strong>ning
                   bo'yida
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} /> <strong>Zamonaviy</strong> loyiha
                 </AlertDescription>
-                <AlertDescription className="flex items-center text-amber-800 dark:text-amber-200">
+                <AlertDescription className="flex items-center text-base text-amber-800 dark:text-amber-200">
                   <CircleCheckBig size={12} /> <strong>Oila</strong> uchun
                   to'g'ri tanlov
                 </AlertDescription>
@@ -1287,227 +1564,243 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
             </LoadTransition>
           </div>
 
-          <div className="no-scrollbar flex w-full flex-col gap-6 overflow-visible lg:h-full lg:w-[36%] lg:max-w-[26rem] lg:min-w-[23rem] lg:overflow-y-auto lg:pl-2">
-            <form
-              onSubmit={handleCalc}
-              className="bg-background mx-auto flex w-full flex-col gap-5 rounded-xl border p-4 sm:p-5"
-            >
-              {showDiscount && (
-                <div className="py-0">
-                  <div className="border-primary animate-fade-in relative rounded-xl border px-4 py-5">
-                    <h3 className="bg-primary absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded p-0.5 px-2 font-bold text-white">
-                      <BadgePercent /> Chegirma
-                    </h3>
-                    <div className="flex w-full flex-col gap-3 sm:flex-row">
-                      <Input
-                        placeholder="100 yoki 5%"
-                        onChange={handleDiscount}
-                        value={discount}
-                        autoFocus={true}
-                        autoComplete="off"
-                        name={discountType}
-                      />
-                      <NativeSelect
-                        className={"w-full sm:w-32"}
-                        onChange={(evt) => {
-                          handleChangeDiscountType(evt.target.value);
-                        }}
-                        value={discountType}
-                        defaultValue={discountType}
-                      >
-                        <NativeSelectOption value={"discountPerM2"}>
-                          m2
-                        </NativeSelectOption>
-                        <NativeSelectOption value={"discountTotal"}>
-                          Summa
-                        </NativeSelectOption>
-                      </NativeSelect>
+          <div className="w-full lg:min-h-0 lg:w-[36%] lg:max-w-[26rem] lg:min-w-[23rem] lg:pr-2 lg:pl-2">
+            <div className="flex h-full flex-col gap-6 overflow-visible lg:min-h-0 lg:overflow-y-auto lg:pr-3 lg:pb-2">
+              <form
+                onSubmit={handleCalc}
+                className="bg-background mx-auto flex w-full flex-col gap-5 rounded-xl border p-4 sm:p-5"
+              >
+                {showDiscount && (
+                  <div className="py-0">
+                    <div className="border-primary animate-fade-in relative rounded-xl border px-4 py-5">
+                      <h3 className="bg-primary absolute top-0 left-5 flex -translate-y-2/4 gap-2 rounded p-0.5 px-2 font-bold text-white">
+                        <BadgePercent /> Chegirma
+                      </h3>
+                      <div className="flex w-full flex-col gap-3 sm:flex-row">
+                        <Input
+                          placeholder="100 yoki 5%"
+                          onChange={handleDiscount}
+                          value={discount}
+                          autoFocus={true}
+                          autoComplete="off"
+                          name={discountType}
+                        />
+                        <NativeSelect
+                          className={"w-full sm:w-32"}
+                          onChange={(evt) => {
+                            handleChangeDiscountType(evt.target.value);
+                          }}
+                          value={discountType}
+                          defaultValue={discountType}
+                        >
+                          <NativeSelectOption value={"discountPerM2"}>
+                            m2
+                          </NativeSelectOption>
+                          <NativeSelectOption value={"discountTotal"}>
+                            Summa
+                          </NativeSelectOption>
+                        </NativeSelect>
+                      </div>
                     </div>
                   </div>
+                )}
+                <RadioGroup
+                  name={"state"}
+                  value={selectedState}
+                  onValueChange={(value) => {
+                    dispatch({ type: "SET_SELECTED_STATE", payload: value });
+                  }}
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <FieldLabel htmlFor="box">
+                      <Field orientation="horizontal">
+                        <FieldContent>
+                          <FieldTitle>Karobka</FieldTitle>
+                          <FieldDescription className="text-xs">
+                            Uy hech qanday ta'mirsiz, karobka holatida
+                            topshiriladi
+                          </FieldDescription>
+                        </FieldContent>
+                        <RadioGroupItem value="BOX" id="box" />
+                      </Field>
+                    </FieldLabel>
+                    <FieldLabel htmlFor="ready">
+                      <Field orientation="horizontal">
+                        <FieldContent>
+                          <FieldTitle>Ta'mirlangan</FieldTitle>
+                          <FieldDescription className="text-xs">
+                            Uy jihozlashga tayyor bo'ladi
+                          </FieldDescription>
+                        </FieldContent>
+                        <RadioGroupItem value="READY" id="ready" />
+                      </Field>
+                    </FieldLabel>
+                  </div>
+                </RadioGroup>
+                <div className="grid gap-2">
+                  <Label htmlFor="downPayment">Boshlang'ich to'lov</Label>
+                  <InputGroup>
+                    <InputGroupInput
+                      id="downPayment"
+                      onChange={handleDownPayment}
+                      value={downPayment}
+                      name={"downPayment"}
+                      placeholder="0"
+                      autoComplete="off"
+                      autoFocus={true}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupText>so'm</InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <button
+                    type="button"
+                    onClick={handleOpenDiscountViewer}
+                    className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1.5 rounded-sm pt-0.5 text-xs transition-colors"
+                  >
+                    <BadgePercent className="size-3.5" />
+                    Ko'proq to'lang, ko'proq oling
+                  </button>
+                  {discountViewerLoaded ? (
+                    <Suspense fallback={null}>
+                      <LazyDiscountViewerSlider
+                        openSignal={discountOpenSignal}
+                        onViewerVisibleChange={handleDiscountVisibleChange}
+                      />
+                    </Suspense>
+                  ) : null}
                 </div>
-              )}
-              <RadioGroup
-                name={"state"}
-                value={selectedState}
-                onValueChange={(value) => {
-                  dispatch({ type: "SET_SELECTED_STATE", payload: value });
-                }}
-              >
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <FieldLabel htmlFor="box">
-                    <Field orientation="horizontal">
-                      <FieldContent>
-                        <FieldTitle>Karobka</FieldTitle>
-                        <FieldDescription className="text-xs">
-                          Uy hech qanday ta'mirsiz, karobka holatida
-                          topshiriladi
-                        </FieldDescription>
-                      </FieldContent>
-                      <RadioGroupItem value="BOX" id="box" />
-                    </Field>
-                  </FieldLabel>
-                  <FieldLabel htmlFor="ready">
-                    <Field orientation="horizontal">
-                      <FieldContent>
-                        <FieldTitle>Ta'mirlangan</FieldTitle>
-                        <FieldDescription className="text-xs">
-                          Uy jihozlashga tayyor bo'ladi
-                        </FieldDescription>
-                      </FieldContent>
-                      <RadioGroupItem value="READY" id="ready" />
-                    </Field>
-                  </FieldLabel>
+                <div className="grid gap-2">
+                  <Label htmlFor="months">Necha oyga</Label>
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-5 gap-2">
+                      {paymentPeriods.map((p) => {
+                        return (
+                          <button
+                            type="button"
+                            key={p}
+                            onClick={() => {
+                              handlePeriod(String(p));
+                            }}
+                            className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-full border text-sm font-medium transition-colors ${
+                              Number(period) === p
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "bg-background hover:bg-accent"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <InputGroup className="w-full">
+                      <InputGroupInput
+                        id="months"
+                        name={"months"}
+                        autoComplete="off"
+                        onChange={handlePeriodInputChange}
+                        onBlur={handlePeriodInputBlur}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={period}
+                        placeholder="12"
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupText>oy</InputGroupText>
+                      </InputGroupAddon>
+                    </InputGroup>
+                  </div>
                 </div>
-              </RadioGroup>
-              <div className="grid gap-2">
-                <Label htmlFor="downPayment">Boshlang'ich to'lov</Label>
-                <InputGroup>
-                  <InputGroupInput
-                    id="downPayment"
-                    onChange={handleDownPayment}
-                    value={downPayment}
-                    name={"downPayment"}
-                    placeholder="0"
-                    autoComplete="off"
-                    autoFocus={true}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <InputGroupText>so'm</InputGroupText>
-                  </InputGroupAddon>
-                </InputGroup>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="months">Necha oyga</Label>
-                <div className="grid gap-3">
-                  <div className="grid grid-cols-5 gap-2">
-                    {paymentPeriods.map((p) => {
+                <Button variant="secondary" disabled={calcLoading}>
+                  {calcLoading ? (
+                    <>Hisoblanmoqda...</>
+                  ) : (
+                    <>
+                      <Calculator /> Hisoblash
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              <div className="bg-muted/20 rounded-xl border p-3">
+                {actionLocked && (
+                  <div className="mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-950">
+                    <span className="bg-background flex size-8 shrink-0 items-center justify-center rounded-md">
+                      <Lock className="size-4 text-amber-700" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">
+                        Ushbu uy ustida amal bajara olmaysiz
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-amber-800">
+                        Faqat ushbu bron yoki savdo amalini yaratgan
+                        foydalanuvchi statusni o'zgartira oladi.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  {home &&
+                    availableActions.map((action) => {
+                      const {
+                        code,
+                        title,
+                        description,
+                        icon: Icon,
+                        cardTone,
+                        accentTone,
+                        iconTone,
+                      } = action;
+
                       return (
                         <button
                           type="button"
-                          key={p}
-                          onClick={() => {
-                            handlePeriod(p);
-                          }}
-                          className={`inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-full border text-sm font-medium transition-colors ${
-                            period === p
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "bg-background hover:bg-accent"
-                          }`}
+                          key={code}
+                          disabled={actionLocked || actionInProgress}
+                          onClick={() => handleStatusAction(action)}
+                          className={cn(
+                            "group bg-background relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border px-4 py-4 text-left transition-colors duration-200",
+                            "hover:bg-accent/30 disabled:pointer-events-none disabled:opacity-60",
+                            cardTone,
+                          )}
                         >
-                          {p}
+                          <span
+                            className={cn(
+                              "absolute top-3 bottom-3 left-0 w-1 rounded-full",
+                              accentTone,
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "flex size-11 shrink-0 items-center justify-center rounded-lg border transition-transform duration-200 group-hover:scale-[1.03]",
+                              iconTone,
+                            )}
+                          >
+                            <Icon className="size-4.5" />
+                          </span>
+
+                          <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="text-foreground text-base font-semibold tracking-[-0.01em]">
+                              {title}
+                            </span>
+                            <span className="text-muted-foreground mt-1 text-sm leading-6">
+                              {description}
+                            </span>
+                          </span>
+
+                          <span className="text-muted-foreground group-hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-md transition-colors">
+                            {pendingAction === code && actionInProgress ? (
+                              <LoaderCircle className="size-4 animate-spin" />
+                            ) : (
+                              <ArrowUpRight className="size-4" />
+                            )}
+                          </span>
                         </button>
                       );
                     })}
-                  </div>
-                  <InputGroup className="w-full">
-                    <InputGroupInput
-                      id="months"
-                      name={"months"}
-                      autoComplete="off"
-                      onChange={(evt) => {
-                        const value = normalizePeriod(evt.target.value);
-                        handlePeriod(value);
-                      }}
-                      type="number"
-                      min={12}
-                      max={240}
-                      value={period}
-                      placeholder="0"
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupText>oy</InputGroupText>
-                    </InputGroupAddon>
-                  </InputGroup>
                 </div>
-              </div>
-              <Button variant="secondary" disabled={calcLoading}>
-                {calcLoading ? (
-                  <>Hisoblanmoqda...</>
-                ) : (
-                  <>
-                    <Calculator /> Hisoblash
-                  </>
-                )}
-              </Button>
-            </form>
-
-            <div className="bg-muted/20 rounded-xl border p-3">
-              {actionLocked && (
-                <div className="mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-950">
-                  <span className="bg-background flex size-8 shrink-0 items-center justify-center rounded-md">
-                    <Lock className="size-4 text-amber-700" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">
-                      Ushbu uy ustida amal bajara olmaysiz
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-amber-800">
-                      Faqat ushbu bron yoki savdo amalini yaratgan foydalanuvchi
-                      statusni o'zgartira oladi.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2">
-                {home &&
-                  availableActions.map((action) => {
-                    const {
-                      code,
-                      title,
-                      description,
-                      icon: Icon,
-                      cardTone,
-                      accentTone,
-                      iconTone,
-                    } = action;
-
-                    return (
-                      <button
-                        type="button"
-                        key={code}
-                        disabled={actionLocked || actionInProgress}
-                        onClick={() => handleStatusAction(action)}
-                        className={cn(
-                          "group bg-background relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden rounded-xl border px-4 py-4 text-left transition-colors duration-200",
-                          "hover:bg-accent/30 disabled:pointer-events-none disabled:opacity-60",
-                          cardTone,
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "absolute top-3 bottom-3 left-0 w-1 rounded-full",
-                            accentTone,
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "flex size-11 shrink-0 items-center justify-center rounded-lg border transition-transform duration-200 group-hover:scale-[1.03]",
-                            iconTone,
-                          )}
-                        >
-                          <Icon className="size-4.5" />
-                        </span>
-
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="text-foreground text-base font-semibold tracking-[-0.01em]">
-                            {title}
-                          </span>
-                          <span className="text-muted-foreground mt-1 text-sm leading-6">
-                            {description}
-                          </span>
-                        </span>
-
-                        <span className="text-muted-foreground group-hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-md transition-colors">
-                          {pendingAction === code && actionInProgress ? (
-                            <LoaderCircle className="size-4 animate-spin" />
-                          ) : (
-                            <ArrowUpRight className="size-4" />
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
               </div>
             </div>
           </div>

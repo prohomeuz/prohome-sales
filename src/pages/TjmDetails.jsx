@@ -807,13 +807,13 @@ export default function TjmDetails() {
                                   rooms: value,
                                 }))
                               }
-                              className="bg-border/60 grid w-full [grid-template-columns:repeat(auto-fit,minmax(92px,1fr))] gap-px overflow-hidden rounded-md p-px"
+                              className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-xl border p-1 shadow-none"
                             >
                               {roomOptions.map((room) => (
                                 <ToggleGroupItem
                                   key={room}
                                   value={room}
-                                  className="bg-background data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/40 w-full justify-center gap-2 rounded-none border-0 text-xs shadow-none data-[state=on]:font-semibold data-[state=on]:ring-1 data-[state=on]:ring-inset"
+                                  className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center rounded-lg border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
                                 >
                                   {room} xona
                                 </ToggleGroupItem>
@@ -837,14 +837,14 @@ export default function TjmDetails() {
                                   statuses: value,
                                 }))
                               }
-                              className="bg-border/60 grid w-full [grid-template-columns:repeat(2,minmax(140px,1fr))] gap-px overflow-hidden rounded-md p-px sm:[grid-template-columns:repeat(4,minmax(140px,1fr))]"
+                              className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-xl border p-1 shadow-none sm:grid-cols-4"
                             >
                               {Object.entries(STATUS_LABEL).map(
                                 ([value, label]) => (
                                   <ToggleGroupItem
                                     key={value}
                                     value={value}
-                                    className="bg-background data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/40 w-full justify-center gap-2 rounded-none border-0 text-xs shadow-none data-[state=on]:font-semibold data-[state=on]:ring-1 data-[state=on]:ring-inset"
+                                    className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center gap-2 rounded-lg border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
                                   >
                                     <span
                                       className={cn(
@@ -992,7 +992,7 @@ export default function TjmDetails() {
                   </div>
                 </div>
               ) : (
-                <div className="no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [--room-tile-gap:0.5rem] [--room-tile-size:2rem] sm:[--room-tile-size:2.25rem]">
+                <div className="no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [--room-tile-gap:0.5rem] [--room-tile-size:2rem] [scrollbar-gutter:auto] sm:[--room-tile-size:2.25rem]">
                   <div className="bg-background sticky top-0 z-30 mb-6 flex w-max min-w-full items-start border-b py-4">
                     <div className="w-10 shrink-0 sm:w-11" />
                     <div className="flex gap-8 px-2 sm:gap-12 sm:px-3 lg:gap-16 xl:gap-20">
