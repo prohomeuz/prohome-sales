@@ -74,14 +74,17 @@ function TabsTrigger({ className, ...props }) {
   );
 }
 
-function TabsContent({ className, ...props }) {
+function TabsContent({ className, forceMount = false, ...props }) {
   const context = React.useContext(TabsContext);
-  if (context?.value !== props.value) return null;
+  const isActive = context?.value === props.value;
+  if (!isActive && !forceMount) return null;
 
   return (
     <div
       data-slot="tabs-content"
-      className={cn("outline-none", className)}
+      data-state={isActive ? "active" : "inactive"}
+      className={cn("outline-none", !isActive && "hidden", className)}
+      aria-hidden={!isActive}
       {...props}
     />
   );
