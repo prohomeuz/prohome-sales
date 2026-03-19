@@ -1,3 +1,4 @@
+import { validateCompanyFormData, formatCompanyPhone } from "@/features/company-form/lib/validators";
 import {
   Field,
   FieldContent,
@@ -20,8 +21,6 @@ import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 import { apiRequest } from "@/shared/lib/api";
 import { getFormData } from "@/shared/lib/utils";
-
-const UZ_PHONE = /^\+998\d{9}$/;
 
 const EMPTY_ERRORS = {
   name: null,
@@ -71,37 +70,17 @@ export default function AddCompany() {
     [logo.src]
   );
 
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "";
-    const trimmed = phone.trim();
-    return trimmed.startsWith("+") ? trimmed : `+998${trimmed}`;
-  }, []);
-
   const validateCompanyForm = useCallback(
     (form, data) => {
-      const next = { ...EMPTY_ERRORS };
-      const name = (data.name ?? "").trim();
-      const phone = (data.phoneNumber ?? "").trim();
-      const fullPhone = formatPhone(phone);
-      const managerName = (data.managerName ?? "").trim();
-      const description = (data.description ?? "").trim();
-
-      if (!name) next.name = "Kompaniya nomini kiriting!";
-      if (!phone) next.phoneNumber = "Telefon raqamni kiriting!";
-      else if (!UZ_PHONE.test(fullPhone)) next.phoneNumber = "Telefon raqam +998xxxxxxxxx formatda bo'lishi kerak!";
-      if (!managerName) next.managerName = "Boshqaruvchi ismini kiriting!";
-      if (!description) next.description = "Kompaniya uchun izoh yozing!";
-      if (!data.permissions?.length) next.permissions = "Kompaniya uchun ruxsatlarni belgilang!";
-
+      const { errors: next, isValid } = validateCompanyFormData(data);
       dispatch({ type: "SET_ERRORS", payload: next });
       if (next.name) form.name?.focus();
       else if (next.phoneNumber) form.phoneNumber?.focus();
       else if (next.managerName) form.managerName?.focus();
       else if (next.description) form.description?.focus();
-
-      return Object.values(next).every((v) => v === null);
+      return isValid;
     },
-    [formatPhone]
+    [],
   );
 
   const handleImage = useCallback((file) => {
@@ -136,7 +115,7 @@ export default function AddCompany() {
       };
       if (!validateCompanyForm(form, data)) return;
 
-      const formattedPhone = formatPhone(data.phoneNumber);
+      const formattedPhone = formatCompanyPhone(data.phoneNumber);
       const formData = new FormData();
       Object.entries({
         ...data,
@@ -180,7 +159,7 @@ export default function AddCompany() {
         dispatch({ type: "SET_ADD_LOADING", payload: false });
       }
     },
-    [formatPhone, logo.file, navigate, validateCompanyForm]
+    [logo.file, navigate, validateCompanyForm]
   );
 
   return (

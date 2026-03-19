@@ -28,6 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppStore } from "@/entities/session/model";
 import { Button, buttonVariants } from "@/shared/ui/button";
+import { cn } from "@/shared/lib/utils";
 
 const routes = {
   SUPERADMIN: [
@@ -95,13 +96,12 @@ export function AppSidebar({ ...props }) {
           {routes[user.role].map(({ url, text, icon }, index) => {
             return (
               <Link
-                className={`${buttonVariants({
-                  variant: "ghost",
-                })} justify-start ${
-                  url === currentPath
-                    ? "bg-accent text-accent-foreground dark:bg-accent/50"
-                    : ""
-                }`}
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  "justify-start",
+                  url === currentPath &&
+                    "bg-accent text-accent-foreground dark:bg-accent/50",
+                )}
                 key={index}
                 to={url}
               >

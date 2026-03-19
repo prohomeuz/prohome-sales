@@ -1,10 +1,11 @@
 import { cn } from "@/shared/lib/utils";
 import { Spinner } from "@/shared/ui/spinner";
-import LogoLoader from "@/widgets/loading/LogoLoader";
 
-export function PageFallback() {
-  return <LogoLoader />;
-}
+/**
+ * @deprecated Ko'chirildi: @/widgets/loading/PageFallback
+ * FSD qoidasiga ko'ra shared/ widgets/ dan import qila olmaydi.
+ */
+export { default as PageFallback } from "@/widgets/loading/PageFallback";
 
 export function PanelFallback({ className }) {
   return (

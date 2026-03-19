@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEventListener } from '@/shared/hooks/use-event-listener'
 import { useMemoizedFn } from '@/shared/hooks/use-memoized-fn'
 import { useUnmount } from '@/shared/hooks/use-unmount'
-import { isBrowser } from '@/shared/lib/is-browser'
+import { isBrowser } from 'es-toolkit'
 
 function isAllowed(status) {
   return status === 'granted' || status === 'prompt'

@@ -1,3 +1,9 @@
+import {
+  formatContractDate,
+  getRowKey,
+  resolveContractAmount,
+  resolveContractFileUrl,
+} from "@/features/contracts/lib/contract-utils";
 import { CircleDollarSign, Download, FileText, RefreshCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -26,10 +32,10 @@ const PROJECT_ID = 1;
 const ALL_STATUS = "ALL";
 
 const STATUS_BADGE_CLASS = {
-  SOLD: "bg-red-500 text-white hover:bg-red-500",
+  SOLD: "bg-destructive text-white hover:bg-destructive",
   RESERVED: "bg-orange-500 text-white hover:bg-orange-500",
-  EMPTY: "bg-green-500 text-white hover:bg-green-500",
-  NOT: "bg-slate-400 text-white hover:bg-slate-400",
+  EMPTY: "bg-primary text-primary-foreground hover:bg-primary",
+  NOT: "bg-secondary text-secondary-foreground hover:bg-secondary",
 };
 
 const STATUS_LABEL = {
@@ -45,81 +51,6 @@ const STATUS_TABS = [
   { key: "RESERVED", label: "Bron qilingan" },
 ];
 
-function formatContractDate(value) {
-  if (!value) {
-    return { date: "Sana yo'q", time: "" };
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return { date: "Noma'lum sana", time: "" };
-  }
-
-  return {
-    date: new Intl.DateTimeFormat("uz-UZ", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    }).format(parsed),
-    time: new Intl.DateTimeFormat("uz-UZ", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(parsed),
-  };
-}
-
-function getRowKey(contract, index) {
-  return String(
-    contract?.id ??
-      contract?.contractId ??
-      contract?.contractNumber ??
-      `${contract?.contractDate ?? "contract"}-${contract?.fullName ?? index}`,
-  );
-}
-
-function resolveContractFileUrl(contractFile) {
-  if (!contractFile) return "";
-  if (contractFile.startsWith("http")) return contractFile;
-
-  const base = import.meta.env.VITE_BASE_URL ?? window.location.origin;
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = contractFile.startsWith("/")
-    ? contractFile.slice(1)
-    : contractFile;
-
-  return new URL(normalizedPath, normalizedBase).href;
-}
-
-function parseAmountValue(raw) {
-  if (raw === null || raw === undefined || raw === "") return null;
-
-  if (typeof raw === "number") {
-    return Number.isFinite(raw) ? raw : null;
-  }
-
-  const normalized = String(raw).replace(/[^\d.-]/g, "");
-  const numeric = Number(normalized);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
-function resolveContractAmount(contract) {
-  const candidates = [
-    contract?.totalPrice,
-    contract?.totalAmount,
-    contract?.amount,
-    contract?.price,
-    contract?.contractAmount,
-    contract?.sum,
-    contract?.overallPrice,
-  ];
-
-  for (const candidate of candidates) {
-    const value = parseAmountValue(candidate);
-    if (value !== null) return value;
-  }
-
-  return null;
-}
 
 export default function Contracts() {
   const { contracts, error, loading, get } = useContracts(PROJECT_ID);
@@ -270,7 +201,7 @@ export default function Contracts() {
                     </CardContent>
                   </Card>
 
-                  <Card className="gap-0 border-red-200/70 bg-red-50/60 py-0 shadow-none">
+                  <Card className="gap-0 border-destructive/20 bg-destructive/5 py-0 shadow-none">
                     <CardContent className="p-4">
                       <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
                         Sotilgan
@@ -281,7 +212,7 @@ export default function Contracts() {
                     </CardContent>
                   </Card>
 
-                  <Card className="gap-0 border-orange-200/70 bg-orange-50/70 py-0 shadow-none">
+                  <Card className="gap-0 border-orange-200/70 bg-orange-50/70 py-0 shadow-none dark:border-orange-900/30 dark:bg-orange-950/20">
                     <CardContent className="p-4">
                       <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
                         Bron qilingan
