@@ -1,4 +1,4 @@
-import { Label } from "@radix-ui/react-label";
+import { Label } from "@/shared/ui/label";
 import { Eye, EyeClosed } from "lucide-react";
 import { useCallback, useReducer, useRef } from "react";
 import { Navigate } from "react-router-dom";

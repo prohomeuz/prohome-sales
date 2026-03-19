@@ -15,7 +15,7 @@ export default function SurfaceLoader({
           panelClassName,
         )}
       >
-        <div className="relative mb-4 flex size-16 items-center justify-center rounded-2xl border bg-primary/5 shadow-[0_10px_30px_-18px_rgba(94,165,0,0.55)]">
+        <div className="relative mb-4 flex size-16 items-center justify-center rounded-2xl border bg-primary/5 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_55%,transparent)]">
           <img
             className="size-9 animate-pulse object-contain"
             src="/logo.png"

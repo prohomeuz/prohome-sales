@@ -1,7 +1,8 @@
+import { validateCompanyFormData, formatCompanyPhone } from "@/features/company-form/lib/validators";
 import { useCompanyDetails } from "@/shared/hooks/use-company-details";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { apiUrl } from "@/shared/lib/api";
-import { getFormData } from "@/shared/lib/utils";
+import { cn, getFormData } from "@/shared/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +45,6 @@ import {
 import { useCallback, useEffect, useReducer } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-const UZ_PHONE = /^\+998\d{9}$/;
 const INITIAL_ERRORS = {
   name: null,
   phoneNumber: null,
@@ -126,46 +126,17 @@ export default function CompanyDetails() {
     [logo.src],
   );
 
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "";
-    const trimmed = phone.trim();
-    return trimmed.startsWith("+") ? trimmed : `+998${trimmed}`;
-  }, []);
-
   const validateCompanyEditForm = useCallback(
     (form, data) => {
-      const next = {
-        name: null,
-        phoneNumber: null,
-        managerName: null,
-        description: null,
-        permissions: null,
-      };
-      const name = (data.name ?? "").trim();
-      const phone = (data.phoneNumber ?? "").trim();
-      const fullPhone = formatPhone(phone);
-      const managerName = (data.managerName ?? "").trim();
-      const description = (data.description ?? "").trim();
-
-      if (!name) next.name = "Kompaniya nomini kiriting!";
-      if (!phone) next.phoneNumber = "Telefon raqamni kiriting!";
-      else if (!UZ_PHONE.test(fullPhone))
-        next.phoneNumber =
-          "Telefon raqam +998xxxxxxxxx formatda bo'lishi kerak!";
-      if (!managerName) next.managerName = "Boshqaruvchi ismini kiriting!";
-      if (!description) next.description = "Kompaniya uchun izoh yozing!";
-      if (!data.permissions?.length)
-        next.permissions = "Kompaniya uchun ruxsatlarni belgilang!";
-
+      const { errors: next, isValid } = validateCompanyFormData(data);
       dispatch({ type: "SET_ERRORS", payload: next });
       if (next.name) form.name?.focus();
       else if (next.phoneNumber) form.phoneNumber?.focus();
       else if (next.managerName) form.managerName?.focus();
       else if (next.description) form.description?.focus();
-
-      return Object.values(next).every((v) => v === null);
+      return isValid;
     },
-    [formatPhone],
+    [],
   );
 
   const handleEditMode = useCallback(() => {
@@ -209,7 +180,7 @@ export default function CompanyDetails() {
         ...data,
         logo: logo.file ?? undefined,
         removeLogo: logo.removed && !logo.file,
-        phoneNumber: formatPhone(data.phoneNumber),
+        phoneNumber: formatCompanyPhone(data.phoneNumber),
       }).then((ok) => {
         if (ok) {
           dispatch({ type: "RESET_LOGO" });
@@ -219,7 +190,6 @@ export default function CompanyDetails() {
     },
     [
       edit,
-      formatPhone,
       logo.file,
       logo.removed,
       handleEditMode,
@@ -288,7 +258,7 @@ export default function CompanyDetails() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {!statusLoading && (
             <Badge
-              className={`animate-fade-in ${details.status === false ? "bg-background" : ""}`}
+              className={cn("animate-fade-in", details.status === false && "bg-background")}
               variant={details.status ? "default" : "outline"}
             >
               {details.status ? (
@@ -367,7 +337,10 @@ export default function CompanyDetails() {
           </Avatar>
           {editMode && (
             <div
-              className={`animate-fade-in absolute inset-0 z-10 flex bg-black/50 ${editLoading ? "pointer-events-none opacity-80" : ""}`}
+              className={cn(
+              "animate-fade-in absolute inset-0 z-10 flex bg-black/50",
+              editLoading && "pointer-events-none opacity-80",
+            )}
             >
               {avatarSrc && (
                 <div

@@ -1,5 +1,5 @@
 import { useAppStore } from "@/entities/session/model";
-import { PageFallback } from "@/shared/ui/suspense-fallback";
+import PageFallback from "@/widgets/loading/PageFallback";
 import Bug from "@/widgets/error/Bug";
 import MainLayout from "@/widgets/layout/main-layout";
 import { useMemo } from "react";

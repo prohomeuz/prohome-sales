@@ -75,8 +75,8 @@ export default function Company() {
                           variant="outline"
                           className={
                             status
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-                              : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-50"
+                              ? "border-primary/20 bg-primary/6 text-primary hover:bg-primary/6"
+                              : "border-destructive/20 bg-destructive/6 text-destructive hover:bg-destructive/6"
                           }
                         >
                           <span className="relative mr-0.5 flex size-2.5">
