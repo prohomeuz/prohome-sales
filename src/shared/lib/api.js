@@ -5,7 +5,8 @@
 
 const BASE = import.meta.env.VITE_BASE_URL;
 
-export function getToken() {
+/** @returns {string|null} */
+function getToken() {
   return localStorage.getItem("token");
 }
 

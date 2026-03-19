@@ -77,7 +77,7 @@ export default function Dashboard() {
           ) : sales ? (
             <>
               <div className="mb-10 flex w-full flex-col overflow-hidden rounded-xl md:flex-row">
-                <div className="w-full bg-green-500 p-4 md:w-1/2">
+                <div className="w-full bg-primary p-4 md:w-1/2">
                   <div className="mb-2 flex items-center gap-1">
                     <span className="text-primary-foreground text-xs">
                       Sotilgan uylar
@@ -87,7 +87,7 @@ export default function Dashboard() {
                     {formatNumber(sales.totalSalesAmount)} UZS
                   </h4>
                 </div>
-                <div className="w-full bg-red-800/50 p-4 md:w-1/2">
+                <div className="w-full bg-destructive/60 p-4 md:w-1/2">
                   <div className="mb-2 flex items-center gap-1">
                     <span className="text-primary-foreground text-xs">
                       Qolgan uylar

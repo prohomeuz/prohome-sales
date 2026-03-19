@@ -1,5 +1,5 @@
 {
-  "maxFloor": 16,
+  "config": { "maxFloor": 16 },
   "blocks": {
     "11-BLOK": {
       "floor": 16,

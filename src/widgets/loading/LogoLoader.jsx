@@ -9,7 +9,7 @@ export default function LogoLoader({
   return (
     <div
       className={cn(
-        "flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(94,165,0,0.08),transparent_42%),linear-gradient(to_bottom,rgba(255,255,255,0.96),rgba(255,255,255,0.9))]",
+        "flex h-full w-full items-center justify-center bg-background",
         className,
       )}
     >
