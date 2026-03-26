@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)]
   [string]$TemplatePath,
 
@@ -10,7 +10,6 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-
 function Replace-WordText {
   param(
     [Parameter(Mandatory = $true)]
@@ -45,6 +44,201 @@ function Replace-WordText {
     $ReplaceText,
     2
   )
+}
+
+function Get-AllStoryRanges {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Document
+  )
+
+  $ranges = @()
+  foreach ($root in $Document.StoryRanges) {
+    $story = $root
+    while ($null -ne $story) {
+      $ranges += $story
+      $story = $story.NextStoryRange
+    }
+  }
+
+  return $ranges
+}
+
+function Replace-WordTextInDocument {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Document,
+
+    [Parameter(Mandatory = $true)]
+    [string]$FindText,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ReplaceText,
+
+    [switch]$Wildcards
+  )
+
+  $storyRanges = Get-AllStoryRanges -Document $Document
+  foreach ($storyRange in $storyRanges) {
+    Replace-WordText `
+      -Range $storyRange `
+      -FindText $FindText `
+      -ReplaceText $ReplaceText `
+      -Wildcards:([bool]$Wildcards)
+  }
+}
+
+function Replace-ValueAfterLabelInRange {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Range,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Label,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Value,
+
+    [Nullable[bool]]$Bold = $null,
+
+    [Nullable[double]]$Size = $null,
+
+    [int]$MaxMatches = 2
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Label)) {
+    return
+  }
+
+  $scopeEnd = $Range.End
+  $searchRange = $Range.Duplicate
+  $matchCount = 0
+
+  while ($searchRange.Start -lt $scopeEnd -and $matchCount -lt $MaxMatches) {
+    $find = $searchRange.Find
+    $find.ClearFormatting()
+    $find.Text = $Label
+    $find.Forward = $true
+    $find.Wrap = 0
+
+    $found = $find.Execute(
+      $Label,
+      $false,
+      $false,
+      $false,
+      $false,
+      $false,
+      $true,
+      1,
+      $false
+    )
+
+    if (!$found) {
+      break
+    }
+
+    $paragraphRange = $searchRange.Paragraphs.Item(1).Range
+    $valueRange = $paragraphRange.Duplicate
+    $valueRange.Start = $searchRange.End
+    $valueRange.End = $paragraphRange.End - 1
+
+    if ($valueRange.End -lt $valueRange.Start) {
+      $valueRange.SetRange($searchRange.End, $searchRange.End)
+    }
+
+    $valueRange.Text = " $Value"
+
+    if ($null -ne $Bold) {
+      $valueRange.Font.Bold = [int][bool]$Bold * -1
+    }
+
+    if ($null -ne $Size) {
+      $valueRange.Font.Size = [double]$Size
+    }
+
+    $matchCount += 1
+
+    $scopeEnd = $Range.End
+    $searchRange.SetRange($paragraphRange.End, $scopeEnd)
+  }
+}
+
+function Replace-ValueAfterLabelsInDocument {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Document,
+
+    [Parameter(Mandatory = $true)]
+    [string[]]$Labels,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Value,
+
+    [Nullable[bool]]$Bold = $null,
+
+    [Nullable[double]]$Size = $null
+  )
+
+  if ($null -eq $Labels -or $Labels.Count -eq 0) {
+    return
+  }
+
+  $storyRanges = Get-AllStoryRanges -Document $Document
+  foreach ($storyRange in $storyRanges) {
+    foreach ($label in $Labels) {
+      Replace-ValueAfterLabelInRange `
+        -Range $storyRange `
+        -Label $label `
+        -Value $Value `
+        -Bold $Bold `
+        -Size $Size
+    }
+  }
+}
+
+function DocumentContainsText {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Document,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Text
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Text)) {
+    return $false
+  }
+
+  $storyRanges = Get-AllStoryRanges -Document $Document
+  foreach ($storyRange in $storyRanges) {
+    if ([string]$storyRange.Text -like "*$Text*") {
+      return $true
+    }
+  }
+
+  return $false
+}
+
+function StoryRangesContainText {
+  param(
+    [Parameter(Mandatory = $true)]
+    $StoryRanges,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Text
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Text)) {
+    return $false
+  }
+
+  foreach ($storyRange in $storyRanges) {
+    if ([string]$storyRange.Text -like "*$Text*") {
+      return $true
+    }
+  }
+
+  return $false
 }
 
 function Find-FirstRange {
@@ -174,13 +368,9 @@ function Set-TableCellText {
     [string]$Value
   )
 
-  try {
-    $range = $Table.Cell($Row, $Column).Range
-    $range.End = $range.End - 1
-    $range.Text = [string]$Value
-  } catch {
-    return
-  }
+  $range = $Table.Cell($Row, $Column).Range
+  $range.End = $range.End - 1
+  $range.Text = [string]$Value
 }
 
 if (!(Test-Path -LiteralPath $TemplatePath)) {
@@ -189,6 +379,19 @@ if (!(Test-Path -LiteralPath $TemplatePath)) {
 
 if (!(Test-Path -LiteralPath $PayloadPath)) {
   throw "Payload topilmadi: $PayloadPath"
+}
+
+try {
+  $orphanThreshold = (Get-Date).AddMinutes(-2)
+  Get-Process -Name WINWORD -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.MainWindowHandle -eq 0 -and $_.StartTime -lt $orphanThreshold
+    } |
+    ForEach-Object {
+      Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    }
+} catch {
+  # Cleanup fail bo'lsa generatsiyani to'xtatmaymiz.
 }
 
 $payload = Get-Content -LiteralPath $PayloadPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -214,11 +417,6 @@ try {
 
   $replacements = @(
     @{
-      Find = 'Boqijonov Umidjon Baxromjon O?g?libilan 2025 yil "20" oktyabrda tuzilgan ? 2010011-sonli shartnomaning to?lov muddati grafigi'
-      Replace = "$($payload.fullName) bilan $($payload.contractDateText)da tuzilgan $contractNoSign $($payload.contractNumber)-sonli shartnomaning to'lov muddati grafigi"
-      Wildcards = $true
-    },
-    @{
       Find = '2025 yil "20" oktyabr'
       Replace = [string]$payload.contractDateText
     },
@@ -227,9 +425,16 @@ try {
       Replace = [string]$payload.contractNumber
     },
     @{
+      Find = "Boqijonov Umidjon Baxromjon O‘g‘li"
+      Replace = [string]$payload.fullName
+    },
+    @{
+      Find = 'Boqijonov Umidjon Baxromjon O''g''li'
+      Replace = [string]$payload.fullName
+    },
+    @{
       Find = 'Boqijonov Umidjon Baxromjon O?g?li'
       Replace = [string]$payload.fullName
-      Wildcards = $true
     },
     @{
       Find = 'Boqijonov Umidjon'
@@ -244,7 +449,11 @@ try {
       Replace = [string]$payload.passportNumber
     },
     @{
-      Find = 'FARG’ONA VILOYATI QO‘SHTEPA TUMANI IIB'
+      Find = "FARG’ONA VILOYATI QO‘SHTEPA TUMANI IIB"
+      Replace = [string]$payload.passportIssuedBy
+    },
+    @{
+      Find = 'FARG''ONA VILOYATI QO''SHTEPA TUMANI IIB'
       Replace = [string]$payload.passportIssuedBy
     },
     @{
@@ -257,6 +466,10 @@ try {
     },
     @{
       Find = 'Фаргона viloyati, ҚУМТЕПА МФЙ, ЛАТИФ КЎЧАСИ,  uy:187'
+      Replace = [string]$payload.address
+    },
+    @{
+      Find = 'Фаргона viloyati ҚУМТЕПА МФЙ, ЛАТИФ КЎЧАСИ,  uy:187'
       Replace = [string]$payload.address
     },
     @{
@@ -301,55 +514,41 @@ try {
       -Wildcards:([bool]$item.Wildcards)
   }
 
-  $contractNumberParagraph = Get-ParagraphRange -Document $document -FindText 'Shartnoma ?' -Wildcards
-  $contractDateParagraph = Get-ParagraphRange -Document $document -FindText 'Marg`ilon shahar'
-  $scheduleTitleParagraph = Get-ParagraphRange -Document $document -FindText 'grafigi'
+  Replace-WordText `
+    -Range $content `
+    -FindText "$($payload.fullName)bilan" `
+    -ReplaceText "$($payload.fullName) bilan"
 
-  if ($null -ne $contractNumberParagraph) {
-    Format-WordText -Range $contractNumberParagraph -FindText ([string]$payload.contractNumber) -Bold $true -Size 10.5
-  }
-
-  if ($null -ne $contractDateParagraph) {
-    Format-WordText -Range $contractDateParagraph -FindText ([string]$payload.contractDateText) -Bold $true -Size 10
-  }
-
-  $priceParagraph = Find-FirstRange -Range $content -FindText ([string]$payload.pricePerMeterUsdLabel)
-  if ($null -ne $priceParagraph) {
-    $priceParagraph.Font.Bold = -1
-    $priceParagraph.Font.Size = 11
-  }
-
-  $totalAmountText = "$($payload.totalUsdLabel) ($($payload.totalUsdWords))"
-  $totalAmountRange = Find-FirstRange -Range $content -FindText $totalAmountText
-  if ($null -ne $totalAmountRange) {
-    $totalAmountRange.Font.Bold = -1
-    $totalAmountRange.Font.Size = 11
-  }
-
-  $contentFormattingTargets = @(
-    @{ Text = [string]$payload.shortName; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.birthDate; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.passportNumber; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.passportIssuedBy; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.passportIssuedDate; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.phone; Bold = $true; Size = 12 },
-    @{ Text = [string]$payload.address; Bold = $true; Size = 12 }
+  $labelDrivenFields = @(
+    @{ Labels = @("Ism-familiya:"); Value = [string]$payload.shortName; Bold = $true; Size = 12 },
+    @{ Labels = @("Tug'ilgansanasi:", "Tug'ilgan sanasi:"); Value = [string]$payload.birthDate; Bold = $true; Size = 12 },
+    @{ Labels = @("Passportraqami:", "Passport raqami:"); Value = [string]$payload.passportNumber; Bold = $true; Size = 12 },
+    @{ Labels = @("Kimtomondanberilgan:", "Kim tomonidan berilgan:"); Value = [string]$payload.passportIssuedBy; Bold = $true; Size = 12 },
+    @{ Labels = @("Berilgansana:", "Berilgan sana:"); Value = [string]$payload.passportIssuedDate; Bold = $true; Size = 12 },
+    @{ Labels = @("Telefon:"); Value = [string]$payload.phone; Bold = $true; Size = 12 },
+    @{ Labels = @("Manzili:", "Manzil:"); Value = [string]$payload.address; Bold = $true; Size = 12 }
   )
 
-  foreach ($formatTarget in $contentFormattingTargets) {
-    $targetRange = Find-FirstRange -Range $content -FindText $formatTarget.Text
-    if ($null -eq $targetRange) {
-      continue
-    }
-
-    if ($null -ne $formatTarget.Bold) {
-      $targetRange.Font.Bold = [int][bool]$formatTarget.Bold * -1
-    }
-
-    if ($null -ne $formatTarget.Size) {
-      $targetRange.Font.Size = [double]$formatTarget.Size
+  foreach ($field in $labelDrivenFields) {
+    foreach ($label in $field.Labels) {
+      Replace-ValueAfterLabelInRange `
+        -Range $content `
+        -Label $label `
+        -Value $field.Value `
+        -Bold $field.Bold `
+        -Size $field.Size
     }
   }
+
+  $contentText = [string]$content.Text
+  $legacyMarkers = @('2003-06-02', 'AC 2521090', '+998936611610', 'uy:187')
+  foreach ($legacy in $legacyMarkers) {
+    if ($contentText -like "*$legacy*") {
+      throw "Template ichida eski qiymat qolib ketdi: $legacy"
+    }
+  }
+
+  $scheduleTitleParagraph = Get-ParagraphRange -Document $document -FindText 'grafigi'
 
   $paymentTable = $document.Tables.Item(2)
 
@@ -386,7 +585,6 @@ try {
     Set-TableCellText -Table $paymentTable -Row $tableRow -Column 3 -Value ([string]$scheduleRow.payment)
     Set-TableCellText -Table $paymentTable -Row $tableRow -Column 4 -Value ([string]$scheduleRow.balance)
   }
-
   if ($null -ne $scheduleTitleParagraph) {
     $scheduleTitleParagraph.Font.Bold = -1
     $scheduleTitleParagraph.Font.Size = 8
@@ -418,3 +616,4 @@ try {
     Remove-Item -LiteralPath $workingPath -Force -ErrorAction SilentlyContinue
   }
 }
+
