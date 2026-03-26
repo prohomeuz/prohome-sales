@@ -14,8 +14,11 @@
  * HomeDetails.jsx tomonidan ishlatiladi.
  */
 
+import { getNextContractNumber } from "@/features/contracts/lib/contract-utils";
+import { buildSalesContractTemplateData } from "@/features/contracts/lib/sales-contract-data";
+import { useRoomStatus } from "@/features/room-status-change/model/use-room-status";
 import { useAppStore } from "@/entities/session/model";
-import { useRoomStatus } from "@/shared/hooks/use-room-status";
+import { apiRequest } from "@/shared/lib/api";
 import useSound from "@/shared/hooks/use-sound";
 import {
   formatNumber,
@@ -49,6 +52,7 @@ import {
   actionButtons,
   DEFAULT_CALC_STATE,
   PDF_SERVICE_URL,
+  SOLD_CONTRACT_SERVICE_URL,
   states,
   STATUS_DIALOG_CLOSE_DELAY,
   UZ_PHONE,
@@ -56,7 +60,7 @@ import {
   MAX_INSTALLMENTS,
 } from "../lib/constants";
 import {
-  createEmptyStatusForm,
+  closePendingDocumentWindow,
   digitsOnly,
   extractContractFileFromResponse,
   formatCreatedDate,
@@ -64,11 +68,13 @@ import {
   getInitialStatusForm,
   getPositiveNumericString,
   normalizePhone,
+  openPendingDocumentWindow,
   openExternalDocument,
   resolveContractFileDocUrl,
   resolvePaymentBonus,
   sanitizeFileName,
 } from "../lib/helpers";
+import { validateStatusFormFields } from "../lib/status-form-validation";
 import {
   calculatorReducer,
   createCalculatorInitialState,
@@ -89,9 +95,9 @@ const LazyDiscountViewerSlider = lazy(() =>
 
 /**
  * Xona kalkulyatori va holat boshqaruv paneli.
- * @param {{ home: object, onStatusUpdated?: function }} props
+ * @param {{ home: object, projectId?: string|number, onStatusUpdated?: function }} props
  */
-export default function CalculatorTool({ home, onStatusUpdated }) {
+export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   const timerRef = useRef();
   const dialogResetTimerRef = useRef();
   const { sound } = useSound("/win.mp3");
@@ -391,6 +397,161 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     return { downPayment: fallbackDownPayment, installments: fallbackInstallments };
   }
 
+  async function resolveCurrencyRate() {
+    if (!useAppStore.getState().currencyUsd?.rate) {
+      await fetchCurrencyUsd?.();
+    }
+
+    const currencyRate = Number(useAppStore.getState().currencyUsd?.rate);
+    if (!Number.isFinite(currencyRate) || currencyRate <= 0) {
+      throw new Error("Dollar kursi topilmadi.");
+    }
+
+    return currencyRate;
+  }
+
+  async function resolveNextSalesContractNumber(contractDate) {
+    const yearFallback = `${contractDate.getFullYear()}0001`;
+    if (!projectId) return yearFallback;
+
+    const res = await apiRequest(`/api/v1/contract/contract/${projectId}`);
+    if (!res.ok) {
+      throw new Error("Shartnoma raqamini olishda xatolik.");
+    }
+
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+
+    const contracts = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.contracts)
+          ? data.contracts
+          : [];
+
+    return getNextContractNumber(contracts, contractDate);
+  }
+
+  async function createReservedContractFile(payload) {
+    const currencyRate = await resolveCurrencyRate();
+    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+    const totalUsd =
+      resolvedPrice > 0 && resolvedSize > 0 ? resolvedPrice * resolvedSize : 0;
+    const totalSom = Math.round(totalUsd * currencyRate);
+    const pricePerMetrSom = Math.round(resolvedPrice * currencyRate);
+    const downPaymentSom = Number(digitsOnly(payload.downPayment)) || 0;
+    const monthlySom = Number(calcResult.monthlyPayment) || 0;
+    const customerName = `${payload.firstName} ${payload.lastName}`.trim();
+    const fileName = sanitizeFileName(`${customerName || "Mijoz"} bron hujjat`);
+
+    const pdfReqBody = {
+      CREATED: formatCreatedDate(new Date()),
+      FILE_NAME: fileName,
+      ROOM: `${home.room ?? ""}x`,
+      BLOCK: String(home.block ?? ""),
+      FLOOR: `${home.floorNumber ?? ""}-QAVAT`,
+      HOUSE_NUMBER: `No ${home.houseNumber ?? ""} XONADON`,
+      PRICE_PER_METR: formatNumber(pricePerMetrSom),
+      MONTHLY_PAYMENT: formatNumber(Math.round(monthlySom)),
+      PERIOD: `${payload.installments} oy`,
+      SIZE: String(resolvedSize || home.size || ""),
+      STATE: states[selectedState] ?? "",
+      DOWN_PAYMENT: formatNumber(downPaymentSom),
+      TOTAL_PRICE: formatNumber(totalSom),
+      "2D": home.image?.[0] ? `${home.image[0]}.png` : "",
+      "3D": home.image?.[1] ? `${home.image[1]}.png` : "",
+      PLAN: home.image?.[2] ? `${home.image[2]}.png` : "",
+    };
+
+    const pdfForm = new URLSearchParams();
+    Object.entries(pdfReqBody).forEach(([key, value]) => {
+      pdfForm.append(key, value ?? "");
+    });
+
+    const pdfRes = await fetch(PDF_SERVICE_URL, {
+      method: "POST",
+      headers: { Accept: "application/pdf" },
+      body: pdfForm,
+    });
+
+    if (!pdfRes.ok) throw new Error("PDF yaratib bo'lmadi.");
+
+    const pdfBlob = await pdfRes.blob();
+    if (!pdfBlob || pdfBlob.size === 0) {
+      throw new Error("PDF bo'sh qaytdi.");
+    }
+
+    return new File([pdfBlob], `${fileName}.pdf`, {
+      type: "application/pdf",
+    });
+  }
+
+  async function createSoldContractAssets(payload) {
+    const currencyRate = await resolveCurrencyRate();
+    const contractDate = new Date();
+    const contractNumber = await resolveNextSalesContractNumber(contractDate);
+    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+    const contractData = buildSalesContractTemplateData({
+      home,
+      form: payload,
+      contractNumber,
+      contractDate,
+      currencyRate,
+      resolvedPriceUsd: resolvedPrice,
+      resolvedSize,
+      monthlyPaymentSom: Number(calcResult.monthlyPayment) || 0,
+    });
+    const pdfRes = await fetch(SOLD_CONTRACT_SERVICE_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/pdf",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(contractData),
+    });
+
+    if (!pdfRes.ok) {
+      let message = "Shartnoma PDF yaratilmadi.";
+      try {
+        const data = await pdfRes.json();
+        message = data?.message || message;
+      } catch {
+        // JSON bo'lmasa default xabar ishlatiladi.
+      }
+      throw new Error(message);
+    }
+
+    const pdfBlob = await pdfRes.blob();
+
+    if (!pdfBlob || pdfBlob.size === 0) {
+      throw new Error("PDF bo'sh qaytdi.");
+    }
+
+    const customerName = [payload.lastName, payload.firstName, payload.middleName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const fileName = sanitizeFileName(
+      `${contractNumber} ${customerName || "Mijoz"} shartnoma`,
+    );
+
+    return {
+      contractNumber,
+      contractDate: contractDate.toISOString(),
+      previewUrl: URL.createObjectURL(pdfBlob),
+      contractFile: new File([pdfBlob], `${fileName}.pdf`, {
+        type: "application/pdf",
+      }),
+    };
+  }
+
   function createDirectStatusPayload(status) {
     const fallbackPayment = getFallbackPaymentValues();
     return {
@@ -404,12 +565,8 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   function handleStatusAction(action) {
     if (actionLocked) return;
 
-    if (home.status === "RESERVED" && action.code === "SOLD") {
-      submitStatusAction(action, createDirectStatusPayload("SOLD"));
-      return;
-    }
     if (home.status === "RESERVED" && action.code === "EMPTY") {
-      submitStatusAction(action, createDirectStatusPayload("EMPTY"));
+      submitStatusActionV2(action, createDirectStatusPayload("EMPTY"));
       return;
     }
 
@@ -432,33 +589,21 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   }
 
   function validateStatusForm(actionCode) {
-    const nextErrors = {};
-    if (actionCode === "SOLD" || actionCode === "RESERVED") {
-      const phone = normalizePhone(statusForm.phone);
-      const installments = Number(digitsOnly(statusForm.installments));
-      if (!statusForm.firstName.trim())
-        nextErrors.firstName = "Mijoz ismini kiriting!";
-      if (!statusForm.lastName.trim())
-        nextErrors.lastName = "Mijoz familiyasini kiriting!";
-      if (!phone) {
-        nextErrors.phone = "Telefon raqamini kiriting!";
-      } else if (!UZ_PHONE.test(phone)) {
-        nextErrors.phone = "Telefon +998xxxxxxxxx formatda bo'lsin!";
-      }
-      if (!String(statusForm.installments ?? "").trim()) {
-        nextErrors.installments = "Muddatni kiriting!";
-      } else if (!Number.isFinite(installments)) {
-        nextErrors.installments = "Muddatni to'g'ri kiriting!";
-      } else if (
-        installments < MIN_INSTALLMENTS ||
-        installments > MAX_INSTALLMENTS
-      ) {
-        nextErrors.installments = `Muddat ${MIN_INSTALLMENTS}-${MAX_INSTALLMENTS} oy oralig'ida bo'lsin!`;
-      }
-    }
-    if (actionCode === "NOT" && !statusForm.description.trim()) {
-      nextErrors.description = "Nima uchun sotuv to'xtatilganini yozing!";
-    }
+    const usdRate = Number(currencyUsd?.rate);
+    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
+    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
+    const totalPriceSom =
+      Number.isFinite(usdRate) && usdRate > 0 && resolvedPrice > 0 && resolvedSize > 0
+        ? Math.round(resolvedPrice * resolvedSize * usdRate)
+        : 0;
+    const nextErrors = validateStatusFormFields({
+      actionCode,
+      statusForm,
+      phoneRegex: UZ_PHONE,
+      minInstallments: MIN_INSTALLMENTS,
+      maxInstallments: MAX_INSTALLMENTS,
+      totalPriceSom,
+    });
     dispatch({ type: "SET_STATUS_ERRORS", payload: nextErrors });
     return Object.keys(nextErrors).length === 0;
   }
@@ -466,14 +611,32 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
   function createStatusPayload(actionCode) {
     const isCustomerFlow = actionCode === "SOLD" || actionCode === "RESERVED";
     const fallbackPayment = getFallbackPaymentValues();
+    const firstName = statusForm.firstName.trim();
+    const lastName = statusForm.lastName.trim();
+    const middleName = statusForm.middleName.trim();
+
     return {
-      firstName: isCustomerFlow ? statusForm.firstName.trim() : "",
-      lastName: isCustomerFlow ? statusForm.lastName.trim() : "",
+      firstName: isCustomerFlow ? firstName : "",
+      lastName: isCustomerFlow ? lastName : "",
+      middleName: actionCode === "SOLD" ? middleName : "",
+      fullName: isCustomerFlow
+        ? [lastName, firstName, actionCode === "SOLD" ? middleName : ""]
+            .filter(Boolean)
+            .join(" ")
+        : "",
       description:
         actionCode === "NOT" || isCustomerFlow
           ? statusForm.description.trim()
           : "",
       phone: isCustomerFlow ? normalizePhone(statusForm.phone) : "",
+      birthDate: actionCode === "SOLD" ? statusForm.birthDate.trim() : "",
+      passportNumber:
+        actionCode === "SOLD" ? statusForm.passportNumber.trim() : "",
+      passportIssuedBy:
+        actionCode === "SOLD" ? statusForm.passportIssuedBy.trim() : "",
+      passportIssuedDate:
+        actionCode === "SOLD" ? statusForm.passportIssuedDate.trim() : "",
+      address: actionCode === "SOLD" ? statusForm.address.trim() : "",
       status: actionCode,
       downPayment: isCustomerFlow
         ? digitsOnly(statusForm.downPayment) || "0"
@@ -525,7 +688,7 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
           ROOM: `${home.room ?? ""}x`,
           BLOCK: String(home.block ?? ""),
           FLOOR: `${home.floorNumber ?? ""}-QAVAT`,
-          HOUSE_NUMBER: `Nº ${home.houseNumber ?? ""} XONADON`,
+          HOUSE_NUMBER: `No ${home.houseNumber ?? ""} XONADON`,
           PRICE_PER_METR: formatNumber(pricePerMetrSom),
           MONTHLY_PAYMENT: formatNumber(Math.round(monthlySom)),
           PERIOD: `${payload.installments} oy`,
@@ -608,11 +771,108 @@ export default function CalculatorTool({ home, onStatusUpdated }) {
     return true;
   }
 
+  async function submitStatusActionV2(action, payloadOverride) {
+    dispatch({ type: "SET_PENDING_ACTION", payload: action.code });
+    const payload = payloadOverride ?? createStatusPayload(action.code);
+    const nextStatus = payload.status ?? action.code;
+    let nextPayload = payload;
+    let previewUrl = "";
+    const documentWindow =
+      nextStatus === "RESERVED" || nextStatus === "SOLD"
+        ? openPendingDocumentWindow(
+            nextStatus === "SOLD"
+              ? "Shartnoma tayyorlanmoqda"
+              : "Bron hujjati tayyorlanmoqda",
+          )
+        : null;
+
+    if (nextStatus === "RESERVED" || nextStatus === "SOLD") {
+      setContractFileLoading(true);
+      try {
+        if (nextStatus === "RESERVED") {
+          const contractFile = await createReservedContractFile(payload);
+          nextPayload = { ...payload, contractFile };
+        } else {
+          const soldAssets = await createSoldContractAssets(payload);
+          previewUrl = soldAssets.previewUrl;
+          nextPayload = {
+            ...payload,
+            contractNumber: soldAssets.contractNumber,
+            contractDate: soldAssets.contractDate,
+            contractFile: soldAssets.contractFile,
+          };
+        }
+      } catch (error) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        closePendingDocumentWindow(documentWindow);
+        toast.error(error?.message || "PDF yaratishda xatolik!", {
+          position: "bottom-left",
+        });
+        dispatch({ type: "SET_PENDING_ACTION", payload: null });
+        setContractFileLoading(false);
+        return false;
+      }
+    }
+
+    const result = await updateStatus(home.id, nextPayload);
+    setContractFileLoading(false);
+
+    if (!result.ok) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      closePendingDocumentWindow(documentWindow);
+      toast.error(result.message);
+      dispatch({ type: "SET_PENDING_ACTION", payload: null });
+      return false;
+    }
+
+    if (nextStatus === "RESERVED" || nextStatus === "SOLD") {
+      const contractFile = extractContractFileFromResponse(result.data);
+      const contractFileUrl = resolveContractFileDocUrl(contractFile);
+      const targetUrl = contractFileUrl || previewUrl;
+
+      if (previewUrl) {
+        const revokeDelay = contractFileUrl ? 0 : 60_000;
+        window.setTimeout(() => URL.revokeObjectURL(previewUrl), revokeDelay);
+      }
+
+      if (targetUrl) {
+        const opened = openExternalDocument(targetUrl, documentWindow);
+        if (!opened) {
+          toast.info(
+            "Shartnomani ochish uchun brauzerda pop-up ruxsatini yoqing.",
+            { position: "bottom-left" },
+          );
+        }
+      } else {
+        closePendingDocumentWindow(documentWindow);
+      }
+    }
+
+    await Promise.resolve(
+      onStatusUpdated?.({
+        roomId: home.id,
+        nextStatus,
+        description: payload.description ?? "",
+      }),
+    );
+
+    toast.success(
+      nextStatus === "RESERVED"
+        ? "Uy bron qilindi."
+        : nextStatus === "SOLD"
+          ? "Uy sotildi va shartnoma yaratildi."
+          : action.successText,
+    );
+    handleClose({ clearDetails: true });
+    dispatch({ type: "SET_PENDING_ACTION", payload: null });
+    return true;
+  }
+
   async function handleStatusSubmit(evt) {
     evt.preventDefault();
     const action = statusDialogAction;
     if (!action || !validateStatusForm(action.code)) return;
-    await submitStatusAction(action);
+    await submitStatusActionV2(action);
   }
 
   function win() {

@@ -30,6 +30,7 @@ import {
 import { normalizePeriod } from "@/shared/lib/utils";
 import { formatUzPhoneDisplay, digitsOnly } from "../lib/helpers";
 import { statusBadgeClass, statusLabels, MIN_INSTALLMENTS, MAX_INSTALLMENTS } from "../lib/constants";
+import SoldContractFields from "./SoldContractFields";
 
 /**
  * @param {{
@@ -60,35 +61,42 @@ export default function StatusChangeDialog({
   onFieldChange,
 }) {
   const ActiveActionIcon = activeAction?.icon;
+  const dialogTitle = activeAction?.title ?? "Statusni o'zgartirish";
+  const dialogDescription = activeAction
+    ? `#${home.houseNumber} uy uchun statusni ${activeAction.title.toLowerCase()} oqimi.`
+    : "Xona holatini yangilash oynasi.";
+  const getFieldClass = (field, className = "") =>
+    cn(
+      className,
+      statusErrors[field]
+        ? "border-destructive/70 ring-1 ring-destructive/20 focus-visible:border-destructive focus-visible:ring-destructive/20"
+        : "",
+    );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
+        <DialogHeader className="gap-3">
+          <div className="flex items-start gap-3">
+            {activeAction ? (
+              <span
+                className={cn(
+                  "mt-1 flex size-11 shrink-0 items-center justify-center rounded-lg border",
+                  activeAction.iconTone,
+                )}
+              >
+                {ActiveActionIcon && <ActiveActionIcon className="size-5" />}
+              </span>
+            ) : null}
+            <div className="space-y-1 text-left">
+              <DialogTitle>{dialogTitle}</DialogTitle>
+              <DialogDescription>{dialogDescription}</DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
         {activeAction && (
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <DialogHeader className="gap-3">
-              <div className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    "mt-1 flex size-11 shrink-0 items-center justify-center rounded-lg border",
-                    activeAction.iconTone,
-                  )}
-                >
-                  {ActiveActionIcon && <ActiveActionIcon className="size-5" />}
-                </span>
-                <div className="space-y-1 text-left">
-                  <DialogTitle>{activeAction.title}</DialogTitle>
-                  <DialogDescription>
-                    #{home.houseNumber} uy uchun statusni{" "}
-                    <span className="font-medium">
-                      {activeAction.title.toLowerCase()}
-                    </span>{" "}
-                    oqimi.
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-
             {/* Hozirgi holat xulosa */}
             <div className="bg-primary/5 grid gap-2 rounded-xl border p-3 text-xs">
               <div className="flex items-center justify-between gap-3">
@@ -128,6 +136,8 @@ export default function StatusChangeDialog({
                       onChange={(evt) =>
                         onFieldChange("firstName", evt.target.value)
                       }
+                      aria-invalid={Boolean(statusErrors.firstName)}
+                      className={getFieldClass("firstName")}
                       placeholder="Ali"
                     />
                     {statusErrors.firstName && (
@@ -145,6 +155,8 @@ export default function StatusChangeDialog({
                       onChange={(evt) =>
                         onFieldChange("lastName", evt.target.value)
                       }
+                      aria-invalid={Boolean(statusErrors.lastName)}
+                      className={getFieldClass("lastName")}
                       placeholder="Valiyev"
                     />
                     {statusErrors.lastName && (
@@ -154,6 +166,14 @@ export default function StatusChangeDialog({
                     )}
                   </div>
                 </div>
+
+                {activeAction.code === "SOLD" && (
+                  <SoldContractFields
+                    statusForm={statusForm}
+                    statusErrors={statusErrors}
+                    onFieldChange={onFieldChange}
+                  />
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="grid gap-2">
@@ -170,7 +190,8 @@ export default function StatusChangeDialog({
                           )
                         }
                         placeholder="+998 (__) ___ __ __"
-                        className="pl-9"
+                        aria-invalid={Boolean(statusErrors.phone)}
+                        className={getFieldClass("phone", "pl-9")}
                       />
                     </div>
                     {statusErrors.phone && (
@@ -193,6 +214,8 @@ export default function StatusChangeDialog({
                           formatNumber(digitsOnly(evt.target.value) || 0),
                         )
                       }
+                      aria-invalid={Boolean(statusErrors.downPayment)}
+                      className={getFieldClass("downPayment")}
                       placeholder="0"
                     />
                     {statusErrors.downPayment && (
@@ -223,6 +246,8 @@ export default function StatusChangeDialog({
                           normalizePeriod(evt.target.value),
                         )
                       }
+                      aria-invalid={Boolean(statusErrors.installments)}
+                      className={getFieldClass("installments")}
                       placeholder="60"
                     />
                     {statusErrors.installments && (
@@ -234,7 +259,7 @@ export default function StatusChangeDialog({
 
                   {activeAction.code === "SOLD" && (
                     <div className="grid gap-2">
-                      {hasDiscountValue && (
+                      {hasDiscountValue ? (
                         <>
                           <Label htmlFor="status-discountValue">Chegirma</Label>
                           <Input
@@ -246,10 +271,12 @@ export default function StatusChangeDialog({
                                 formatNumberWithPercent(evt.target.value),
                               )
                             }
+                            aria-invalid={Boolean(statusErrors.discountValue)}
+                            className={getFieldClass("discountValue")}
                             placeholder="100 000 yoki 5%"
                           />
                         </>
-                      )}
+                      ) : null}
                     </div>
                   )}
                 </div>
@@ -264,10 +291,16 @@ export default function StatusChangeDialog({
                       onChange={(evt) =>
                         onFieldChange("description", evt.target.value)
                       }
-                      className="min-h-24 pl-9"
+                      aria-invalid={Boolean(statusErrors.description)}
+                      className={getFieldClass("description", "min-h-24 pl-9")}
                       placeholder="Qo'shimcha qaydlar yoki mijozga oid eslatma..."
                     />
                   </div>
+                  {statusErrors.description && (
+                    <p className="text-destructive text-xs">
+                      {statusErrors.description}
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -285,7 +318,8 @@ export default function StatusChangeDialog({
                     onChange={(evt) =>
                       onFieldChange("description", evt.target.value)
                     }
-                    className="min-h-28 pl-9"
+                    aria-invalid={Boolean(statusErrors.description)}
+                    className={getFieldClass("description", "min-h-28 pl-9")}
                     placeholder="Masalan: namunaviy kvartira, ichki rezerv yoki texnik sababi bor..."
                   />
                 </div>
