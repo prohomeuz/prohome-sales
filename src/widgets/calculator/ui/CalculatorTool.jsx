@@ -15,7 +15,7 @@
  */
 
 import { getNextContractNumber } from "@/features/contracts/lib/contract-utils";
-import { buildSalesContractTemplateData } from "@/features/contracts/lib/sales-contract-data";
+import { createSaleContractPdfFile } from "@/features/contracts/lib/sales-contract-pdf";
 import { useRoomStatus } from "@/features/room-status-change/model/use-room-status";
 import { useAppStore } from "@/entities/session/model";
 import { apiRequest } from "@/shared/lib/api";
@@ -52,7 +52,6 @@ import {
   actionButtons,
   DEFAULT_CALC_STATE,
   PDF_SERVICE_URL,
-  SOLD_CONTRACT_SERVICE_URL,
   states,
   STATUS_DIALOG_CLOSE_DELAY,
   UZ_PHONE,
@@ -411,30 +410,46 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   }
 
   async function resolveNextSalesContractNumber(contractDate) {
-    const yearFallback = `${contractDate.getFullYear()}0001`;
-    if (!projectId) return yearFallback;
+    const year = String(contractDate.getFullYear());
+    let apiNextNumber = `${year}0001`;
 
-    const res = await apiRequest(`/api/v1/contract/contract/${projectId}`);
-    if (!res.ok) {
-      throw new Error("Shartnoma raqamini olishda xatolik.");
+    if (projectId) {
+      const res = await apiRequest(`/api/v1/contract/contract/${projectId}`);
+      if (!res.ok) {
+        throw new Error("Shartnoma raqamini olishda xatolik.");
+      }
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      const contracts = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.contracts)
+            ? data.contracts
+            : [];
+
+      apiNextNumber = getNextContractNumber(contracts, contractDate);
     }
 
-    let data = null;
-    try {
-      data = await res.json();
-    } catch {
-      data = null;
-    }
+    const apiSeq = Number(apiNextNumber.slice(year.length));
+    const normalizedApiLast = Number.isFinite(apiSeq)
+      ? Math.max(apiSeq - 1, 0)
+      : 0;
+    const localKey = `sales_contract_last_seq_${year}`;
+    const localLastRaw = Number(window.localStorage.getItem(localKey) ?? 0);
+    const normalizedLocalLast = Number.isFinite(localLastRaw)
+      ? Math.max(localLastRaw, 0)
+      : 0;
+    const nextSeq = Math.max(normalizedApiLast, normalizedLocalLast) + 1;
 
-    const contracts = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.contracts)
-          ? data.contracts
-          : [];
-
-    return getNextContractNumber(contracts, contractDate);
+    window.localStorage.setItem(localKey, String(nextSeq));
+    return `${year}${String(nextSeq).padStart(4, "0")}`;
   }
 
   async function createReservedContractFile(payload) {
@@ -498,7 +513,7 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     const contractNumber = await resolveNextSalesContractNumber(contractDate);
     const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
     const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
-    const contractData = buildSalesContractTemplateData({
+    const pdfBlob = await createSaleContractPdfFile({
       home,
       form: payload,
       contractNumber,
@@ -508,27 +523,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       resolvedSize,
       monthlyPaymentSom: Number(calcResult.monthlyPayment) || 0,
     });
-    const pdfRes = await fetch(SOLD_CONTRACT_SERVICE_URL, {
-      method: "POST",
-      headers: {
-        Accept: "application/pdf",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(contractData),
-    });
-
-    if (!pdfRes.ok) {
-      let message = "Shartnoma PDF yaratilmadi.";
-      try {
-        const data = await pdfRes.json();
-        message = data?.message || message;
-      } catch {
-        // JSON bo'lmasa default xabar ishlatiladi.
-      }
-      throw new Error(message);
-    }
-
-    const pdfBlob = await pdfRes.blob();
 
     if (!pdfBlob || pdfBlob.size === 0) {
       throw new Error("PDF bo'sh qaytdi.");

@@ -32,6 +32,12 @@ import { formatUzPhoneDisplay, digitsOnly } from "../lib/helpers";
 import { statusBadgeClass, statusLabels, MIN_INSTALLMENTS, MAX_INSTALLMENTS } from "../lib/constants";
 import SoldContractFields from "./SoldContractFields";
 
+function sanitizeNameInput(raw) {
+  return String(raw ?? "")
+    .replace(/[^\p{L}\p{M}'`\u2019\-\s]/gu, "")
+    .replace(/\s{2,}/g, " ");
+}
+
 /**
  * @param {{
  *   open: boolean,
@@ -134,7 +140,10 @@ export default function StatusChangeDialog({
                       autoFocus
                       value={statusForm.firstName}
                       onChange={(evt) =>
-                        onFieldChange("firstName", evt.target.value)
+                        onFieldChange(
+                          "firstName",
+                          sanitizeNameInput(evt.target.value),
+                        )
                       }
                       aria-invalid={Boolean(statusErrors.firstName)}
                       className={getFieldClass("firstName")}
@@ -153,7 +162,10 @@ export default function StatusChangeDialog({
                       id="status-lastName"
                       value={statusForm.lastName}
                       onChange={(evt) =>
-                        onFieldChange("lastName", evt.target.value)
+                        onFieldChange(
+                          "lastName",
+                          sanitizeNameInput(evt.target.value),
+                        )
                       }
                       aria-invalid={Boolean(statusErrors.lastName)}
                       className={getFieldClass("lastName")}
