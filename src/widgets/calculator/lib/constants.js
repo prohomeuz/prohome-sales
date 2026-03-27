@@ -177,6 +177,9 @@ export const INITIAL_CALC_RESULT = {
 /** Bron hujjat PDF servisi URL */
 export const PDF_SERVICE_URL = "https://contract.prohome.uz/bron";
 
+/** Sotuv shartnomasi uchun lokal Word->PDF servis URL */
+export const SOLD_CONTRACT_SERVICE_URL = "/local-contract-service/sales-contract";
+
 /** O'zbek oylari nomlari (0-indeksdan boshlangan) */
 export const UZ_MONTHS = [
   "yanvar",
