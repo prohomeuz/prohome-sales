@@ -1,4 +1,5 @@
 import { formatNumber } from "@/shared/lib/utils";
+import { normalizePassportNumber } from "@/shared/lib/passport";
 
 const TEMPLATE_PDF_URL = "/contracts/sales-contract-template.pdf";
 const PAGE_OBJECTS = {
@@ -203,10 +204,11 @@ endbfchar
 1 beginbfrange
 <0026> <0027> <0046>
 endbfrange
-4 beginbfchar
+5 beginbfchar
 <002C> <0048>
 <002F> <0049>
 <003A> <004A>
+<003C> <004B>
 <003E> <004C>
 endbfchar
 1 beginbfrange
@@ -450,11 +452,27 @@ function digitsOnly(value) {
 
 function sanitizeText(value) {
   return String(value ?? "")
-    .replace(/[‘’`]/g, "'")
-    .replace(/[“”]/g, '"')
+    .normalize("NFC")
+    .replace(/[\u2018\u2019`]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u0420\u0459|\u00D0\u0161|\u041A/g, "K")
+    .replace(/\u0420\u0454|\u00D0\u00BA|\u043A/g, "k")
     .replace(/\u00A0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeAddressValue(value) {
+  const leadingLabelPattern =
+    /^(?:(?:manzili?|manzil|address|\u0430\u0434\u0440\u0435\u0441)\b[\s\u003A\uFF1A\u002D\u2013\u2014]*)+/iu;
+  let result = sanitizeText(value).replace(/^[\s'"`.,;|/\\-]+/u, "");
+
+  while (leadingLabelPattern.test(result)) {
+    result = result.replace(leadingLabelPattern, "").trimStart();
+  }
+
+  result = result.replace(/\s+/g, " ").trim();
+  return result.replace(/^[\s'"`.,;|/\\-]+/u, "");
 }
 
 function roundMoney(value, fractionDigits = 2) {
@@ -745,6 +763,20 @@ function resolveParagraphLayout({
   return best;
 }
 
+function splitFooterFullName(fullName) {
+  const words = sanitizeText(fullName).split(" ").filter(Boolean);
+  if (words.length <= 1) {
+    return { leftPart: words[0] ?? "", rightPart: "" };
+  }
+  if (words.length === 2) {
+    return { leftPart: words[0], rightPart: words[1] };
+  }
+  return {
+    leftPart: words.slice(0, 2).join(" "),
+    rightPart: words.slice(2).join(" "),
+  };
+}
+
 function buildPaymentSchedule(
   remainingAmount,
   installments,
@@ -796,6 +828,7 @@ function buildContractData({
   const downPaymentSom = Number(digitsOnly(form.downPayment)) || 0;
   const remainingSom = Math.max(totalSom - downPaymentSom, 0);
   const installments = Math.max(1, Number(digitsOnly(form.installments)) || 1);
+  const normalizedAddress = normalizeAddressValue(form.address);
   const shortName = [form.lastName, form.firstName].filter(Boolean).join(" ").trim();
   const fullName = [form.lastName, form.firstName, form.middleName]
     .filter(Boolean)
@@ -812,11 +845,11 @@ function buildContractData({
     shortName: sanitizeText(shortName),
     fullName: sanitizeText(fullName || shortName),
     birthDate: sanitizeText(form.birthDate),
-    passportNumber: sanitizeText(form.passportNumber),
+    passportNumber: normalizePassportNumber(form.passportNumber),
     passportIssuedBy: sanitizeText(form.passportIssuedBy),
     passportIssuedDate: sanitizeText(form.passportIssuedDate),
     phone: sanitizeText(form.phone),
-    address: sanitizeText(form.address),
+    address: normalizedAddress,
     blockLabel: normalizeBlockLabel(home?.block),
     floorLabel: String(home?.floorNumber ?? ""),
     houseNumber: String(home?.houseNumber ?? ""),
@@ -856,8 +889,8 @@ function fontConfig(fontKey) {
 
 function normalizeEncodableText(text) {
   return sanitizeText(text)
-    .replace(/[–—]/g, "-")
-    .replace(/[ʻ]/g, "'");
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[\u02BB]/g, "'");
 }
 
 function encodePdfHexText(text, fontKey) {
@@ -1009,12 +1042,40 @@ function createOverlayBuilder() {
     });
   }
 
+  function drawWrappedLines({
+    lineSpecs,
+    fontKey,
+    fontSize,
+    text,
+    minFontSize = 8.75,
+  }) {
+    const layout = resolveLineSpecLayout({
+      text,
+      lineSpecs,
+      fontKey,
+      fontSize,
+      minFontSize,
+    });
+
+    lineSpecs.forEach((spec, index) => {
+      if (!layout.lines[index]) return;
+      drawText({
+        fontKey,
+        fontSize: layout.fontSize,
+        x: spec.x,
+        y: spec.y,
+        text: layout.lines[index],
+      });
+    });
+  }
+
   return {
     coverRect,
     drawText,
     coverAndDrawLine,
     coverWrappedParagraph,
     coverWrappedLines,
+    drawWrappedLines,
     build() {
       return operations.join("\n");
     },
@@ -1090,21 +1151,39 @@ function buildPage5Overlay(data) {
     text: data.birthDate,
   });
   overlay.coverAndDrawLine({
-    fontKey: "F5",
+    fontKey: "F3",
     fontSize: 12,
     x: 398.54,
     y: 405.96,
     width: 114,
     text: data.passportNumber,
   });
+  overlay.drawText({
+    fontKey: "F3",
+    fontSize: 12,
+    x: 398.72,
+    y: 405.96,
+    text: data.passportNumber,
+  });
+  const page5IssuedByLineSpecs = [
+    { x: 451.61, y: 380.98, maxWidth: 118, coverX: 446, coverWidth: 150 },
+    { x: 308.52, y: 356.02, maxWidth: 248, coverX: 305, coverWidth: 292 },
+  ];
   overlay.coverWrappedLines({
-    fontKey: "F5",
+    fontKey: "F3",
     fontSize: 12,
     text: data.passportIssuedBy,
-    lineSpecs: [
-      { x: 451.61, y: 380.98, maxWidth: 118, coverX: 446, coverWidth: 124 },
-      { x: 308.52, y: 356.02, maxWidth: 248, coverX: 305, coverWidth: 252 },
-    ],
+    lineSpecs: page5IssuedByLineSpecs,
+    minFontSize: 10.75,
+  });
+  overlay.drawWrappedLines({
+    fontKey: "F3",
+    fontSize: 12,
+    text: data.passportIssuedBy,
+    lineSpecs: page5IssuedByLineSpecs.map((spec) => ({
+      ...spec,
+      x: spec.x + 0.18,
+    })),
     minFontSize: 10.75,
   });
   overlay.coverAndDrawLine({
@@ -1123,15 +1202,28 @@ function buildPage5Overlay(data) {
     width: 208,
     text: data.phone,
   });
-  overlay.coverWrappedLines({
-    fontKey: "F5",
+  overlay.coverRect(353, 262, 232, 14);
+  overlay.coverRect(305, 249, 252, 14);
+  const page5AddressLineSpecs = [
+    { x: 359.18, y: 266.23, maxWidth: 198 },
+    { x: 308.52, y: 253.51, maxWidth: 248 },
+  ];
+  overlay.drawWrappedLines({
+    fontKey: "F3",
     fontSize: 10.56,
     text: data.address,
-    lineSpecs: [
-      { x: 359.18, y: 266.23, maxWidth: 198, coverX: 353, coverWidth: 214 },
-      { x: 308.52, y: 253.51, maxWidth: 248, coverX: 305, coverWidth: 252 },
-    ],
-    minFontSize: 9.5,
+    lineSpecs: page5AddressLineSpecs,
+    minFontSize: 9.25,
+  });
+  overlay.drawWrappedLines({
+    fontKey: "F3",
+    fontSize: 10.56,
+    text: data.address,
+    lineSpecs: page5AddressLineSpecs.map((spec) => ({
+      ...spec,
+      x: spec.x + 0.18,
+    })),
+    minFontSize: 9.25,
   });
 
   return overlay.build();
@@ -1139,19 +1231,92 @@ function buildPage5Overlay(data) {
 
 function buildPage6Overlay(data) {
   const overlay = createOverlayBuilder();
-  const propertyText = `"MARG'ILON - CHINA CITY" turar - joy majmuasining ${data.blockLabel} -sonli uyi, ${data.floorLabel} - qavati, ${data.houseNumber} - xonasi, ${data.roomCount} - xonali maydoni ${data.sizeLabel} kvadrat metr bo'lgan (${data.propertyTypeUz}) birlik (bundan buyon "Shartnoma obyekti" deb ataladi) ustidan mulk huquqini Ikkinchi tomonga o'tkazadi.`;
 
-  overlay.coverWrappedParagraph({
-    x: 308.52,
-    y: 232.15,
-    maxWidth: 235,
-    fontKey: "F3",
-    fontSize: 11.25,
-    text: propertyText,
-    lineHeight: 19.2,
-    boxWidth: 248,
-    boxHeight: 126,
-    minFontSize: 9.75,
+  // 1.4-banddagi faqat dinamik qiymatlar yangilanadi, qolgan satrlar template dagidek qoladi.
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 12,
+    text: `${data.blockLabel}-sonli`,
+    lineSpecs: [
+      {
+        x: 308.52,
+        y: 209.57,
+        maxWidth: 84,
+        coverX: 306.5,
+        coverY: 206.5,
+        coverWidth: 90,
+        coverHeight: 16,
+      },
+    ],
+    minFontSize: 10,
+  });
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 12,
+    text: `${data.floorLabel} - qavati`,
+    lineSpecs: [
+      {
+        x: 400.46,
+        y: 209.57,
+        maxWidth: 62,
+        coverX: 398.5,
+        coverY: 206.5,
+        coverWidth: 66,
+        coverHeight: 16,
+      },
+    ],
+    minFontSize: 10,
+  });
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 12,
+    text: `${data.houseNumber} - xonasi`,
+    lineSpecs: [
+      {
+        x: 459.77,
+        y: 209.57,
+        maxWidth: 62,
+        coverX: 457.5,
+        coverY: 206.5,
+        coverWidth: 66,
+        coverHeight: 16,
+      },
+    ],
+    minFontSize: 10,
+  });
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 12,
+    text: `${data.roomCount} - xonali`,
+    lineSpecs: [
+      {
+        x: 520.03,
+        y: 209.57,
+        maxWidth: 68,
+        coverX: 518.5,
+        coverY: 206.5,
+        coverWidth: 72,
+        coverHeight: 16,
+      },
+    ],
+    minFontSize: 10,
+  });
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 11.04,
+    text: data.sizeLabel,
+    lineSpecs: [
+      {
+        x: 359.9,
+        y: 187.25,
+        maxWidth: 44,
+        coverX: 357.2,
+        coverY: 184.6,
+        coverWidth: 48,
+        coverHeight: 14,
+      },
+    ],
+    minFontSize: 9.25,
   });
 
   return overlay.build();
@@ -1159,19 +1324,40 @@ function buildPage6Overlay(data) {
 
 function buildPage7Overlay(data) {
   const overlay = createOverlayBuilder();
-  const priceText = `2.1.Ikkinchi tomon har bir kvadrat metr uchun ${data.pricePerMeterUsdLabel} (AQSh dollari) miqdorida narxni qabul qiladi,to'lov kuni valyuta kursiga muvofiq tenglashtiriladi; umumiy to'lov ${data.totalUsdLabel} (${data.totalUsdWords}) (AQSh dollari) miqdorida bo'ladi, to'lov kuni valyuta kursiga muvofiq tenglashtiriladi; Ikkinchi tomon investitsiya mablag'ini bank o'tkazmasi yoki naqd pul orqali to'lashi mumkin.`;
 
-  overlay.coverWrappedParagraph({
-    x: 308.52,
-    y: 311.14,
-    maxWidth: 235,
-    fontKey: "F3",
-    fontSize: 11.25,
-    text: priceText,
-    lineHeight: 18.2,
-    boxWidth: 248,
-    boxHeight: 182,
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 11.04,
+    text: data.pricePerMeterUsdLabel,
+    lineSpecs: [
+      {
+        x: 308.52,
+        y: 291.19,
+        maxWidth: 16,
+        coverX: 307.2,
+        coverY: 288.6,
+        coverWidth: 20,
+        coverHeight: 14,
+      },
+    ],
     minFontSize: 9.5,
+  });
+  overlay.coverWrappedLines({
+    fontKey: "F5",
+    fontSize: 11.04,
+    text: data.totalUsdLabel,
+    lineSpecs: [
+      {
+        x: 390.86,
+        y: 231.19,
+        maxWidth: 56,
+        coverX: 386,
+        coverY: 228.5,
+        coverWidth: 62,
+        coverHeight: 14,
+      },
+    ],
+    minFontSize: 9.25,
   });
 
   return overlay.build();
@@ -1185,19 +1371,32 @@ function buildPage15Overlay(data) {
     fontSize: 12,
     text: data.fullName,
     lineSpecs: [
-      { x: 464.57, y: 591.77, maxWidth: 92, coverWidth: 98 },
-      { x: 308.52, y: 562.49, maxWidth: 245, coverWidth: 248 },
+      { x: 464.57, y: 591.77, maxWidth: 92, coverX: 460, coverWidth: 136 },
+      { x: 308.52, y: 562.49, maxWidth: 245, coverWidth: 292 },
     ],
     minFontSize: 10.75,
   });
+  overlay.coverRect(344, 447.2, 246, 16.8);
+  overlay.coverRect(305, 418.5, 252, 16);
+  const page15AddressLineSpecs = [
+    { x: 347.9, y: 451.08, maxWidth: 205, coverX: 344, coverWidth: 246 },
+    { x: 308.52, y: 422.04, maxWidth: 248, coverX: 305, coverWidth: 252 },
+  ];
   overlay.coverWrappedLines({
-    fontKey: "F5",
+    fontKey: "F3",
     fontSize: 12,
     text: data.address,
-    lineSpecs: [
-      { x: 396.14, y: 451.08, maxWidth: 156, coverX: 389, coverWidth: 171 },
-      { x: 308.52, y: 422.04, maxWidth: 248, coverX: 305, coverWidth: 252 },
-    ],
+    lineSpecs: page15AddressLineSpecs,
+    minFontSize: 10.5,
+  });
+  overlay.drawWrappedLines({
+    fontKey: "F3",
+    fontSize: 12,
+    text: data.address,
+    lineSpecs: page15AddressLineSpecs.map((spec) => ({
+      ...spec,
+      x: spec.x + 0.18,
+    })),
     minFontSize: 10.5,
   });
   overlay.coverAndDrawLine({
@@ -1289,9 +1488,9 @@ function buildPage16Overlay(data) {
   const title = `${data.fullName} bilan ${data.contractDateText}da tuzilgan ${data.contractNumber}-sonli shartnomaning to'lov muddati grafigi`;
   const pageRows = data.schedule.slice(0, ROW_Y_PAGE_16.length);
 
-  overlay.coverRect(56, 695, 485, 16);
+  overlay.coverRect(56, 695, 535, 16);
   overlay.drawText({
-    fontKey: "F8",
+    fontKey: "F3",
     fontSize: 7.92,
     x: 71.784,
     y: 702.43,
@@ -1319,13 +1518,55 @@ function buildPage17Overlay(data) {
 
 function buildPage18Overlay(data) {
   const overlay = createOverlayBuilder();
-  overlay.coverRect(397, 744.4, 172, 13.2);
-  overlay.drawText({
-    fontKey: "F8",
-    fontSize: 10.8,
-    x: 399.4,
+  const { leftPart, rightPart } = splitFooterFullName(data.fullName);
+
+  function drawFooterNamePart(text, spec) {
+    overlay.coverWrappedLines({
+      fontKey: "F3",
+      fontSize: 11.04,
+      text,
+      lineSpecs: [spec],
+      minFontSize: 8.5,
+    });
+    overlay.drawWrappedLines({
+      fontKey: "F3",
+      fontSize: 11.04,
+      text,
+      lineSpecs: [{ ...spec, x: spec.x + 0.18 }],
+      minFontSize: 8.5,
+    });
+  }
+
+  if (!rightPart) {
+    drawFooterNamePart(leftPart, {
+      x: 400.7,
+      y: 749.74,
+      maxWidth: 195,
+      coverX: 396,
+      coverY: 746.5,
+      coverWidth: 204,
+      coverHeight: 14,
+    });
+    return overlay.build();
+  }
+
+  drawFooterNamePart(leftPart, {
+    x: 400.7,
     y: 749.74,
-    text: data.fullName,
+    maxWidth: 92,
+    coverX: 396,
+    coverY: 746.5,
+    coverWidth: 98,
+    coverHeight: 14,
+  });
+  drawFooterNamePart(rightPart, {
+    x: 495.79,
+    y: 749.74,
+    maxWidth: 100,
+    coverX: 492,
+    coverY: 746.5,
+    coverWidth: 108,
+    coverHeight: 14,
   });
   return overlay.build();
 }
@@ -1634,3 +1875,4 @@ export async function createSaleContractPdfFile({
   const overlays = getOverlayByPage(data);
   return appendOverlayToTemplate(templateBytes, overlays);
 }
+

@@ -1,4 +1,6 @@
-const NAME_REGEX = /^[\p{L}\p{M}'`’\-\s]+$/u;
+import { formatPassportNumberDisplay } from "@/shared/lib/passport";
+
+const NAME_REGEX = /^[\p{L}\p{M}'`\u2019\-\s]+$/u;
 const PASSPORT_REGEX = /^[A-Z]{2}\s\d{7}$/;
 
 function parseIsoDate(value) {
@@ -26,22 +28,6 @@ function isFutureDate(date) {
 
 function hasValidName(value) {
   return NAME_REGEX.test(String(value ?? "").trim());
-}
-
-/**
- * Passport raqamini ko'rsatish uchun formatlaydi.
- * Masalan: AC 2521090
- * @param {string} raw
- * @returns {string}
- */
-export function formatPassportNumberDisplay(raw) {
-  const source = String(raw ?? "").toUpperCase();
-  const letters = source.replace(/[^A-Z]/g, "").slice(0, 2);
-  const digits = source.replace(/\D/g, "").slice(0, 7);
-
-  if (!letters) return digits;
-  if (!digits) return letters;
-  return `${letters} ${digits}`;
 }
 
 /**

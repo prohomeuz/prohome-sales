@@ -3,7 +3,6 @@ import { CalendarDays, CreditCard, FileText, MapPin } from "lucide-react";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { formatPassportNumberDisplay } from "../lib/status-form-validation";
 
 const DATE_MIN = "1900-01-01";
 
@@ -11,6 +10,16 @@ function sanitizeNameInput(raw) {
   return String(raw ?? "")
     .replace(/[^\p{L}\p{M}'`\u2019\-\s]/gu, "")
     .replace(/\s{2,}/g, " ");
+}
+
+function limitPassportInput(raw) {
+  const source = String(raw ?? "").toUpperCase();
+  const letters = source.replace(/[^\p{L}]/gu, "").slice(0, 2);
+  const digits = source.replace(/\D/g, "").slice(0, 7);
+
+  if (!letters) return digits;
+  if (!digits) return letters;
+  return `${letters} ${digits}`;
 }
 
 function getTodayIso() {
@@ -196,9 +205,10 @@ export default function SoldContractFields({
               onChange={(evt) =>
                 onFieldChange(
                   "passportNumber",
-                  formatPassportNumberDisplay(evt.target.value),
+                  limitPassportInput(evt.target.value),
                 )
               }
+              maxLength={10}
               aria-invalid={Boolean(statusErrors.passportNumber)}
               className={getFieldClass("passportNumber", "pl-9 uppercase")}
               placeholder="AC 2521090"
