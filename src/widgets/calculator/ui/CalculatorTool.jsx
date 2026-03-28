@@ -14,8 +14,7 @@
  * HomeDetails.jsx tomonidan ishlatiladi.
  */
 
-import { getNextContractNumber } from "@/features/contracts/lib/contract-utils";
-import { buildSalesContractTemplateData } from "@/features/contracts/lib/sales-contract-data";
+import { createSaleContractPdfFile } from "@/features/contracts/lib/sales-contract-pdf";
 import { useRoomStatus } from "@/features/room-status-change/model/use-room-status";
 import { useAppStore } from "@/entities/session/model";
 import { apiRequest } from "@/shared/lib/api";
@@ -52,7 +51,6 @@ import {
   actionButtons,
   DEFAULT_CALC_STATE,
   PDF_SERVICE_URL,
-  SOLD_CONTRACT_SERVICE_URL,
   states,
   STATUS_DIALOG_CLOSE_DELAY,
   UZ_PHONE,
@@ -411,30 +409,13 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   }
 
   async function resolveNextSalesContractNumber(contractDate) {
-    const yearFallback = `${contractDate.getFullYear()}0001`;
-    if (!projectId) return yearFallback;
-
-    const res = await apiRequest(`/api/v1/contract/contract/${projectId}`);
-    if (!res.ok) {
-      throw new Error("Shartnoma raqamini olishda xatolik.");
-    }
-
-    let data = null;
-    try {
-      data = await res.json();
-    } catch {
-      data = null;
-    }
-
-    const contracts = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.contracts)
-          ? data.contracts
-          : [];
-
-    return getNextContractNumber(contracts, contractDate);
+    const year = String(contractDate.getFullYear());
+    const localKey = `sales_contract_last_seq_${year}`;
+    const localLastRaw = Number(window.localStorage.getItem(localKey) ?? 0);
+    const localLast = Number.isFinite(localLastRaw) ? Math.max(localLastRaw, 0) : 0;
+    const nextSeq = localLast + 1;
+    window.localStorage.setItem(localKey, String(nextSeq));
+    return `${year}${String(nextSeq).padStart(4, "0")}`;
   }
 
   async function createReservedContractFile(payload) {
@@ -498,7 +479,7 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     const contractNumber = await resolveNextSalesContractNumber(contractDate);
     const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
     const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
-    const contractData = buildSalesContractTemplateData({
+    const pdfBlob = await createSaleContractPdfFile({
       home,
       form: payload,
       contractNumber,
@@ -508,48 +489,35 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       resolvedSize,
       monthlyPaymentSom: Number(calcResult.monthlyPayment) || 0,
     });
-    const pdfRes = await fetch(SOLD_CONTRACT_SERVICE_URL, {
-      method: "POST",
-      headers: {
-        Accept: "application/pdf",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(contractData),
-    });
-
-    if (!pdfRes.ok) {
-      let message = "Shartnoma PDF yaratilmadi.";
-      try {
-        const data = await pdfRes.json();
-        message = data?.message || message;
-      } catch {
-        // JSON bo'lmasa default xabar ishlatiladi.
-      }
-      throw new Error(message);
-    }
-
-    const pdfBlob = await pdfRes.blob();
 
     if (!pdfBlob || pdfBlob.size === 0) {
       throw new Error("PDF bo'sh qaytdi.");
     }
 
-    const customerName = [payload.lastName, payload.firstName, payload.middleName]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    const fileName = sanitizeFileName(
-      `${contractNumber} ${customerName || "Mijoz"} shartnoma`,
-    );
+    const fileName = sanitizeFileName(`Shartnoma_${contractNumber}`);
+    const contractFile = new File([pdfBlob], `${fileName}.pdf`, {
+      type: "application/pdf",
+    });
 
     return {
       contractNumber,
       contractDate: contractDate.toISOString(),
-      previewUrl: URL.createObjectURL(pdfBlob),
-      contractFile: new File([pdfBlob], `${fileName}.pdf`, {
-        type: "application/pdf",
-      }),
+      previewUrl: URL.createObjectURL(contractFile),
+      contractFile,
     };
+  }
+
+  function triggerPdfDownload(url, fileName) {
+    if (!url || typeof document === "undefined") return;
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.rel = "noopener noreferrer";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function createDirectStatusPayload(status) {
@@ -828,20 +796,37 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     if (nextStatus === "RESERVED" || nextStatus === "SOLD") {
       const contractFile = extractContractFileFromResponse(result.data);
       const contractFileUrl = resolveContractFileDocUrl(contractFile);
-      const targetUrl = contractFileUrl || previewUrl;
+      const shouldPreferPreview = nextStatus === "SOLD" && Boolean(previewUrl);
+      const targetUrl = shouldPreferPreview
+        ? previewUrl
+        : contractFileUrl || previewUrl;
 
       if (previewUrl) {
-        const revokeDelay = contractFileUrl ? 0 : 60_000;
+        const revokeDelay = shouldPreferPreview ? 60_000 : contractFileUrl ? 0 : 60_000;
         window.setTimeout(() => URL.revokeObjectURL(previewUrl), revokeDelay);
       }
 
       if (targetUrl) {
-        const opened = openExternalDocument(targetUrl, documentWindow);
+        const documentTitle =
+          nextStatus === "SOLD"
+            ? `Shartnoma_${nextPayload.contractNumber ?? ""}.pdf`.trim()
+            : "";
+        const opened = openExternalDocument(
+          targetUrl,
+          documentWindow,
+          documentTitle,
+        );
         if (!opened) {
           toast.info(
             "Shartnomani ochish uchun brauzerda pop-up ruxsatini yoqing.",
             { position: "bottom-left" },
           );
+        }
+        if (nextStatus === "SOLD" && previewUrl) {
+          const downloadName = `${sanitizeFileName(
+            `Shartnoma_${nextPayload.contractNumber ?? ""}`,
+          )}.pdf`;
+          triggerPdfDownload(previewUrl, downloadName);
         }
       } else {
         closePendingDocumentWindow(documentWindow);

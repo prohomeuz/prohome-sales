@@ -3,7 +3,82 @@ import { CalendarDays, CreditCard, FileText, MapPin } from "lucide-react";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { formatPassportNumberDisplay } from "../lib/status-form-validation";
+
+const DATE_MIN = "1900-01-01";
+
+function sanitizeNameInput(raw) {
+  return String(raw ?? "")
+    .replace(/[^\p{L}\p{M}'`\u2019\-\s]/gu, "")
+    .replace(/\s{2,}/g, " ");
+}
+
+function limitPassportInput(raw) {
+  const source = String(raw ?? "").toUpperCase();
+  const letters = source.replace(/[^\p{L}]/gu, "").slice(0, 2);
+  const digits = source.replace(/\D/g, "").slice(0, 7);
+
+  if (!letters) return digits;
+  if (!digits) return letters;
+  return `${letters} ${digits}`;
+}
+
+function getTodayIso() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseIsoDate(value) {
+  const source = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(source)) return null;
+
+  const [year, month, day] = source.split("-").map(Number);
+  if (month < 1 || month > 12 || day < 1) return null;
+
+  const isLeapYear =
+    (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  const monthDays = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const maxDay = monthDays[month - 1];
+
+  if (!maxDay || day > maxDay) {
+    return null;
+  }
+
+  return { year, month, day };
+}
+
+function normalizeDateInput(nextValue, prevValue, options = {}) {
+  const bounds = options.bounds ?? {};
+  const allowEmpty = options.allowEmpty ?? true;
+  const enforceBounds = options.enforceBounds ?? true;
+  const next = String(nextValue ?? "").trim();
+  if (!next) {
+    return allowEmpty ? "" : String(prevValue ?? "");
+  }
+
+  if (!parseIsoDate(next)) {
+    return String(prevValue ?? "");
+  }
+
+  if (!enforceBounds) {
+    return next;
+  }
+
+  const minDate = String(bounds.minDate ?? "").trim();
+  const maxDate = String(bounds.maxDate ?? "").trim();
+
+  if (minDate && next < minDate) {
+    return String(prevValue ?? "");
+  }
+
+  if (maxDate && next > maxDate) {
+    return String(prevValue ?? "");
+  }
+
+  return next;
+}
 
 /**
  * @param {{
@@ -17,6 +92,40 @@ export default function SoldContractFields({
   statusErrors,
   onFieldChange,
 }) {
+  const todayIso = getTodayIso();
+  const birthDateValue = normalizeDateInput(statusForm.birthDate, "", {
+    enforceBounds: false,
+  });
+  const passportIssuedDateValue = normalizeDateInput(
+    statusForm.passportIssuedDate,
+    "",
+    {
+      enforceBounds: false,
+    },
+  );
+
+  function handleDateFieldChange(
+    field,
+    nextValue,
+    prevValue,
+    minDate,
+    maxDate,
+    mode = "change",
+  ) {
+    const normalized = normalizeDateInput(nextValue, prevValue, {
+      allowEmpty: mode === "blur",
+      enforceBounds: mode === "blur",
+      bounds: {
+        minDate,
+        maxDate,
+      },
+    });
+
+    if (normalized !== prevValue) {
+      onFieldChange(field, normalized);
+    }
+  }
+
   function getFieldClass(field, className = "") {
     return cn(
       className,
@@ -34,7 +143,9 @@ export default function SoldContractFields({
           <Input
             id="status-middleName"
             value={statusForm.middleName}
-            onChange={(evt) => onFieldChange("middleName", evt.target.value)}
+            onChange={(evt) =>
+              onFieldChange("middleName", sanitizeNameInput(evt.target.value))
+            }
             aria-invalid={Boolean(statusErrors.middleName)}
             className={getFieldClass("middleName")}
             placeholder="Baxromjon O'g'li"
@@ -51,8 +162,28 @@ export default function SoldContractFields({
             <Input
               id="status-birthDate"
               type="date"
-              value={statusForm.birthDate}
-              onChange={(evt) => onFieldChange("birthDate", evt.target.value)}
+              value={birthDateValue}
+              onChange={(evt) =>
+                handleDateFieldChange(
+                  "birthDate",
+                  evt.currentTarget.value,
+                  birthDateValue,
+                  DATE_MIN,
+                  todayIso,
+                )
+              }
+              onBlur={(evt) =>
+                handleDateFieldChange(
+                  "birthDate",
+                  evt.currentTarget.value,
+                  birthDateValue,
+                  DATE_MIN,
+                  todayIso,
+                  "blur",
+                )
+              }
+              min={DATE_MIN}
+              max={todayIso}
               aria-invalid={Boolean(statusErrors.birthDate)}
               className={getFieldClass("birthDate", "pl-9")}
             />
@@ -74,9 +205,10 @@ export default function SoldContractFields({
               onChange={(evt) =>
                 onFieldChange(
                   "passportNumber",
-                  formatPassportNumberDisplay(evt.target.value),
+                  limitPassportInput(evt.target.value),
                 )
               }
+              maxLength={10}
               aria-invalid={Boolean(statusErrors.passportNumber)}
               className={getFieldClass("passportNumber", "pl-9 uppercase")}
               placeholder="AC 2521090"
@@ -96,10 +228,28 @@ export default function SoldContractFields({
             <Input
               id="status-passportIssuedDate"
               type="date"
-              value={statusForm.passportIssuedDate}
+              value={passportIssuedDateValue}
               onChange={(evt) =>
-                onFieldChange("passportIssuedDate", evt.target.value)
+                handleDateFieldChange(
+                  "passportIssuedDate",
+                  evt.currentTarget.value,
+                  passportIssuedDateValue,
+                  DATE_MIN,
+                  todayIso,
+                )
               }
+              onBlur={(evt) =>
+                handleDateFieldChange(
+                  "passportIssuedDate",
+                  evt.currentTarget.value,
+                  passportIssuedDateValue,
+                  DATE_MIN,
+                  todayIso,
+                  "blur",
+                )
+              }
+              min={DATE_MIN}
+              max={todayIso}
               aria-invalid={Boolean(statusErrors.passportIssuedDate)}
               className={getFieldClass("passportIssuedDate", "pl-9")}
             />

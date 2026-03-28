@@ -184,24 +184,51 @@ export function closePendingDocumentWindow(target) {
  * Yangi tab da hujjat ochadi.
  * @param {string} url
  * @param {Window|null} [targetWindow]
+ * @param {string} [documentTitle]
  * @returns {boolean} Muvaffaqiyatli ochildi/ochilmadi
  */
-export function openExternalDocument(url, targetWindow = null) {
+export function openExternalDocument(url, targetWindow = null, documentTitle = "") {
   if (!url || typeof document === "undefined") return false;
 
-  if (targetWindow && !targetWindow.closed) {
+  const safeTitle = String(documentTitle ?? "").trim();
+  const safeUrl = String(url);
+
+  const openInWindow = (target) => {
+    if (!target || target.closed) return false;
+
     try {
-      targetWindow.location.replace(url);
+      target.location.replace(safeUrl);
       return true;
     } catch {
-      // Fallback orqali oddiy link click ishlatiladi.
+      return false;
+    }
+  };
+
+  if (openInWindow(targetWindow)) {
+    return true;
+  }
+
+  if (safeTitle) {
+    const popup = window.open("", "_blank");
+    if (openInWindow(popup)) {
+      return true;
+    }
+    if (popup && !popup.closed) {
+      try {
+        popup.close();
+      } catch {
+        // popup yopilmasa jim o'tamiz.
+      }
     }
   }
 
   const link = document.createElement("a");
-  link.href = url;
+  link.href = safeUrl;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
+  if (safeTitle) {
+    link.download = safeTitle;
+  }
   link.style.display = "none";
 
   document.body.appendChild(link);
