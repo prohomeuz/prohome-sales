@@ -448,6 +448,8 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       "2D": home.image?.[0] ? `${home.image[0]}.png` : "",
       "3D": home.image?.[1] ? `${home.image[1]}.png` : "",
       PLAN: home.image?.[2] ? `${home.image[2]}.png` : "",
+      CLIENT_NAME: customerName,
+      CLIENT_PHONE: payload.phone || "",
     };
 
     const pdfForm = new URLSearchParams();
