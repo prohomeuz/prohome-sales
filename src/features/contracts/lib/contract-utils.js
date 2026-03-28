@@ -104,3 +104,27 @@ export function resolveContractAmount(contract) {
 
   return null;
 }
+
+/**
+ * Joriy yil uchun keyingi shartnoma raqamini qaytaradi.
+ * Format: YYYY0001
+ * @param {object[]} contracts
+ * @param {Date} [date]
+ * @returns {string}
+ */
+export function getNextContractNumber(contracts, date = new Date()) {
+  const year = String(date.getFullYear());
+  let maxSequence = 0;
+
+  (contracts ?? []).forEach((contract) => {
+    const raw = String(contract?.contractNumber ?? "").trim();
+    if (!new RegExp(`^${year}\\d{4}$`).test(raw)) return;
+
+    const sequence = Number(raw.slice(year.length));
+    if (Number.isFinite(sequence)) {
+      maxSequence = Math.max(maxSequence, sequence);
+    }
+  });
+
+  return `${year}${String(maxSequence + 1).padStart(4, "0")}`;
+}

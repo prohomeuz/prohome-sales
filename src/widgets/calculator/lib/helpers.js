@@ -143,13 +143,92 @@ export function resolveContractFileDocUrl(contractFile) {
  * @param {string} url
  * @returns {boolean} Muvaffaqiyatli ochildi/ochilmadi
  */
-export function openExternalDocument(url) {
+export function openPendingDocumentWindow(title = "Hujjat tayyorlanmoqda") {
+  if (typeof window === "undefined") return null;
+
+  const target = window.open("", "_blank");
+  if (!target) return null;
+
+  try {
+    target.document.title = title;
+    target.document.body.innerHTML = `
+      <div style="font-family: Arial, sans-serif; padding: 32px; color: #111827;">
+        <h1 style="margin: 0 0 12px; font-size: 18px;">${title}</h1>
+        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+          Iltimos, kuting. Hujjat yangi oynada ochiladi.
+        </p>
+      </div>
+    `;
+  } catch {
+    // Yangi tab ichidagi DOM ga yozib bo'lmasa ham keyin URL ni ochishga harakat qilamiz.
+  }
+
+  return target;
+}
+
+/**
+ * Agar kerak bo'lsa ochilgan bo'sh oynani yopadi.
+ * @param {Window|null} target
+ */
+export function closePendingDocumentWindow(target) {
+  if (!target || target.closed) return;
+
+  try {
+    target.close();
+  } catch {
+    // Brauzer cheklovi bo'lsa jim o'tamiz.
+  }
+}
+
+/**
+ * Yangi tab da hujjat ochadi.
+ * @param {string} url
+ * @param {Window|null} [targetWindow]
+ * @param {string} [documentTitle]
+ * @returns {boolean} Muvaffaqiyatli ochildi/ochilmadi
+ */
+export function openExternalDocument(url, targetWindow = null, documentTitle = "") {
   if (!url || typeof document === "undefined") return false;
 
+  const safeTitle = String(documentTitle ?? "").trim();
+  const safeUrl = String(url);
+
+  const openInWindow = (target) => {
+    if (!target || target.closed) return false;
+
+    try {
+      target.location.replace(safeUrl);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  if (openInWindow(targetWindow)) {
+    return true;
+  }
+
+  if (safeTitle) {
+    const popup = window.open("", "_blank");
+    if (openInWindow(popup)) {
+      return true;
+    }
+    if (popup && !popup.closed) {
+      try {
+        popup.close();
+      } catch {
+        // popup yopilmasa jim o'tamiz.
+      }
+    }
+  }
+
   const link = document.createElement("a");
-  link.href = url;
+  link.href = safeUrl;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
+  if (safeTitle) {
+    link.download = safeTitle;
+  }
   link.style.display = "none";
 
   document.body.appendChild(link);
@@ -235,7 +314,13 @@ export function createEmptyStatusForm() {
   return {
     firstName: "",
     lastName: "",
+    middleName: "",
     phone: "",
+    birthDate: "",
+    passportNumber: "",
+    passportIssuedBy: "",
+    passportIssuedDate: "",
+    address: "",
     description: "",
     downPayment: "0",
     installments: "60",
@@ -273,7 +358,17 @@ export function getInitialStatusForm(home, nextStatus, defaults) {
 
     form.firstName = customer.firstName ?? "";
     form.lastName = customer.lastName ?? "";
+    form.middleName =
+      customer.middleName ?? customer.middle_name ?? customer.fatherName ?? "";
     form.phone = formatUzPhoneDisplay(customer.phone ?? "");
+    form.birthDate = customer.birthDate ?? customer.birth_date ?? "";
+    form.passportNumber =
+      customer.passportNumber ?? customer.passport_number ?? "";
+    form.passportIssuedBy =
+      customer.passportIssuedBy ?? customer.passport_issued_by ?? "";
+    form.passportIssuedDate =
+      customer.passportIssuedDate ?? customer.passport_issued_date ?? "";
+    form.address = customer.address ?? customer.adress ?? "";
     form.description = home?.description ?? "";
     form.downPayment = formatNumber(currentDownPayment);
     form.installments = String(currentInstallments);

@@ -329,6 +329,7 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
       {home && (
         <CalculatorTool
           home={home}
+          projectId={id}
           onStatusUpdated={(payload) => {
             onRoomStatusUpdated?.(payload.roomId, {
               status: payload.nextStatus,

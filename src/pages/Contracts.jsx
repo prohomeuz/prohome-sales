@@ -276,6 +276,8 @@ export default function Contracts() {
                         const amount = resolveContractAmount(contract);
                         const fullName =
                           contract?.fullName?.trim() || "Mijoz ko'rsatilmagan";
+                        const contractNumber =
+                          contract?.contractNumber?.trim() ?? "";
                         const hasFile = Boolean(contract?.contractFile);
                         const isOpening = openingRowKey === rowKey;
 
@@ -289,6 +291,11 @@ export default function Contracts() {
                               <div className="space-y-1">
                                 <p className="font-medium">{fullName}</p>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                  {contractNumber ? (
+                                    <span className="font-mono">
+                                      № {contractNumber}
+                                    </span>
+                                  ) : null}
                                   <span>
                                     {hasFile ? "Fayl yuklangan" : "Fayl biriktirilmagan"}
                                   </span>
