@@ -129,6 +129,7 @@ export function resolveContractAmount(contract) {
     contract?.contractAmount,
     contract?.sum,
     contract?.overallPrice,
+    contract?.downPayment,
   ];
 
   for (const candidate of candidates) {
