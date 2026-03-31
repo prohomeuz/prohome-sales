@@ -68,7 +68,7 @@ export function getRowKey(contract, index) {
     contract?.id ??
       contract?.contractId ??
       contract?.contractNumber ??
-      `${contract?.contractDate ?? "contract"}-${contract?.fullName ?? index}`,
+      `${contract?.contractDate ?? "contract"}-${contract?.fullname ?? contract?.fullName ?? index}`,
   );
 }
 

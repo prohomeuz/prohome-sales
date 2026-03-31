@@ -63,6 +63,8 @@ export default function Contracts() {
   const [page, setPage] = useState(1);
 
   const searchTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(searchTimerRef.current), []);
+
   function handleSearchChange(e) {
     const val = e.target.value;
     setSearchInput(val);
@@ -109,7 +111,7 @@ export default function Contracts() {
       const amount = resolveContractAmount(item);
       return amount === null ? sum : sum + amount;
     }, 0);
-    const hasAmount = contracts.some((item) => resolveContractAmount(item) !== null);
+    const hasAmount = totalAmount > 0;
     return {
       // Backend statistics dan olamiz, bo'lmasa localdan hisoblaymiz
       totalContracts: statistics?.totalContracts ?? total,
@@ -335,7 +337,7 @@ export default function Contracts() {
                         const date = formatContractDate(
                           contract?.contractDate ?? contract?.createdAt,
                         );
-                        const status = contract?.status ?? "PROCESS";
+                        const status = contract?.status ?? "PENDING";
                         const amount = resolveContractAmount(contract);
                         const fullName =
                           contract?.fullname?.trim() ||
