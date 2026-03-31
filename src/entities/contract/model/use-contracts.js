@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { apiRequest } from "@/shared/lib/api";
 
-/** @type {{ contracts: object[], total: number, error: string|null, loading: boolean }} */
+/** @type {{ contracts: object[], total: number, statistics: object|null, error: string|null, loading: boolean }} */
 const INITIAL_STATE = {
   contracts: [],
   total: 0,
@@ -15,10 +15,6 @@ const INITIAL_STATE = {
   loading: true,
 };
 
-/**
- * @param {typeof INITIAL_STATE} state
- * @param {{ type: string, payload?: any }} action
- */
 function contractsReducer(state, action) {
   switch (action.type) {
     case "FETCH_START":
@@ -38,12 +34,7 @@ function contractsReducer(state, action) {
   }
 }
 
-/**
- * @param {any} payload
- * @returns {{ contracts: object[], total: number, statistics: object }}
- */
 function normalizeResponse(payload) {
-  // Backend: { data: [...], pagination: { total }, statistics: {...} }
   const list = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.data)
@@ -59,17 +50,15 @@ function normalizeResponse(payload) {
         ? payload.total
         : list.length;
 
-  const statistics = payload?.statistics ?? null;
-
-  return { contracts: list, total, statistics };
+  return { contracts: list, total, statistics: payload?.statistics ?? null };
 }
 
 /**
  * @typedef {Object} ContractFilters
  * @property {string} [search]
- * @property {string} [status] - PROCESS | SUCCESS | CANCELED
- * @property {string} [from]   - ISO date string
- * @property {string} [to]     - ISO date string
+ * @property {string} [status]          - PENDING | SUCCESS | CANCELED
+ * @property {string} [from]            - ISO date
+ * @property {string} [to]              - ISO date
  * @property {string} [contractNumber]
  * @property {number} [minDownPayment]
  * @property {number} [maxDownPayment]
@@ -78,17 +67,14 @@ function normalizeResponse(payload) {
  */
 
 /**
- * Berilgan loyiha bo'yicha shartnomalar ro'yxatini yuklaydi.
  * @param {string|number} projectId
  * @param {ContractFilters} [filters]
- * @returns {{ contracts: object[], total: number, error: string|null, loading: boolean, get: Function }}
  */
 export function useContracts(projectId, filters = {}) {
   const [state, dispatch] = useReducer(contractsReducer, INITIAL_STATE);
   const controllerRef = useRef(null);
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
 
+  // Har bir filter o'zgarganda get qayta yaratiladi → useEffect qayta ishlaydi
   const get = useCallback(async () => {
     if (!projectId) return;
     if (controllerRef.current) controllerRef.current.abort();
@@ -98,17 +84,16 @@ export function useContracts(projectId, filters = {}) {
 
     try {
       const params = new URLSearchParams();
-      const f = filtersRef.current;
 
-      if (f.search)           params.set("search", f.search);
-      if (f.status)           params.set("status", f.status);
-      if (f.from)             params.set("from", f.from);
-      if (f.to)               params.set("to", f.to);
-      if (f.contractNumber)   params.set("contractNumber", f.contractNumber);
-      if (f.minDownPayment != null) params.set("minDownPayment", f.minDownPayment);
-      if (f.maxDownPayment != null) params.set("maxDownPayment", f.maxDownPayment);
-      if (f.page != null)     params.set("page", f.page);
-      if (f.limit != null)    params.set("limit", f.limit);
+      if (filters.search)                params.set("search", filters.search);
+      if (filters.status)                params.set("status", filters.status);
+      if (filters.from)                  params.set("from", filters.from);
+      if (filters.to)                    params.set("to", filters.to);
+      if (filters.contractNumber)        params.set("contractNumber", filters.contractNumber);
+      if (filters.minDownPayment != null) params.set("minDownPayment", filters.minDownPayment);
+      if (filters.maxDownPayment != null) params.set("maxDownPayment", filters.maxDownPayment);
+      if (filters.page != null)          params.set("page", filters.page);
+      if (filters.limit != null)         params.set("limit", filters.limit);
 
       const query = params.toString();
       const url = `/api/v1/contract/contract/${projectId}${query ? `?${query}` : ""}`;
@@ -122,7 +107,7 @@ export function useContracts(projectId, filters = {}) {
         return;
       }
       if (res.status === 404) {
-        dispatch({ type: "FETCH_SUCCESS", payload: { contracts: [], total: 0 } });
+        dispatch({ type: "FETCH_SUCCESS", payload: { contracts: [], total: 0, statistics: null } });
         return;
       }
       dispatch({ type: "FETCH_ERROR", payload: "Xatolik yuz berdi, qayta urinib ko'ring!" });
@@ -134,7 +119,10 @@ export function useContracts(projectId, filters = {}) {
         controllerRef.current = null;
       }
     }
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, filters.search, filters.status, filters.from, filters.to,
+      filters.contractNumber, filters.minDownPayment, filters.maxDownPayment,
+      filters.page, filters.limit]);
 
   useEffect(() => {
     get();
