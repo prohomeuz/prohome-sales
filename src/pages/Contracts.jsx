@@ -125,23 +125,26 @@ export default function Contracts() {
     setOpeningRowKey(rowKey);
     try {
       const res = await apiRequest(fileUrl);
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
-      const preview = window.open("", "_blank", "noopener,noreferrer");
-      if (preview) {
-        preview.location.href = objectUrl;
-      } else {
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.click();
-      }
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+
+      // Fayl nomini contractFile dan olamiz yoki default
+      const fileName =
+        contract?.contractFile?.split("/").pop() ??
+        `shartnoma-${contract?.contractNumber ?? rowKey}.pdf`;
+
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
     } catch {
-      toast.error("Shartnoma faylini ochib bo'lmadi");
+      toast.error("Shartnoma faylini yuklab bo'lmadi");
     } finally {
       setOpeningRowKey(null);
     }
@@ -395,7 +398,7 @@ export default function Contracts() {
                                   onClick={() => handleOpenContractFile(contract, rowKey)}
                                 >
                                   <Download className={cn(isOpening && "animate-bounce")} />
-                                  {isOpening ? "Ochilmoqda" : "Ochish"}
+                                  {isOpening ? "Yuklanmoqda" : "Yuklab olish"}
                                 </Button>
                               ) : (
                                 <span className="text-xs text-muted-foreground">Fayl yo'q</span>
