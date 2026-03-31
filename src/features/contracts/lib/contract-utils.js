@@ -3,6 +3,32 @@
  * @module features/contracts/lib/contract-utils
  */
 
+/** Backend status qiymatlari: PROCESS | SUCCESS | CANCELED */
+export const CONTRACT_STATUS = {
+  PROCESS: "PROCESS",
+  SUCCESS: "SUCCESS",
+  CANCELED: "CANCELED",
+};
+
+export const CONTRACT_STATUS_LABEL = {
+  PROCESS: "Jarayonda",
+  SUCCESS: "Muvaffaqiyatli",
+  CANCELED: "Bekor qilingan",
+};
+
+export const CONTRACT_STATUS_BADGE_CLASS = {
+  PROCESS:  "bg-yellow-500 text-white hover:bg-yellow-500",
+  SUCCESS:  "bg-green-600 text-white hover:bg-green-600",
+  CANCELED: "bg-destructive text-white hover:bg-destructive",
+};
+
+export const CONTRACT_STATUS_TABS = [
+  { key: "ALL",      label: "Barchasi" },
+  { key: "PROCESS",  label: "Jarayonda" },
+  { key: "SUCCESS",  label: "Muvaffaqiyatli" },
+  { key: "CANCELED", label: "Bekor qilingan" },
+];
+
 /**
  * Sanani o'zbek formatida { date, time } sifatida qaytaradi.
  * @param {string|number|null} value
