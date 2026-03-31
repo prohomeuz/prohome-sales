@@ -1,28 +1,32 @@
 /**
- * @file DATA layer: contracts list by project.
+ * @file DATA layer: contracts list by project with filters & pagination.
  * @module entities/contract/model/use-contracts
  */
 
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { apiRequest } from "@/shared/lib/api";
 
-/** @type {{ contracts: object[], error: string|null, loading: boolean }} */
+/** @type {{ contracts: object[], total: number, statistics: object|null, error: string|null, loading: boolean }} */
 const INITIAL_STATE = {
   contracts: [],
+  total: 0,
+  statistics: null,
   error: null,
   loading: true,
 };
 
-/**
- * @param {typeof INITIAL_STATE} state
- * @param {{ type: string, payload?: any }} action
- */
 function contractsReducer(state, action) {
   switch (action.type) {
     case "FETCH_START":
       return { ...state, loading: true, error: null };
     case "FETCH_SUCCESS":
-      return { contracts: action.payload, error: null, loading: false };
+      return {
+        contracts: action.payload.contracts,
+        total: action.payload.total,
+        statistics: action.payload.statistics,
+        error: null,
+        loading: false,
+      };
     case "FETCH_ERROR":
       return { ...state, error: action.payload, loading: false };
     default:
@@ -30,11 +34,7 @@ function contractsReducer(state, action) {
   }
 }
 
-/**
- * @param {any} payload
- * @returns {object[]}
- */
-function normalizeContracts(payload) {
+function normalizeResponse(payload) {
   const list = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.data)
@@ -43,22 +43,38 @@ function normalizeContracts(payload) {
         ? payload.contracts
         : [];
 
-  return [...list].sort((a, b) => {
-    const aTime = Number(new Date(a?.contractDate ?? 0));
-    const bTime = Number(new Date(b?.contractDate ?? 0));
-    return bTime - aTime;
-  });
+  const total =
+    typeof payload?.pagination?.total === "number"
+      ? payload.pagination.total
+      : typeof payload?.total === "number"
+        ? payload.total
+        : list.length;
+
+  return { contracts: list, total, statistics: payload?.statistics ?? null };
 }
 
 /**
- * Berilgan loyiha bo'yicha shartnomalar ro'yxatini yuklaydi.
- * @param {string|number} projectId - Loyiha ID si
- * @returns {{ contracts: object[], error: string|null, loading: boolean, get: Function }}
+ * @typedef {Object} ContractFilters
+ * @property {string} [search]
+ * @property {string} [status]          - PENDING | SUCCESS | CANCELED
+ * @property {string} [from]            - ISO date
+ * @property {string} [to]              - ISO date
+ * @property {string} [contractNumber]
+ * @property {number} [minDownPayment]
+ * @property {number} [maxDownPayment]
+ * @property {number} [page]
+ * @property {number} [limit]
  */
-export function useContracts(projectId) {
+
+/**
+ * @param {string|number} projectId
+ * @param {ContractFilters} [filters]
+ */
+export function useContracts(projectId, filters = {}) {
   const [state, dispatch] = useReducer(contractsReducer, INITIAL_STATE);
   const controllerRef = useRef(null);
 
+  // Har bir filter o'zgarganda get qayta yaratiladi → useEffect qayta ishlaydi
   const get = useCallback(async () => {
     if (!projectId) return;
     if (controllerRef.current) controllerRef.current.abort();
@@ -67,21 +83,34 @@ export function useContracts(projectId) {
     dispatch({ type: "FETCH_START" });
 
     try {
-      const res = await apiRequest(`/api/v1/contract/contract/${projectId}`, {
-        signal: controller.signal,
-      });
+      const params = new URLSearchParams();
+
+      if (filters.search)                params.set("search", filters.search);
+      if (filters.status)                params.set("status", filters.status);
+      if (filters.from)                  params.set("from", filters.from);
+      if (filters.to)                    params.set("to", filters.to);
+      if (filters.contractNumber)        params.set("contractNumber", filters.contractNumber);
+      if (filters.minDownPayment != null) params.set("minDownPayment", filters.minDownPayment);
+      if (filters.maxDownPayment != null) params.set("maxDownPayment", filters.maxDownPayment);
+      if (filters.page != null)          params.set("page", filters.page);
+      if (filters.limit != null)         params.set("limit", filters.limit);
+
+      const query = params.toString();
+      const url = `/api/v1/contract/contract/${projectId}${query ? `?${query}` : ""}`;
+
+      const res = await apiRequest(url, { signal: controller.signal });
       if (controller.signal.aborted) return;
 
       if (res.ok) {
         const data = await res.json();
-        dispatch({ type: "FETCH_SUCCESS", payload: normalizeContracts(data) });
+        dispatch({ type: "FETCH_SUCCESS", payload: normalizeResponse(data) });
         return;
       }
       if (res.status === 404) {
-        dispatch({ type: "FETCH_SUCCESS", payload: [] });
+        dispatch({ type: "FETCH_SUCCESS", payload: { contracts: [], total: 0, statistics: null } });
         return;
       }
-      dispatch({ type: "FETCH_ERROR", payload: "Xatolik yuz berdi qayta urunib ko'ring!" });
+      dispatch({ type: "FETCH_ERROR", payload: "Xatolik yuz berdi, qayta urinib ko'ring!" });
     } catch (error) {
       if (error?.name === "AbortError") return;
       dispatch({ type: "FETCH_ERROR", payload: "Tizimda nosozlik!" });
@@ -90,7 +119,10 @@ export function useContracts(projectId) {
         controllerRef.current = null;
       }
     }
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, filters.search, filters.status, filters.from, filters.to,
+      filters.contractNumber, filters.minDownPayment, filters.maxDownPayment,
+      filters.page, filters.limit]);
 
   useEffect(() => {
     get();
@@ -99,6 +131,8 @@ export function useContracts(projectId) {
 
   return {
     contracts: state.contracts,
+    total: state.total,
+    statistics: state.statistics,
     error: state.error,
     loading: state.loading,
     get,
