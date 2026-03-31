@@ -93,7 +93,7 @@ export default function Contracts() {
     [search, activeTab, page],
   );
 
-  const { contracts, total, error, loading, get } = useContracts(projectId, filters);
+  const { contracts, total, statistics, error, loading, get } = useContracts(projectId, filters);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
 
   const [openingRowKey, setOpeningRowKey] = useState(null);
@@ -111,12 +111,15 @@ export default function Contracts() {
     }, 0);
     const hasAmount = contracts.some((item) => resolveContractAmount(item) !== null);
     return {
-      success:  contracts.filter((c) => c?.status === "SUCCESS").length,
-      canceled: contracts.filter((c) => c?.status === "CANCELED").length,
+      // Backend statistics dan olamiz, bo'lmasa localdan hisoblaymiz
+      totalContracts: statistics?.totalContracts ?? total,
+      sold:           statistics?.sold     ?? contracts.filter((c) => c?.status === "SUCCESS").length,
+      reserved:       statistics?.reserved ?? contracts.filter((c) => c?.status === "PENDING").length,
+      canceled:       contracts.filter((c) => c?.status === "CANCELED").length,
       totalAmount,
       hasAmount,
     };
-  }, [contracts]);
+  }, [contracts, statistics, total]);
 
   const handleOpenContractFile = useCallback(async (contract, rowKey) => {
     const fileUrl = resolveContractFileUrl(contract?.contractFile);
@@ -263,25 +266,25 @@ export default function Contracts() {
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="size-3.5 text-green-600" />
                   <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
-                    Muvaffaqiyatli
+                    Sotilgan
                   </p>
                 </div>
                 <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
-                  {stats.success}
+                  {stats.sold}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="gap-0 border-destructive/20 bg-destructive/5 py-0 shadow-none">
+            <Card className="gap-0 border-orange-200/70 bg-orange-50/70 py-0 shadow-none dark:border-orange-900/30 dark:bg-orange-950/20">
               <CardContent className="p-4">
                 <div className="flex items-center gap-1.5">
-                  <XCircle className="size-3.5 text-destructive" />
+                  <XCircle className="size-3.5 text-orange-500" />
                   <p className="text-muted-foreground text-xs uppercase tracking-[0.12em]">
-                    Bekor qilingan
+                    Bron qilingan
                   </p>
                 </div>
                 <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
-                  {stats.canceled}
+                  {stats.reserved}
                 </p>
               </CardContent>
             </Card>
@@ -335,6 +338,7 @@ export default function Contracts() {
                         const status = contract?.status ?? "PROCESS";
                         const amount = resolveContractAmount(contract);
                         const fullName =
+                          contract?.fullname?.trim() ||
                           contract?.fullName?.trim() ||
                           [contract?.firstName, contract?.lastName]
                             .filter(Boolean)

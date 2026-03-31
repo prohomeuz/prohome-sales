@@ -10,6 +10,7 @@ import { apiRequest } from "@/shared/lib/api";
 const INITIAL_STATE = {
   contracts: [],
   total: 0,
+  statistics: null,
   error: null,
   loading: true,
 };
@@ -26,6 +27,7 @@ function contractsReducer(state, action) {
       return {
         contracts: action.payload.contracts,
         total: action.payload.total,
+        statistics: action.payload.statistics,
         error: null,
         loading: false,
       };
@@ -38,10 +40,10 @@ function contractsReducer(state, action) {
 
 /**
  * @param {any} payload
- * @returns {{ contracts: object[], total: number }}
+ * @returns {{ contracts: object[], total: number, statistics: object }}
  */
 function normalizeResponse(payload) {
-  // Backend: { data: [...], total: N } yoki array
+  // Backend: { data: [...], pagination: { total }, statistics: {...} }
   const list = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.data)
@@ -51,13 +53,15 @@ function normalizeResponse(payload) {
         : [];
 
   const total =
-    typeof payload?.total === "number"
-      ? payload.total
-      : typeof payload?.count === "number"
-        ? payload.count
+    typeof payload?.pagination?.total === "number"
+      ? payload.pagination.total
+      : typeof payload?.total === "number"
+        ? payload.total
         : list.length;
 
-  return { contracts: list, total };
+  const statistics = payload?.statistics ?? null;
+
+  return { contracts: list, total, statistics };
 }
 
 /**
@@ -140,6 +144,7 @@ export function useContracts(projectId, filters = {}) {
   return {
     contracts: state.contracts,
     total: state.total,
+    statistics: state.statistics,
     error: state.error,
     loading: state.loading,
     get,

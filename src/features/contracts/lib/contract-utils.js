@@ -3,28 +3,28 @@
  * @module features/contracts/lib/contract-utils
  */
 
-/** Backend status qiymatlari: PROCESS | SUCCESS | CANCELED */
+/** Backend status qiymatlari: PENDING | SUCCESS | CANCELED */
 export const CONTRACT_STATUS = {
-  PROCESS: "PROCESS",
-  SUCCESS: "SUCCESS",
+  PENDING:  "PENDING",
+  SUCCESS:  "SUCCESS",
   CANCELED: "CANCELED",
 };
 
 export const CONTRACT_STATUS_LABEL = {
-  PROCESS: "Jarayonda",
-  SUCCESS: "Muvaffaqiyatli",
+  PENDING:  "Jarayonda",
+  SUCCESS:  "Muvaffaqiyatli",
   CANCELED: "Bekor qilingan",
 };
 
 export const CONTRACT_STATUS_BADGE_CLASS = {
-  PROCESS:  "bg-yellow-500 text-white hover:bg-yellow-500",
+  PENDING:  "bg-yellow-500 text-white hover:bg-yellow-500",
   SUCCESS:  "bg-green-600 text-white hover:bg-green-600",
   CANCELED: "bg-destructive text-white hover:bg-destructive",
 };
 
 export const CONTRACT_STATUS_TABS = [
   { key: "ALL",      label: "Barchasi" },
-  { key: "PROCESS",  label: "Jarayonda" },
+  { key: "PENDING",  label: "Jarayonda" },
   { key: "SUCCESS",  label: "Muvaffaqiyatli" },
   { key: "CANCELED", label: "Bekor qilingan" },
 ];
@@ -74,6 +74,8 @@ export function getRowKey(contract, index) {
 
 /**
  * Shartnoma fayl yo'lini to'liq URL ga aylantiradi.
+ * Backend faqat fayl nomini qaytaradi: "1774805171094-779218106.pdf"
+ * To'liq URL: VITE_BASE_URL + /api/v1/docs/ + filename
  * @param {string} contractFile
  * @returns {string}
  */
@@ -82,12 +84,18 @@ export function resolveContractFileUrl(contractFile) {
   if (contractFile.startsWith("http")) return contractFile;
 
   const base = import.meta.env.VITE_BASE_URL ?? window.location.origin;
-  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
-  const normalizedPath = contractFile.startsWith("/")
+  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const normalizedFile = contractFile.startsWith("/")
     ? contractFile.slice(1)
     : contractFile;
 
-  return new URL(normalizedPath, normalizedBase).href;
+  // Agar yo'lda allaqachon /api/v1/docs/ bor bo'lsa
+  if (normalizedFile.includes("/")) {
+    return `${normalizedBase}/${normalizedFile}`;
+  }
+
+  // Faqat fayl nomi kelgan holat (asosiy holat)
+  return `${normalizedBase}/api/v1/docs/${normalizedFile}`;
 }
 
 /**
