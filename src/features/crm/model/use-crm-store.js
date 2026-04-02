@@ -355,6 +355,17 @@ export const useCrmStore = create((set, get) => {
       await updateLead(leadId, { columnId: archiveCol.id });
     },
 
+    restoreLead: async (leadId, targetColumnId) => {
+      const { columns, updateLead } = get();
+      // targetColumnId berilmasa — birinchi ko'rinadigan column ga qaytaradi
+      const firstVisible = columns.find(
+        (c) => c.name !== "__crm_hidden_archive__" && c.title !== "__crm_hidden_archive__"
+      );
+      const colId = targetColumnId ?? firstVisible?.id;
+      if (!colId) return;
+      await updateLead(leadId, { columnId: colId });
+    },
+
     moveColumn: (activeId, overId) => {
       set((state) => {
         const oldIndex = state.columns.findIndex((col) => col.id === activeId);
