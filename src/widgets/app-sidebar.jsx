@@ -33,7 +33,7 @@ import { cn } from "@/shared/lib/utils";
 const routes = {
   SUPERADMIN: [
     { url: "/", text: "Bosh sahifa", icon: <HomeIcon /> },
-    { url: "/dashboard", text: "Dashboard", icon: <Gauge /> },
+    { url: "/dashboard", text: "Boshqaruv paneli", icon: <Gauge /> },
     { url: "/company", text: "Kompaniyalar", icon: <Building2 /> },
     { url: "/admin", text: "Adminlar", icon: <User /> },
     { url: "/rop", text: "Roplar", icon: <User /> },
@@ -44,7 +44,7 @@ const routes = {
   ],
   ADMIN: [
     { url: "/", text: "Bosh sahifa", icon: <HomeIcon /> },
-    { url: "/dashboard", text: "Dashboard", icon: <Gauge /> },
+    { url: "/dashboard", text: "Boshqaruv paneli", icon: <Gauge /> },
     { url: "/company", text: "Kompaniyalar", icon: <Building2 /> },
     { url: "/rop", text: "Roplar", icon: <User /> },
     { url: "/salesmanager", text: "Sotuv menejerlari", icon: <User /> },
@@ -54,7 +54,7 @@ const routes = {
   ],
   ROP: [
     { url: "/", text: "Bosh sahifa", icon: <HomeIcon /> },
-    { url: "/dashboard", text: "Dashboard", icon: <Gauge /> },
+    { url: "/dashboard", text: "Boshqaruv paneli", icon: <Gauge /> },
     { url: "/salesmanager", text: "Sotuv menejerlari", icon: <User /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
     { url: "/contracts", text: "Shartnomalar", icon: <FileText /> },
@@ -62,6 +62,7 @@ const routes = {
   ],
   SALESMANAGER: [
     { url: "/", text: "Bosh sahifa", icon: <HomeIcon /> },
+    { url: "/dashboard", text: "Boshqaruv paneli", icon: <Gauge /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
     { url: "/crm", text: "CRM", icon: <UsersRound /> },
   ],
