@@ -3,7 +3,7 @@
  * All fetch calls go through this for consistent base URL and auth.
  */
 
-const BASE = import.meta.env.VITE_BASE_URL;
+const BASE = import.meta.env.DEV ? "" : (import.meta.env.VITE_BASE_URL || "");
 
 /** @returns {string|null} */
 function getToken() {
@@ -28,6 +28,12 @@ export async function apiRequest(path, options = {}) {
     ...(options.headers ?? {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  const res = await fetch(url, { ...options, headers });
-  return res;
+  
+  try {
+    const res = await fetch(url, { ...options, headers });
+    return res;
+  } catch (err) {
+    console.error(`API Request failed [${path}]:`, err);
+    throw err;
+  }
 }
