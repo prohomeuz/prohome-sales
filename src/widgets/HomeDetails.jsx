@@ -8,6 +8,7 @@
  */
 
 import { useAppStore } from "@/entities/session/model";
+import { apiRequest } from "@/shared/lib/api";
 import { useClipboard } from "@/shared/hooks/use-clipboard";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { cn, formatNumber } from "@/shared/lib/utils";
@@ -66,13 +67,9 @@ export default function HomeDetails({ onRoomStatusUpdated }) {
   async function get(roomId) {
     start();
     let req;
-    const token = localStorage.getItem("token");
     dispatch({ type: "FETCH_START" });
     try {
-      req = await fetch(
-        import.meta.env.VITE_BASE_URL + `/api/v1/room/by/${roomId}`,
-        { headers: { Authorization: "Bearer " + token } },
-      );
+      req = await apiRequest(`/api/v1/room/by/${roomId}`);
     } catch {
       dispatch({ type: "FETCH_ERROR", payload: "Tizimda nosozlik!" });
     }

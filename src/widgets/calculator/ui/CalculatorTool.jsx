@@ -291,12 +291,9 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
 
   async function calc(url) {
     let req;
-    const token = localStorage.getItem("token");
     dispatch({ type: "SET_CALC_LOADING", payload: true });
     try {
-      req = await fetch(url, {
-        headers: { Authorization: "Bearer " + token },
-      });
+      req = await apiRequest(url);
     } catch {
       toast.error("Tizimda nosozlik!", { position: "bottom-left" });
     }
@@ -336,16 +333,14 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
 
   function handleCalc(evt) {
     evt.preventDefault();
-    const url = new URL(
-      import.meta.env.VITE_BASE_URL + `/api/v1/room/${home.id}/calculate`,
-    );
+    const params = new URLSearchParams();
     const formData = getFormData(evt.currentTarget);
     Object.entries(formData).forEach(([key, value]) => {
       const normalizedValue =
         key === "months" ? normalizePeriod(value) || "12" : value;
-      url.searchParams.append(key, normalizedValue.replaceAll(/\s+/g, ""));
+      params.append(key, normalizedValue.replaceAll(/\s+/g, ""));
     });
-    calc(url.href);
+    calc(`/api/v1/room/${home.id}/calculate?${params.toString()}`);
   }
 
   function handlePeriod(p) {
