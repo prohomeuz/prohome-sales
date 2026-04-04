@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  KeyboardSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { useCrmStore } from "@/features/crm/model/use-crm-store";
@@ -17,21 +19,47 @@ import { useAppStore } from "@/entities/session/model";
 import { ColumnContainer } from "./ColumnContainer";
 import { LeadCard } from "./LeadCard";
 import { LeadDetailsDrawer } from "./LeadDetailsDrawer";
+import { ArchiveDialog } from "./ArchiveDialog";
 import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
-import { Loader2, PlusCircle, Search, ShieldAlert } from "lucide-react";
+import { PlusCircle, ShieldAlert, Filter, Archive } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/shared/ui/input-group";
 import { Label } from "@/shared/ui/label";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { Filter } from "lucide-react";
-import { toast } from "sonner";
+
+function isArchiveColumn(col) {
+  return col.name === "__crm_hidden_archive__" || col.title === "__crm_hidden_archive__";
+}
+
+function moveLeadInDraft(currentLeads, activeId, overId, overType) {
+  const activeIdx = currentLeads.findIndex((lead) => lead.id === activeId);
+  if (activeIdx === -1) return currentLeads;
+
+  if (overType === "Lead") {
+    const overIdx = currentLeads.findIndex((lead) => lead.id === overId);
+    if (overIdx === -1) return currentLeads;
+    const activeItem = currentLeads[activeIdx];
+    const overItem = currentLeads[overIdx];
+    const next = [...currentLeads];
+
+    if (activeItem.columnId !== overItem.columnId) {
+      next[activeIdx] = { ...activeItem, columnId: overItem.columnId };
+    }
+
+    return arrayMove(next, activeIdx, overIdx);
+  }
+
+  if (overType === "Column") {
+    const activeItem = currentLeads[activeIdx];
+    if (activeItem.columnId === overId) return currentLeads;
+    const next = [...currentLeads];
+    next[activeIdx] = { ...activeItem, columnId: overId };
+    return next;
+  }
+
+  return currentLeads;
+}
 
 export function KanbanBoard() {
   const { user } = useAppStore();
@@ -43,165 +71,94 @@ export function KanbanBoard() {
   const addColumn = useCrmStore((state) => state.addColumn);
   const startPolling = useCrmStore((state) => state.startPolling);
   const stopPolling = useCrmStore((state) => state.stopPolling);
-  const updateLead = useCrmStore((state) => state.updateLead);
   const filters = useCrmStore((state) => state.filters);
   const setFilters = useCrmStore((state) => state.setFilters);
+  const deleteColumn = useCrmStore((state) => state.deleteColumn);
+  const updateColumn = useCrmStore((state) => state.updateColumn);
+  const addLead = useCrmStore((state) => state.addLead);
+  const deleteLead = useCrmStore((state) => state.deleteLead);
+  const updateLead = useCrmStore((state) => state.updateLead);
+  const archiveLead = useCrmStore((state) => state.archiveLead);
+  const restoreLead = useCrmStore((state) => state.restoreLead);
 
+  // Archive column va visible columnlar
+  const archiveColumn = useMemo(() => columns.find(isArchiveColumn), [columns]);
+  const visibleColumns = useMemo(() => columns.filter((c) => !isArchiveColumn(c)), [columns]);
+  const archivedLeads = useMemo(
+    () => (archiveColumn ? leads.filter((l) => l.columnId === archiveColumn.id) : []),
+    [archiveColumn, leads]
+  );
 
+  // Local leads state during drag
+  const [localLeads, setLocalLeads] = useState(null);
+  const displayLeads = localLeads !== null ? localLeads : leads;
 
   useEffect(() => {
     const hasCrmPermission = user?.permission?.CRM === true;
-
     if (hasCrmPermission) {
       fetchCrmData();
       startPolling();
       return () => stopPolling();
     } else if (user) {
-      stopPolling();
-      useCrmStore.setState({ error: "permissions denied", isLoading: false });
+      useCrmStore.setState({ error: "permissions denied" });
     }
   }, [fetchCrmData, startPolling, stopPolling, user]);
 
-  const deleteColumn = useCrmStore((state) => state.deleteColumn);
-  const updateColumn = useCrmStore((state) => state.updateColumn);
-  const addLead = useCrmStore((state) => state.addLead);
-  const deleteLead = useCrmStore((state) => state.deleteLead);
-  const moveLeadSameColumn = useCrmStore((state) => state.moveLeadSameColumn);
-  const previewMoveLeadToDifferentColumn = useCrmStore((state) => state.previewMoveLeadToDifferentColumn);
-
-  const [activeColumn, setActiveColumn] = useState(null);
   const [activeLead, setActiveLead] = useState(null);
   const [activeEditLead, setActiveEditLead] = useState(null);
-  
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isRetrying, setIsRetrying] = useState(false);
-  const boardScrollRef = useRef(null);
-  const [showLeftBoardShadow, setShowLeftBoardShadow] = useState(false);
-  const [showRightBoardShadow, setShowRightBoardShadow] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
-  useEffect(() => {
-    if (!activeEditLead) return;
-
-    const stillExists = leads.some((lead) => lead.id === activeEditLead.id);
-    if (!stillExists) {
-      setActiveEditLead(null);
-    }
-  }, [activeEditLead, leads]);
-
-  const columnsId = useMemo(() => (Array.isArray(columns) ? columns.map((col) => col.id) : []), [columns]);
-  const activeFilterCount = useMemo(
-    () => [filters.phoneQuery, filters.priceMin, filters.priceMax].filter((value) => String(value ?? "").trim() !== "").length,
-    [filters.phoneQuery, filters.priceMin, filters.priceMax],
+  const columnsId = useMemo(() => visibleColumns.map((col) => col.id), [visibleColumns]);
+  const stretchColumns = visibleColumns.length > 0;
+  const visibleStageTitles = useMemo(
+    () => visibleColumns.map((col) => col.title || col.name).filter(Boolean),
+    [visibleColumns]
   );
-  const boardEdgeShadowStyle = useMemo(() => {
-    const shadows = [];
 
-    if (showLeftBoardShadow) {
-      shadows.push("inset 16px 0 20px -20px rgba(148, 163, 184, 0.38)");
-    }
-
-    if (showRightBoardShadow) {
-      shadows.push("inset -16px 0 20px -20px rgba(148, 163, 184, 0.38)");
-    }
-
-    return shadows.length ? { boxShadow: shadows.join(", ") } : undefined;
-  }, [showLeftBoardShadow, showRightBoardShadow]);
-
-  // Comprehensive Filtering (Search + Advanced Filters)
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
-      const leadPrice = Number(lead.price);
-      const hasLeadPrice = Number.isFinite(leadPrice);
-
-      // Qidiruv text
+    return displayLeads.filter((lead) => {
+      // Arxiv leadlarini board da ko'rsatmaymiz
+      if (archiveColumn && lead.columnId === archiveColumn.id) return false;
       const query = searchQuery.trim().toLowerCase();
-      if (query && !lead.title?.toLowerCase().includes(query) && !lead.companyName?.toLowerCase().includes(query)) {
+      if (
+        query &&
+        !lead.title?.toLowerCase().includes(query) &&
+        !lead.companyName?.toLowerCase().includes(query)
+      )
         return false;
-      }
-      // Telefon filter
-      if (filters.phoneQuery && !lead.companyName?.toLowerCase().includes(filters.phoneQuery.toLowerCase())) {
+      if (
+        filters.phoneQuery &&
+        !lead.companyName?.toLowerCase().includes(filters.phoneQuery.toLowerCase())
+      )
         return false;
-      }
-      // Minimal summa
-      if (filters.priceMin && (!hasLeadPrice || leadPrice < Number(filters.priceMin))) {
+      if (filters.priceMin && Number(lead.price) < Number(filters.priceMin)) return false;
+      if (
+        filters.priceMax &&
+        Number(filters.priceMax) > 0 &&
+        Number(lead.price) > Number(filters.priceMax)
+      )
         return false;
-      }
-      // Maksimal summa
-      if (filters.priceMax && Number(filters.priceMax) > 0 && (!hasLeadPrice || leadPrice > Number(filters.priceMax))) {
-        return false;
-      }
       return true;
     });
-  }, [leads, searchQuery, filters]);
+  }, [displayLeads, searchQuery, filters, archiveColumn]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor)
+    useSensor(PointerSensor, { activationConstraint: { distance: 2 } })
   );
 
-  const handleCreateColumn = async (e) => {
-    e.preventDefault();
-    if (!newColumnTitle.trim()) return;
-
-    const result = await addColumn(newColumnTitle.trim());
-    if (result?.success) {
-      setNewColumnTitle("");
-      setIsColumnDialogOpen(false);
-      toast.success("Yangi bosqich qo'shildi");
-      return;
-    }
-
-    toast.error(result?.error || "Bosqich qo'shib bo'lmadi");
+  const collisionDetectionStrategy = (args) => {
+    const pointer = pointerWithin(args);
+    if (pointer.length > 0) return pointer;
+    return rectIntersection(args);
   };
-
-  const handleRetry = async () => {
-    if (isRetrying) return;
-
-    setIsRetrying(true);
-    stopPolling();
-    useCrmStore.setState({ error: null, isLoading: true });
-
-    try {
-      await fetchCrmData();
-      const { error: nextError } = useCrmStore.getState();
-      if (!nextError) {
-        startPolling();
-      }
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  useEffect(() => {
-    const el = boardScrollRef.current;
-    if (!el) return;
-
-    const updateBoardShadows = () => {
-      const maxScrollLeft = el.scrollWidth - el.clientWidth;
-      setShowLeftBoardShadow(el.scrollLeft > 8);
-      setShowRightBoardShadow(maxScrollLeft > 8 && el.scrollLeft < maxScrollLeft - 8);
-    };
-
-    updateBoardShadows();
-    el.addEventListener("scroll", updateBoardShadows, { passive: true });
-    window.addEventListener("resize", updateBoardShadows);
-
-    return () => {
-      el.removeEventListener("scroll", updateBoardShadows);
-      window.removeEventListener("resize", updateBoardShadows);
-    };
-  }, [columns.length, filteredLeads.length, isLoading]);
 
   const onDragStart = (event) => {
-    // Only allow dragging Leads, not Columns
     if (event.active.data.current?.type === "Lead") {
       setActiveLead(event.active.data.current.lead);
+      setLocalLeads([...leads]);
     }
   };
 
@@ -211,193 +168,202 @@ export function KanbanBoard() {
     const activeId = active.id;
     const overId = over.id;
     if (activeId === overId) return;
+    if (active.data.current?.type !== "Lead") return;
+    const overType = over.data.current?.type;
+    if (overType !== "Lead" && overType !== "Column") return;
 
-    const isActiveLead = active.data.current?.type === "Lead";
-    const isOverLead = over.data.current?.type === "Lead";
-    const isOverColumn = over.data.current?.type === "Column";
-
-    if (!isActiveLead) return;
-
-    if (isActiveLead && isOverLead) {
-      const activeLeadData = leads.find((l) => l.id === activeId);
-      const overLeadData = leads.find((l) => l.id === overId);
-      if (!activeLeadData || !overLeadData) return;
-      if (activeLeadData.columnId === overLeadData.columnId) {
-        moveLeadSameColumn(activeId, overId);
-      } else {
-        previewMoveLeadToDifferentColumn(activeId, overId, overLeadData.columnId, false);
-      }
-    }
-
-    if (isActiveLead && isOverColumn) {
-      previewMoveLeadToDifferentColumn(activeId, overId, overId, true);
-    }
+    setLocalLeads((prev) => {
+      const current = prev ?? leads;
+      const next = moveLeadInDraft(current, activeId, overId, overType);
+      return next === current ? prev : next;
+    });
   };
 
-  const onDragEnd = async (event) => {
-    if (!event.over && activeLead) {
-      await fetchCrmData();
+  const onDragEnd = (event) => {
+    const { active, over } = event;
+    let finalLeads = localLeads ?? leads;
+
+    if (active.data.current?.type === "Lead" && over) {
+      const overType = over.data.current?.type;
+      finalLeads = moveLeadInDraft(finalLeads, active.id, over.id, overType);
     }
 
-    if (activeLead && event.over) {
-      const { leads: latestLeads } = useCrmStore.getState();
-      const movedLead = latestLeads.find((lead) => lead.id === activeLead.id);
-      if (movedLead && movedLead.columnId !== activeLead.columnId) {
-        const result = await updateLead(movedLead.id, { columnId: movedLead.columnId });
-        if (!result?.success) {
-          toast.error(result?.error || "Lead holatini saqlab bo'lmadi");
-          await fetchCrmData();
-        }
-      }
+    if (finalLeads !== leads) {
+      useCrmStore.setState({ leads: finalLeads });
     }
 
-    setActiveColumn(null);
+    const original = leads.find((lead) => lead.id === active.id);
+    const updated = finalLeads.find((lead) => lead.id === active.id);
+    if (original && updated && original.columnId !== updated.columnId) {
+      updateLead(active.id, { columnId: updated.columnId });
+    }
+
+    setLocalLeads(null);
     setActiveLead(null);
   };
 
+  const boardLeadCount = leads.filter((l) => !archiveColumn || l.columnId !== archiveColumn.id).length;
+  const hasActiveFilter = searchQuery || filters.phoneQuery || filters.priceMin || filters.priceMax;
+
   return (
-    <div className="h-full min-h-0 w-full bg-[#f8fafc] flex flex-col">
+    <div className="h-[calc(100vh-64px)] sm:h-screen w-full bg-[#f0f2f5] flex flex-col pt-18 sm:pt-0">
       <LeadDetailsDrawer
         lead={activeEditLead}
         isOpen={!!activeEditLead}
         onClose={() => setActiveEditLead(null)}
       />
-      {!error && (
-        <div className="flex flex-col gap-3 border-b border-gray-100 bg-white px-3 py-3.5 sm:px-6 sm:py-5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <h1 className="text-2xl font-black leading-tight tracking-tight text-gray-900 sm:text-3xl">
-              Kalonkalar & Leadlar
-            </h1>
-            <p className="mt-1 text-[10px] font-bold tracking-[0.22em] text-gray-300 uppercase sm:text-xs">
-              SOTUV BO'LIMI KANBAN DOSKASI
-            </p>
-          </div>
 
-          <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center lg:w-auto lg:flex-nowrap lg:justify-end">
-            <InputGroup className="h-11 w-full rounded-xl border-gray-200 bg-gray-50 shadow-none transition-all has-[[data-slot=input-group-control]:focus-visible]:border-[#65a30d] has-[[data-slot=input-group-control]:focus-visible]:ring-[#65a30d]/15 sm:flex-1 lg:w-[420px] lg:flex-none">
-              <InputGroupAddon align="inline-start" className="pl-3 text-gray-400">
-                <Search className="size-4" />
-              </InputGroupAddon>
-              <InputGroupInput
-                placeholder="Qidiruv..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-full text-sm placeholder:text-gray-400"
-              />
-              <InputGroupAddon align="inline-end" className="gap-2 pr-1.5">
-                <span aria-hidden="true" className="h-5 w-px rounded-full bg-gray-200" />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={`relative mr-2 h-8 rounded-lg px-3 text-xs font-bold ${
-                        activeFilterCount
-                          ? "bg-[#ecfccb]/40 text-[#65a30d] hover:bg-[#ecfccb]/60 hover:text-[#4d7c0f]"
-                          : "text-gray-500 hover:bg-white hover:text-gray-900"
-                      }`}
-                    >
-                      <Filter className="size-4" />
-                      <span>Filtr</span>
-                      {activeFilterCount > 0 && (
-                        <Badge className="absolute -top-1 -right-1 min-w-5 border-white bg-[#65a30d] px-1.5 py-0 text-[10px] font-black text-white shadow-sm">
-                          {activeFilterCount}
-                        </Badge>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(20rem,calc(100vw-1rem))] rounded-2xl p-4 sm:p-5" align="end">
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-gray-900 leading-none">Filterlar</h4>
-                      <p className="text-xs text-muted-foreground">Doskadagi leadlarni saralash.</p>
-                      
-                      <div className="grid gap-3 pt-2">
-                        <div className="grid gap-1">
-                          <Label htmlFor="phoneQ" className="text-xs font-bold text-gray-500">Telefon raqam</Label>
-                          <Input
-                            id="phoneQ"
-                            value={filters.phoneQuery}
-                            onChange={(e) => setFilters({ phoneQuery: e.target.value })}
-                            placeholder="Masalan: +998..."
-                            className="h-10 rounded-xl text-sm"
-                          />
-                        </div>
-                        
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          <div className="grid gap-1">
-                            <Label htmlFor="pMin" className="text-xs font-bold text-gray-500">Min. Summa</Label>
-                            <Input
-                              id="pMin"
-                              type="number"
-                              value={filters.priceMin}
-                              onChange={(e) => setFilters({ priceMin: e.target.value })}
-                              placeholder="0"
-                              className="h-10 rounded-xl text-sm"
-                            />
-                          </div>
-                          <div className="grid gap-1">
-                            <Label htmlFor="pMax" className="text-xs font-bold text-gray-500">Max. Summa</Label>
-                            <Input
-                              id="pMax"
-                              type="number"
-                              value={filters.priceMax}
-                              onChange={(e) => setFilters({ priceMax: e.target.value })}
-                              placeholder="Cheksiz"
-                              className="h-10 rounded-xl text-sm"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 flex w-full items-center justify-between border-t pt-3">
-                          <Button
-                            variant="ghost"
-                            onClick={() => setFilters({ phoneQuery: "", priceMin: "", priceMax: "" })}
-                            className="h-9 px-3 text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg"
-                          >
-                            Tozalash
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </InputGroupAddon>
-            </InputGroup>
-            
-            <Dialog open={isColumnDialogOpen} onOpenChange={setIsColumnDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="h-10 w-full shrink-0 justify-center rounded-xl bg-[#65a30d] px-3.5 text-[13px] font-bold text-white shadow-sm transition-all duration-200 group whitespace-nowrap hover:bg-[#4d7c0f] hover:scale-[1.02] active:scale-[0.98] sm:w-auto">
-                  <PlusCircle className="size-4 transition-transform group-hover:rotate-90" />
-                  <span>Yangi bosqich</span>
+      <ArchiveDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        leads={archivedLeads}
+        stageTitles={visibleStageTitles}
+        visibleColumns={visibleColumns}
+        onRestore={restoreLead}
+        onDelete={deleteLead}
+      />
+
+      {!error && (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 bg-white gap-3 shrink-0">
+          <p className="text-sm text-gray-500 font-medium shrink-0">
+            Jami <span className="font-bold text-gray-800">{boardLeadCount}</span> ta e'lon
+            {hasActiveFilter ? ` (${filteredLeads.length} ko'rsatilmoqda)` : ""}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Qidiruv..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 w-44 text-sm rounded-lg border-gray-200 bg-gray-50"
+            />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-xs ${
+                    filters.priceMin || filters.priceMax || filters.phoneQuery
+                      ? "border-blue-500 text-blue-600"
+                      : "text-gray-400 border-gray-200"
+                  }`}
+                >
+                  <Filter className="size-3.5" />
+                  Filtr
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[calc(100vw-1rem)] max-w-[425px] rounded-[24px]">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-gray-900">Yangi bosqich qo'shish</DialogTitle>
-                  <p className="text-sm text-gray-400">
-                    Sotuv voronkasi uchun yangi bosqich (kalonka) nomini kiriting.
-                  </p>
-                </DialogHeader>
-                <div className="grid gap-6 py-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title" className="text-sm font-bold text-gray-900 ml-1">Kalonka nomi</Label>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 rounded-xl p-4" align="end">
+                <div className="space-y-3">
+                  <h4 className="font-bold text-sm">Filterlar</h4>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Telefon</Label>
                     <Input
-                      id="title"
-                      placeholder="Masalan: Muzokara"
-                      value={newColumnTitle}
-                      onChange={(e) => setNewColumnTitle(e.target.value)}
-                      className="h-12 px-4 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-[#65a30d] transition-all"
+                      value={filters.phoneQuery}
+                      onChange={(e) => setFilters({ phoneQuery: e.target.value })}
+                      placeholder="+998..."
+                      className="h-9 rounded-lg text-sm"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs text-gray-500 mb-1 block">Min summa</Label>
+                      <Input
+                        type="number"
+                        value={filters.priceMin}
+                        onChange={(e) => setFilters({ priceMin: e.target.value })}
+                        placeholder="0"
+                        className="h-9 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500 mb-1 block">Max summa</Label>
+                      <Input
+                        type="number"
+                        value={filters.priceMax}
+                        onChange={(e) => setFilters({ priceMax: e.target.value })}
+                        placeholder="∞"
+                        className="h-9 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFilters({ phoneQuery: "", priceMin: "", priceMax: "" })}
+                    className="h-8 text-xs text-red-500 hover:bg-red-50 rounded-lg w-full"
+                  >
+                    Tozalash
+                  </Button>
                 </div>
-                <div className="flex justify-end gap-3 pt-2">
-                  <Button variant="ghost" onClick={() => setIsColumnDialogOpen(false)} className="rounded-xl font-bold text-gray-400">
-                    Bekor qilish
+              </PopoverContent>
+            </Popover>
+
+            {/* Arxiv tugmasi */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setArchiveOpen(true)}
+              className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-xs text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            >
+              <Archive className="size-3.5" />
+              Arxiv
+              {archivedLeads.length > 0 && (
+                <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {archivedLeads.length}
+                </span>
+              )}
+            </Button>
+
+            <Dialog open={isColumnDialogOpen} onOpenChange={setIsColumnDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <PlusCircle className="size-3.5" />
+                  Bosqich
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-sm rounded-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold">Yangi bosqich</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    Bosqich nomi
+                  </Label>
+                  <Input
+                    placeholder="Masalan: Muzokara"
+                    value={newColumnTitle}
+                    onChange={(e) => setNewColumnTitle(e.target.value)}
+                    className="h-11 rounded-xl"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newColumnTitle.trim()) {
+                        addColumn(newColumnTitle.trim());
+                        setNewColumnTitle("");
+                        setIsColumnDialogOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsColumnDialogOpen(false)}
+                    className="rounded-xl font-semibold"
+                  >
+                    Bekor
                   </Button>
                   <Button
-                    onClick={handleCreateColumn}
-                    className="bg-[#65a30d] hover:bg-[#4d7c0f] text-white rounded-xl px-8 font-bold"
+                    onClick={() => {
+                      if (newColumnTitle.trim()) {
+                        addColumn(newColumnTitle.trim());
+                        setNewColumnTitle("");
+                        setIsColumnDialogOpen(false);
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 font-semibold"
                   >
                     Saqlash
                   </Button>
@@ -408,41 +374,27 @@ export function KanbanBoard() {
         </div>
       )}
 
-      <div
-        ref={boardScrollRef}
-        className="custom-scrollbar [scrollbar-gutter:auto] relative flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden bg-white scroll-smooth touch-pan-x transition-[box-shadow] duration-200"
-        style={boardEdgeShadowStyle}
-      >
+      <div className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-hidden scroll-smooth touch-pan-x">
         {error ? (
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center animate-in fade-in duration-500">
-            <ShieldAlert className="size-20 text-red-500 mb-4 opacity-80 bg-red-500/10 px-3 py-3 rounded-full" />
-            
-            <h3 className="text-xl font-bold tracking-tight text-gray-900">
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+            <ShieldAlert className="size-14 text-red-400 mb-3" />
+            <h3 className="text-base font-bold text-gray-900">
               {error.includes("permissions") ? "Ruxsat etilmadi" : "Xatolik yuz berdi"}
             </h3>
-            
-            <p className="text-muted-foreground text-xs font-medium max-w-[280px] mb-3 leading-relaxed">
-              {error.includes("permissions") 
+            <p className="text-sm text-gray-400 max-w-60 mt-1 mb-4">
+              {error.includes("permissions")
                 ? "Sizda ushbu bo'limni ko'rish imkoniyati yo'q."
-                : "Ma'lumotlarni yuklab bo'lmadi. Iltimos, qayta urinib ko'ring."}
+                : "Ma'lumotlarni yuklab bo'lmadi."}
             </p>
-
-            <div className="flex gap-2">
+            {!error.includes("permissions") && (
               <Button
-                onClick={handleRetry}
-                disabled={isRetrying}
-                className="h-9 px-6 text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors !focus-visible:ring-[1px] !ring-red-100 disabled:opacity-70"
+                onClick={() => fetchCrmData()}
+                size="sm"
+                className="bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-semibold"
               >
-                {isRetrying ? (
-                  <>
-                    <Loader2 className="size-3.5 animate-spin" />
-                    Tekshirilmoqda...
-                  </>
-                ) : (
-                  "Qayta urinish"
-                )}
+                Qayta urinish
               </Button>
-            </div>
+            )}
           </div>
         ) : (
           <DndContext
@@ -450,46 +402,50 @@ export function KanbanBoard() {
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDragOver={onDragOver}
-            collisionDetection={closestCorners}
+            collisionDetection={collisionDetectionStrategy}
           >
-            <div className="flex h-full w-max snap-x snap-mandatory items-stretch gap-2.5 px-2.5 pt-3 pb-6 sm:gap-4 sm:px-6 sm:pt-4 sm:pb-10 lg:min-w-full lg:gap-0 lg:border-t lg:border-gray-200 lg:bg-white lg:px-0 lg:pt-0 lg:pb-0">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex h-full w-[calc(100vw-1rem)] max-w-[380px] flex-col gap-3 sm:w-[320px] lg:max-w-none lg:gap-4 lg:border-r lg:border-gray-200 lg:px-4 lg:pt-4 lg:first:border-l">
-                    <Skeleton className="h-28 w-full rounded-2xl" />
-                    <Skeleton className="h-28 w-full rounded-2xl" />
+            <div className="flex h-full min-w-full flex-nowrap items-stretch gap-3 px-4 py-4">
+              {isLoading && leads.length === 0 ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="basis-[240px] min-w-[240px] flex-1 flex flex-col gap-2">
+                    <Skeleton className="h-11 w-full rounded-xl" />
+                    <Skeleton className="h-20 w-full rounded-xl" />
+                    <Skeleton className="h-20 w-full rounded-xl" />
                   </div>
                 ))
               ) : (
                 <>
-                  {columns.map((col) => (
-                    <ColumnContainer
-                      key={col.id}
-                      column={col}
-                      leads={filteredLeads.filter((lead) => lead.columnId === col.id)}
-                      searchQuery={searchQuery}
-                      deleteColumn={deleteColumn}
-                      updateColumn={updateColumn}
-                      addLead={addLead}
-                      deleteLead={deleteLead}
-                      onEditLead={setActiveEditLead}
-                    />
-                  ))}
+                  <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
+                    {visibleColumns.map((col, index) => (
+                      <ColumnContainer
+                        key={col.id}
+                        column={col}
+                        colorIndex={index}
+                        stretch={stretchColumns}
+                        leads={filteredLeads.filter((l) => l.columnId === col.id)}
+                        deleteColumn={deleteColumn}
+                        updateColumn={updateColumn}
+                        addLead={addLead}
+                        deleteLead={deleteLead}
+                        onEditLead={setActiveEditLead}
+                        onArchiveLead={archiveLead}
+                      />
+                    ))}
+                  </SortableContext>
 
-                  {columns.length === 0 && (
-                    <div className="flex flex-col items-center justify-center w-full min-h-[400px] border-2 border-dashed border-gray-100 rounded-[32px] px-10 py-20 bg-gray-50/50">
-                      <div className="size-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
-                        <PlusCircle className="size-8 text-gray-200" />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-400 mb-2">Hozircha bosqichlar yo'q</h3>
-                      <p className="text-gray-400 text-xs mb-8 text-center max-w-[240px]">
-                        Sotuv jarayonini boshlash uchun birinchi kalonkani qo'shing.
+                  {visibleColumns.length === 0 && (
+                    <div className="flex flex-col items-center justify-center min-w-90 min-h-65 rounded-2xl border-2 border-dashed border-gray-200 bg-white px-10 py-14">
+                      <PlusCircle className="size-10 text-gray-200 mb-3" />
+                      <h3 className="text-sm font-bold text-gray-400 mb-1">Bosqichlar yo'q</h3>
+                      <p className="text-xs text-gray-300 mb-5 text-center">
+                        Birinchi kalonkani qo'shing.
                       </p>
-                      <Button 
+                      <Button
                         onClick={() => setIsColumnDialogOpen(true)}
-                        className="bg-[#65a30d] hover:bg-[#4d7c0f] text-white rounded-xl px-8"
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5"
                       >
-                        Bosqich qo'shish
+                        Qo'shish
                       </Button>
                     </div>
                   )}
@@ -497,24 +453,15 @@ export function KanbanBoard() {
               )}
             </div>
 
-            {"document" in window && createPortal(
-              <DragOverlay>
-                {activeColumn && (
-                  <ColumnContainer
-                    column={activeColumn}
-                    leads={leads.filter((l) => l.columnId === activeColumn.id)}
-                    deleteColumn={deleteColumn}
-                    updateColumn={updateColumn}
-                    addLead={addLead}
-                    deleteLead={deleteLead}
-                  />
-                )}
-                {activeLead && (
-                  <LeadCard lead={activeLead} deleteLead={deleteLead} />
-                )}
-              </DragOverlay>,
-              document.body
-            )}
+            {"document" in window &&
+              createPortal(
+                <DragOverlay>
+                  {activeLead && (
+                    <LeadCard lead={activeLead} deleteLead={deleteLead} colorIndex={0} />
+                  )}
+                </DragOverlay>,
+                document.body
+              )}
           </DndContext>
         )}
       </div>

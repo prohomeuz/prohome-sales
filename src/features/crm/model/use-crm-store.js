@@ -4,141 +4,34 @@ import { apiRequest } from "@/shared/lib/api";
 
 const DEFAULT_STAGES = [
   { id: "stage-1", name: "Yangi", title: "Yangi" },
-  { id: "stage-2", name: "Qo'ng'iroq qilindi", title: "Qo'ng'iroq qilindi" },
-  { id: "stage-3", name: "Muzokara", title: "Muzokara" },
-  { id: "stage-4", name: "Qaror", title: "Qaror" },
-  { id: "stage-5", name: "Bitim", title: "Bitim" },
+  { id: "stage-2", name: "Qo'ng'iroq qildim", title: "Qo'ng'iroq qildim" },
+  { id: "stage-3", name: "Telefon ko'tarmadi", title: "Telefon ko'tarmadi" },
+  { id: "stage-4", name: "Qayta qo'ng'iroq", title: "Qayta qo'ng'iroq" },
+  { id: "stage-5", name: "Kelishildi", title: "Kelishildi" },
+  { id: "stage-6", name: "Bekor", title: "Bekor" },
 ];
 
-const TEMP_STAGE_PREFIX = "stage-";
-const SYSTEM_ARCHIVE_STAGE_NAME = "__crm_hidden_archive__";
-const LEAD_DELETE_SUPPORTED = true;
+const LEGACY_STAGE_TITLE_MAP = {
+  "Aloqa qilindi": "Qo'ng'iroq qildim",
+  "Muzokara": "Telefon ko'tarmadi",
+  "Qaror": "Qayta qo'ng'iroq",
+  "Bitim": "Kelishildi",
+};
 
-function normalizeId(value) {
-  return value === null || value === undefined ? "" : String(value);
-}
+const normalizeStageTitle = (nameOrTitle) => {
+  const raw = String(nameOrTitle || "").trim();
+  return LEGACY_STAGE_TITLE_MAP[raw] || raw;
+};
 
-function isTempStageId(id) {
-  return normalizeId(id).startsWith(TEMP_STAGE_PREFIX);
-}
-
-function isArchiveStageName(value) {
-  return String(value ?? "").trim().toLowerCase() === SYSTEM_ARCHIVE_STAGE_NAME;
-}
-
-function isArchiveColumn(column) {
-  return isArchiveStageName(column?.name ?? column?.title);
-}
-
-function normalizeColumnTitle(value) {
-  const title = String(value ?? "").trim();
-
-  if (title.toLowerCase() === "aloqa qilindi") {
-    return "Qo'ng'iroq qilindi";
-  }
-
-  return title;
-}
-
-function hasColumnTitle(columns, title, exceptId = null) {
-  const normalizedTitle = normalizeColumnTitle(title).toLowerCase();
-  if (!normalizedTitle) return false;
-
-  return columns.some((column) => {
-    if (exceptId !== null && normalizeId(column.id) === normalizeId(exceptId)) {
-      return false;
-    }
-
-    return normalizeColumnTitle(column?.title || column?.name).toLowerCase() === normalizedTitle;
+const hasStageTitle = (columns, expectedTitle) => {
+  const normalizedExpected = String(expectedTitle || "").trim().toLowerCase();
+  return columns.some((col) => {
+    const title = normalizeStageTitle(col.name || col.title);
+    return title.toLowerCase() === normalizedExpected;
   });
-}
-
-function normalizeColumn(column) {
-  const title = normalizeColumnTitle(column?.name || column?.title || "");
-  return {
-    ...column,
-    id: normalizeId(column?.id ?? column?._id),
-    name: title,
-    title,
-  };
-}
-
-function normalizeLead(lead) {
-  return {
-    ...lead,
-    id: normalizeId(lead?.id ?? lead?._id),
-    columnId: normalizeId(lead?.statusId ?? lead?.columnId),
-    title: lead?.firstName || lead?.title || "",
-    companyName: lead?.phone || lead?.companyName || "",
-  };
-}
-
-function buildLeadOrderByColumn(leads) {
-  return leads.reduce((acc, lead) => {
-    const columnId = normalizeId(lead?.columnId);
-    if (!columnId) return acc;
-    if (!acc[columnId]) {
-      acc[columnId] = [];
-    }
-    acc[columnId].push(normalizeId(lead.id));
-    return acc;
-  }, {});
-}
-
-function sortLeadsByColumnOrder(leads, leadOrderByColumn) {
-  const indexedLeads = leads.map((lead, index) => ({ lead, index }));
-  const positionMaps = Object.fromEntries(
-    Object.entries(leadOrderByColumn || {}).map(([columnId, ids]) => [
-      columnId,
-      new Map(ids.map((id, index) => [normalizeId(id), index])),
-    ]),
-  );
-
-  return indexedLeads
-    .sort((a, b) => {
-      if (a.lead.columnId !== b.lead.columnId) {
-        return a.index - b.index;
-      }
-
-      const columnPositions = positionMaps[a.lead.columnId];
-      if (!columnPositions) {
-        return a.index - b.index;
-      }
-
-      const aPos = columnPositions.has(a.lead.id)
-        ? columnPositions.get(a.lead.id)
-        : Number.MAX_SAFE_INTEGER;
-      const bPos = columnPositions.has(b.lead.id)
-        ? columnPositions.get(b.lead.id)
-        : Number.MAX_SAFE_INTEGER;
-
-      if (aPos !== bPos) {
-        return aPos - bPos;
-      }
-
-      return a.index - b.index;
-    })
-    .map(({ lead }) => lead);
-}
-
-function moveLeadToColumnEnd(leads, leadId, targetColumnId, nextLead) {
-  const filteredLeads = leads.filter((lead) => lead.id !== normalizeId(leadId));
-  const lastIndexInColumn = filteredLeads.reduce(
-    (lastIndex, lead, index) =>
-      lead.columnId === normalizeId(targetColumnId) ? index : lastIndex,
-    -1,
-  );
-
-  const insertIndex =
-    lastIndexInColumn === -1 ? filteredLeads.length : lastIndexInColumn + 1;
-  filteredLeads.splice(insertIndex, 0, nextLead);
-  return filteredLeads;
-}
+};
 
 export const useCrmStore = create((set, get) => {
-  const pendingStageCreations = new Map();
-  const pendingSystemStageCreations = new Map();
-
   const safeJson = async (res) => {
     const contentType = res.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -148,111 +41,14 @@ export const useCrmStore = create((set, get) => {
     throw new Error(text.slice(0, 100) || "Server xatosi (JSON emas)");
   };
 
-  const ensurePersistedColumnId = async (columnId) => {
-    const normalizedId = normalizeId(columnId);
-
-    if (!isTempStageId(normalizedId)) {
-      return { success: true, id: normalizedId };
-    }
-
-    const { columns, addColumn } = get();
-    const localCol = columns.find((col) => col.id === normalizedId);
-    if (!localCol) {
-      return { success: false, error: "Bosqich topilmadi" };
-    }
-
-    if (!pendingStageCreations.has(normalizedId)) {
-      pendingStageCreations.set(normalizedId, addColumn(localCol.title));
-    }
-
-    const createRes = await pendingStageCreations.get(normalizedId);
-    pendingStageCreations.delete(normalizedId);
-
-    if (!createRes.success) {
-      return createRes;
-    }
-
-    set((state) => ({
-      columns: state.columns.filter((col) => col.id !== normalizedId),
-    }));
-
-    return { success: true, id: normalizeId(createRes.data.id) };
-  };
-
-  const ensureArchiveColumnId = async () => {
-    const { archiveColumnId, systemColumns } = get();
-
-    if (archiveColumnId) {
-      return { success: true, id: normalizeId(archiveColumnId) };
-    }
-
-    const existingArchiveColumn = systemColumns.find(isArchiveColumn);
-    if (existingArchiveColumn) {
-      const nextId = normalizeId(existingArchiveColumn.id);
-      set({ archiveColumnId: nextId });
-      return { success: true, id: nextId };
-    }
-
-    const pendingKey = SYSTEM_ARCHIVE_STAGE_NAME;
-    if (!pendingSystemStageCreations.has(pendingKey)) {
-      pendingSystemStageCreations.set(
-        pendingKey,
-        (async () => {
-          try {
-            const res = await apiRequest("/api/v1/sales-manager-crm/voronka", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name: SYSTEM_ARCHIVE_STAGE_NAME }),
-            });
-
-            if (!res.ok) {
-              const errorData = await safeJson(res).catch(() => null);
-              return {
-                success: false,
-                error:
-                  errorData?.message ||
-                  errorData?.error ||
-                  "Yashirin arxiv bosqichini yaratib bo'lmadi",
-              };
-            }
-
-            const raw = await safeJson(res);
-            const data = raw?.data || raw;
-            const normalized = normalizeColumn(data);
-
-            set((state) => ({
-              systemColumns: state.systemColumns.some(
-                (column) => column.id === normalized.id,
-              )
-                ? state.systemColumns
-                : [...state.systemColumns, normalized],
-              archiveColumnId: normalized.id,
-            }));
-
-            return { success: true, id: normalized.id };
-          } catch (err) {
-            return { success: false, error: err.message };
-          }
-        })(),
-      );
-    }
-
-    const result = await pendingSystemStageCreations.get(pendingKey);
-    pendingSystemStageCreations.delete(pendingKey);
-    return result;
-  };
-
   return {
     columns: DEFAULT_STAGES,
-    systemColumns: [],
-    archiveColumnId: null,
     leads: [],
-    leadOrderByColumn: {},
     isLoading: false,
     error: null,
     hasFetched: false,
     pollingIntervalId: null,
-    leadDeleteSupported: LEAD_DELETE_SUPPORTED,
+    bekorBootstrapChecked: false,
 
     filters: {
       phoneQuery: "",
@@ -268,7 +64,7 @@ export const useCrmStore = create((set, get) => {
 
     startPolling: () => {
       const state = get();
-      if (state.pollingIntervalId || state.error === "permissions denied") return; // Already polling / permission blocked
+      if (state.pollingIntervalId) return; // Already polling
       
       const id = setInterval(() => {
         get().fetchCrmData();
@@ -286,19 +82,21 @@ export const useCrmStore = create((set, get) => {
     },
 
     fetchCrmData: async () => {
-      const { hasFetched, pollingIntervalId } = get();
+      const { hasFetched, pollingIntervalId, bekorBootstrapChecked } = get();
       if (!hasFetched && !pollingIntervalId) {
         set({ isLoading: true, error: null });
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const [voronkaRes, leadsRes] = await Promise.all([
           apiRequest("/api/v1/sales-manager-crm/voronka", { signal: controller.signal }),
           apiRequest("/api/v1/sales-manager-crm/leads", { signal: controller.signal }),
         ]);
+
+        clearTimeout(timeoutId);
 
         if (!voronkaRes.ok || !leadsRes.ok) {
           const errorRes = !voronkaRes.ok ? voronkaRes : leadsRes;
@@ -314,118 +112,82 @@ export const useCrmStore = create((set, get) => {
         const backendColumns = Array.isArray(voronka) ? voronka : (voronka?.data || []);
         const backendLeads = Array.isArray(leadsRaw) ? leadsRaw : (leadsRaw?.data || []);
 
-        const normalizedBackendColumns = backendColumns.map(normalizeColumn);
-        const systemColumns = normalizedBackendColumns.filter(isArchiveColumn);
-        const hiddenColumnIds = new Set(systemColumns.map((column) => column.id));
+        // Backend columns mavjud bo'lsa — faqat shularni ishlatamiz (DEFAULT_STAGES bilan merge qilmaymiz)
+        let normalizedColumns = backendColumns.length > 0
+          ? backendColumns.map((col) => {
+              const originalTitle = col.name || col.title;
+              return { ...col, title: normalizeStageTitle(originalTitle) };
+            })
+          : [...DEFAULT_STAGES];
 
-        let normalizedColumns = [...DEFAULT_STAGES];
-
-        normalizedBackendColumns
-          .filter((column) => !hiddenColumnIds.has(column.id))
-          .forEach((normalized) => {
-          const bName = normalized.title.toLowerCase();
-          const existingIdx = normalizedColumns.findIndex(
-            (defaultColumn) => defaultColumn.title.toLowerCase() === bName,
-          );
-          if (existingIdx !== -1) {
-            normalizedColumns[existingIdx] = normalized;
-          } else {
-            normalizedColumns.push(normalized);
+        if (
+          backendColumns.length > 0 &&
+          !bekorBootstrapChecked &&
+          !hasStageTitle(normalizedColumns, "Bekor")
+        ) {
+          try {
+            const createBekorRes = await apiRequest("/api/v1/sales-manager-crm/voronka", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: "Bekor" }),
+            });
+            if (createBekorRes.ok) {
+              const createBekorRaw = await safeJson(createBekorRes);
+              const createBekorData = createBekorRaw?.data || createBekorRaw;
+              normalizedColumns = [
+                ...normalizedColumns,
+                {
+                  ...createBekorData,
+                  title: normalizeStageTitle(createBekorData.name || createBekorData.title),
+                },
+              ];
+            }
+          } catch (err) {
+            console.warn("Bekor bosqichini yaratib bo'lmadi:", err?.message || err);
           }
-          });
+        }
 
-        const normalizedLeads = backendLeads
-          .map(normalizeLead)
-          .filter((lead) => !hiddenColumnIds.has(lead.columnId));
-        const orderedLeads = sortLeadsByColumnOrder(
-          normalizedLeads,
-          get().leadOrderByColumn,
-        );
+        const normalizedLeads = backendLeads.map(lead => ({
+          ...lead,
+          columnId: lead.statusId,
+          title: lead.firstName || lead.title,
+          companyName: lead.phone || lead.companyName
+        }));
 
         set({ 
           columns: normalizedColumns, 
-          systemColumns,
-          archiveColumnId: systemColumns[0]?.id ?? null,
-          leads: orderedLeads,
-          leadOrderByColumn: buildLeadOrderByColumn(orderedLeads),
+          leads: normalizedLeads, 
           isLoading: false,
           hasFetched: true,
+          bekorBootstrapChecked: true,
           error: null 
         });
       } catch (err) {
         const { hasFetched } = get();
-        if (err.message === "permissions denied") {
-          get().stopPolling();
-          set({
-            error: "permissions denied",
-            isLoading: false,
-          });
-          return;
-        }
-
         if (hasFetched) {
           console.warn("Background refresh failed:", err.message);
           set({ isLoading: false }); 
         } else {
           set({ error: err.message, isLoading: false });
         }
-      } finally {
-        clearTimeout(timeoutId);
       }
     },
 
     addColumn: async (name) => {
       try {
-        const trimmedName = normalizeColumnTitle(name);
-        if (!trimmedName) {
-          return { success: false, error: "Bosqich nomini kiriting" };
-        }
-
-        if (hasColumnTitle(get().columns, trimmedName)) {
-          return { success: false, error: "Bu nomdagi bosqich allaqachon mavjud" };
-        }
-
         const res = await apiRequest("/api/v1/sales-manager-crm/voronka", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: trimmedName }),
+          body: JSON.stringify({ name }),
         });
         if (res.ok) {
           const raw = await safeJson(res);
-          const data = raw?.data || raw;
-          const normalized = normalizeColumn(data);
-
-          set((state) => {
-            const hasSameColumn = state.columns.some(
-              (column) => !isTempStageId(column.id) && column.id === normalized.id,
-            );
-
-            if (hasSameColumn) {
-              return { columns: state.columns };
-            }
-
-            const tempStageIndex = state.columns.findIndex(
-              (column) =>
-                isTempStageId(column.id) &&
-                column.title.toLowerCase() === normalized.title.toLowerCase(),
-            );
-
-            if (tempStageIndex !== -1) {
-              const nextColumns = [...state.columns];
-              nextColumns[tempStageIndex] = normalized;
-              return { columns: nextColumns };
-            }
-
-            return { columns: [...state.columns, normalized] };
-          });
-
+          const data = raw?.data || raw; // Handle both nested and direct
+          const normalized = { ...data, title: data.name || data.title };
+          set((state) => ({ columns: [...state.columns, normalized] }));
           return { success: true, data: normalized };
         }
-        const errorData = await safeJson(res).catch(() => null);
-        return {
-          success: false,
-          error: errorData?.message || errorData?.error || "Bosqich qo'shib bo'lmadi",
-        };
+        return { success: false, error: "Bosqich qo'shib bo'lmadi" };
       } catch (err) {
         console.error("Column qo'shishda xato:", err);
         return { success: false, error: err.message };
@@ -434,93 +196,53 @@ export const useCrmStore = create((set, get) => {
 
     updateColumn: async (id, name) => {
       try {
-        if (isTempStageId(id)) {
-          return { success: false, error: "Avval bosqichni serverda yaratish kerak" };
-        }
-
-        const trimmedName = normalizeColumnTitle(name);
-        if (!trimmedName) {
-          return { success: false, error: "Bosqich nomini kiriting" };
-        }
-
-        if (hasColumnTitle(get().columns, trimmedName, id)) {
-          return { success: false, error: "Bu nomdagi bosqich allaqachon mavjud" };
-        }
-
         const res = await apiRequest(`/api/v1/sales-manager-crm/voronka/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: trimmedName }),
+          body: JSON.stringify({ name }),
         });
         if (res.ok) {
           set((state) => ({
-            columns: state.columns.map((col) =>
-              col.id === normalizeId(id)
-                ? { ...col, name: trimmedName, title: trimmedName }
-                : col,
-            ),
+            columns: state.columns.map((col) => (col.id === id ? { ...col, name, title: name } : col)),
           }));
-          return { success: true };
         }
-        const errorData = await safeJson(res).catch(() => null);
-        return {
-          success: false,
-          error: errorData?.message || errorData?.error || "Bosqich tahrirlanmadi",
-        };
       } catch (err) {
         console.error("Column tahrirlashda xato:", err);
-        return { success: false, error: err.message };
       }
     },
 
     deleteColumn: async (id) => {
       try {
-        if (isTempStageId(id)) {
-          return { success: false, error: "Standart bosqichni o'chirib bo'lmaydi" };
-        }
-
-        const hasLeads = get().leads.some(
-          (lead) => normalizeId(lead.columnId) === normalizeId(id),
-        );
-        if (hasLeads) {
-          return {
-            success: false,
-            error: "Avval ushbu bosqich ichidagi leadlarni boshqa joyga ko'chiring",
-          };
-        }
-
         const res = await apiRequest(`/api/v1/sales-manager-crm/voronka/${id}`, {
           method: "DELETE",
         });
         if (res.ok) {
-          set((state) => {
-            const nextLeads = state.leads.filter(
-              (lead) => lead.columnId !== normalizeId(id),
-            );
-            return {
-              columns: state.columns.filter((col) => col.id !== normalizeId(id)),
-              leads: nextLeads,
-              leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-            };
-          });
-          return { success: true };
+          set((state) => ({
+            columns: state.columns.filter((col) => col.id !== id),
+            leads: state.leads.filter((lead) => lead.columnId !== id),
+          }));
         }
-        const errorData = await safeJson(res).catch(() => null);
-        return {
-          success: false,
-          error: errorData?.message || errorData?.error || "Bosqich o'chirilmadi",
-        };
       } catch (err) {
         console.error("Column o'chirishda xato:", err);
-        return { success: false, error: err.message };
       }
     },
 
     addLead: async (columnId, leadData) => {
       try {
-        const persistedColumn = await ensurePersistedColumnId(columnId);
-        if (!persistedColumn.success) {
-          throw new Error(persistedColumn.error);
+        let finalColumnId = columnId;
+
+        if (String(columnId).startsWith("stage-")) {
+          const { columns, addColumn } = get();
+          const localCol = columns.find(c => c.id === columnId);
+          if (!localCol) throw new Error("Bosqich topilmadi");
+          
+          const createRes = await addColumn(localCol.title);
+          if (!createRes.success) throw new Error(createRes.error);
+          
+          finalColumnId = createRes.data.id;
+          set((state) => ({
+            columns: state.columns.filter(c => c.id !== columnId)
+          }));
         }
 
         const res = await apiRequest("/api/v1/sales-manager-crm/leads", {
@@ -530,28 +252,24 @@ export const useCrmStore = create((set, get) => {
             firstName: leadData.title,
             phone: leadData.companyName,
             price: leadData.price,
-            statusId: Number(persistedColumn.id)
+            statusId: Number(finalColumnId)
           }),
         });
         
         if (res.ok) {
           const raw = await safeJson(res);
-          const data = raw?.data || raw;
-          const normalized = normalizeLead(data);
-          set((state) => {
-            const nextLeads = [...state.leads, normalized];
-            return {
-              leads: nextLeads,
-              leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-            };
-          });
-          return { success: true, data: normalized };
-        } else {
-          const errorData = await safeJson(res);
-          return {
-            success: false,
-            error: errorData?.message || errorData?.error || "Lead qo'shib bo'lmadi",
+          const data = raw?.data || raw; // Handle both nested and direct
+          // Normalize the new lead from backend
+          const normalized = {
+            ...data,
+            columnId: data.statusId,
+            title: data.firstName || data.title,
+            companyName: data.phone || data.companyName
           };
+          set((state) => ({ leads: [...state.leads, normalized] }));
+          return { success: true };
+        } else {
+          await safeJson(res); 
         }
       } catch (err) {
         console.error("Lead qo'shishda xato:", err);
@@ -561,25 +279,31 @@ export const useCrmStore = create((set, get) => {
 
     updateLead: async (id, updateData) => {
       try {
+        let finalColumnId = updateData.columnId;
+        if (finalColumnId && String(finalColumnId).startsWith("stage-")) {
+          const { columns, addColumn } = get();
+          const localCol = columns.find((c) => c.id === finalColumnId);
+          if (!localCol) throw new Error("Bosqich topilmadi");
+
+          const createRes = await addColumn(localCol.title || localCol.name);
+          if (!createRes.success) throw new Error(createRes.error || "Bosqich yaratilmadi");
+
+          finalColumnId = createRes.data.id;
+          set((state) => ({
+            columns: state.columns.filter((c) => c.id !== updateData.columnId),
+          }));
+        }
+
         const mappedData = { ...updateData };
-        if (
-          updateData.columnId !== undefined &&
-          updateData.columnId !== null &&
-          updateData.columnId !== ""
-        ) {
-          const persistedColumn = await ensurePersistedColumnId(updateData.columnId);
-          if (!persistedColumn.success) {
-            return persistedColumn;
-          }
-          mappedData.statusId = Number(persistedColumn.id);
-          updateData = { ...updateData, columnId: persistedColumn.id };
+        if (finalColumnId) {
+          mappedData.statusId = Number(finalColumnId);
           delete mappedData.columnId;
         }
-        if (updateData.title !== undefined) {
+        if (updateData.title) {
           mappedData.firstName = updateData.title;
           delete mappedData.title;
         }
-        if (updateData.companyName !== undefined) {
+        if (updateData.companyName) {
           mappedData.phone = updateData.companyName;
           delete mappedData.companyName;
         }
@@ -590,173 +314,56 @@ export const useCrmStore = create((set, get) => {
           body: JSON.stringify(mappedData),
         });
         if (res.ok) {
-          set((state) => {
-            const normalizedLeadId = normalizeId(id);
-            const currentLead = state.leads.find(
-              (lead) => lead.id === normalizedLeadId,
-            );
-
-            if (!currentLead) {
-              return state;
-            }
-
-            const nextColumnId = normalizeId(
-              updateData.columnId ?? currentLead.columnId,
-            );
-            const nextLead = normalizeLead({
-              ...currentLead,
-              ...updateData,
-              statusId: nextColumnId,
-            });
-
-            const shouldMoveToAnotherColumn =
-              updateData.columnId &&
-              normalizeId(currentLead.columnId) !== nextColumnId;
-
-            const nextLeads = shouldMoveToAnotherColumn
-              ? moveLeadToColumnEnd(
-                  state.leads,
-                  normalizedLeadId,
-                  nextColumnId,
-                  nextLead,
-                )
-              : state.leads.map((lead) =>
-                  lead.id === normalizedLeadId ? nextLead : lead,
-                );
-
-            return {
-              leads: nextLeads,
-              leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-            };
-          });
-          return { success: true };
+          set((state) => ({
+            leads: state.leads.map((lead) =>
+              lead.id === id
+                ? {
+                    ...lead,
+                    ...updateData,
+                    ...(updateData.columnId ? { columnId: finalColumnId } : null),
+                  }
+                : lead
+            ),
+          }));
         }
-        const errorData = await safeJson(res).catch(() => null);
-        return {
-          success: false,
-          error: errorData?.message || errorData?.error || "Lead saqlanmadi",
-        };
       } catch (err) {
         console.error("Lead tahrirlashda xato:", err);
-        return { success: false, error: err.message };
       }
-    },
-
-    changeLeadColumn: async (id, columnId) => {
-      const normalizedLeadId = normalizeId(id);
-      const normalizedColumnId = normalizeId(columnId);
-      const existingLead = get().leads.find((lead) => lead.id === normalizedLeadId);
-
-      if (!existingLead) {
-        return { success: false, error: "Lead topilmadi" };
-      }
-
-      if (existingLead.columnId === normalizedColumnId) {
-        return { success: true };
-      }
-
-      return await get().updateLead(normalizedLeadId, {
-        columnId: normalizedColumnId,
-      });
-    },
-
-    moveLeadByColumnIndex: (id, direction) => {
-      const normalizedLeadId = normalizeId(id);
-      const { leads } = get();
-      const activeLead = leads.find((lead) => lead.id === normalizedLeadId);
-
-      if (!activeLead) {
-        return { success: false, error: "Lead topilmadi" };
-      }
-
-      const sameColumnLeads = leads.filter(
-        (lead) => lead.columnId === activeLead.columnId,
-      );
-      const currentIndex = sameColumnLeads.findIndex(
-        (lead) => lead.id === normalizedLeadId,
-      );
-      const targetIndex =
-        direction === "up" ? currentIndex - 1 : currentIndex + 1;
-
-      if (currentIndex === -1 || targetIndex < 0 || targetIndex >= sameColumnLeads.length) {
-        return {
-          success: false,
-          error:
-            direction === "up"
-              ? "Lead allaqachon tepada"
-              : "Lead allaqachon pastda",
-        };
-      }
-
-      const reorderedColumnLeads = arrayMove(
-        sameColumnLeads,
-        currentIndex,
-        targetIndex,
-      );
-      let replacementIndex = 0;
-      const nextLeads = leads.map((lead) => {
-        if (lead.columnId !== activeLead.columnId) {
-          return lead;
-        }
-
-        const replacementLead = reorderedColumnLeads[replacementIndex];
-        replacementIndex += 1;
-        return replacementLead;
-      });
-
-      set({
-        leads: nextLeads,
-        leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-      });
-
-      return { success: true };
     },
 
     deleteLead: async (id) => {
       try {
-        const normalizedId = normalizeId(id);
-        const archiveColumn = await ensureArchiveColumnId();
-        if (!archiveColumn.success) {
-          return archiveColumn;
-        }
-
-        const archiveStatusId = Number(archiveColumn.id);
-        if (!Number.isFinite(archiveStatusId)) {
-          return {
-            success: false,
-            error: "Arxiv bosqichi ID noto'g'ri qaytdi",
-          };
-        }
-
-        const res = await apiRequest(`/api/v1/sales-manager-crm/leads/${normalizedId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ statusId: archiveStatusId }),
+        const res = await apiRequest(`/api/v1/sales-manager-crm/leads/${id}`, {
+          method: "DELETE",
         });
-
         if (res.ok) {
-          set((state) => {
-            const nextLeads = state.leads.filter(
-              (lead) => lead.id !== normalizedId,
-            );
-            return {
-              leads: nextLeads,
-              leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-            };
-          });
-          return { success: true, archived: true };
+          set((state) => ({
+            leads: state.leads.filter((lead) => lead.id !== id),
+          }));
         }
-
-        const errorData = await safeJson(res).catch(() => null);
-        const message = errorData?.message || errorData?.error || "Lead arxivga yuborilmadi";
-        return {
-          success: false,
-          error: message,
-        };
       } catch (err) {
         console.error("Lead o'chirishda xato:", err);
-        return { success: false, error: err.message };
       }
+    },
+
+    archiveLead: async (leadId) => {
+      const { columns, updateLead } = get();
+      const archiveCol = columns.find(
+        (c) => c.name === "__crm_hidden_archive__" || c.title === "__crm_hidden_archive__"
+      );
+      if (!archiveCol) return;
+      await updateLead(leadId, { columnId: archiveCol.id });
+    },
+
+    restoreLead: async (leadId, targetColumnId) => {
+      const { columns, updateLead } = get();
+      // targetColumnId berilmasa — birinchi ko'rinadigan column ga qaytaradi
+      const firstVisible = columns.find(
+        (c) => c.name !== "__crm_hidden_archive__" && c.title !== "__crm_hidden_archive__"
+      );
+      const colId = targetColumnId ?? firstVisible?.id;
+      if (!colId) return;
+      await updateLead(leadId, { columnId: colId });
     },
 
     moveColumn: (activeId, overId) => {
@@ -773,30 +380,24 @@ export const useCrmStore = create((set, get) => {
 
     moveLeadSameColumn: (activeId, overId) => {
       set((state) => {
-        const oldIndex = state.leads.findIndex((lead) => lead.id === normalizeId(activeId));
-        const newIndex = state.leads.findIndex((lead) => lead.id === normalizeId(overId));
+        const oldIndex = state.leads.findIndex((l) => l.id === activeId);
+        const newIndex = state.leads.findIndex((l) => l.id === overId);
         if (oldIndex !== -1 && newIndex !== -1) {
-          const nextLeads = arrayMove(state.leads, oldIndex, newIndex);
-          return {
-            leads: nextLeads,
-            leadOrderByColumn: buildLeadOrderByColumn(nextLeads),
-          };
+          return { leads: arrayMove(state.leads, oldIndex, newIndex) };
         }
         return state;
       });
     },
 
-    previewMoveLeadToDifferentColumn: (activeId, overId, newColumnId, isOverAColumn) => {
-      const { leads } = get();
-      const normalizedActiveId = normalizeId(activeId);
-      const normalizedOverId = normalizeId(overId);
-      const activeIndex = leads.findIndex((lead) => lead.id === normalizedActiveId);
-      const overIndex = leads.findIndex((lead) => lead.id === normalizedOverId);
+    moveLeadToDifferentColumn: (activeId, overId, newColumnId, isOverAColumn) => {
+      const { leads, updateLead } = get();
+      const activeIndex = leads.findIndex((l) => l.id === activeId);
+      const overIndex = leads.findIndex((l) => l.id === overId);
 
       if (activeIndex !== -1) {
         const activeLead = leads[activeIndex];
         const newLeads = [...leads];
-        const updatedLead = { ...activeLead, columnId: normalizeId(newColumnId) };
+        const updatedLead = { ...activeLead, columnId: newColumnId };
         newLeads.splice(activeIndex, 1);
         
         if (isOverAColumn) {
@@ -806,61 +407,19 @@ export const useCrmStore = create((set, get) => {
           newLeads.splice(adjustedOverIndex, 0, updatedLead);
         }
         
-        set({
-          leads: newLeads,
-          leadOrderByColumn: buildLeadOrderByColumn(newLeads),
-        });
-        return { success: true };
+        set({ leads: newLeads });
+        updateLead(activeId, { columnId: newColumnId });
       }
-
-      return { success: false, error: "Lead topilmadi" };
-    },
-
-    moveLeadToDifferentColumn: async (activeId, overId, newColumnId, isOverAColumn) => {
-      const { leads, updateLead, previewMoveLeadToDifferentColumn } = get();
-      const normalizedActiveId = normalizeId(activeId);
-      const previousLeads = leads;
-
-      const previewResult = previewMoveLeadToDifferentColumn(
-        normalizedActiveId,
-        overId,
-        newColumnId,
-        isOverAColumn,
-      );
-
-      if (!previewResult?.success) {
-        return previewResult;
-      }
-
-      const movedLead = get().leads.find((lead) => lead.id === normalizedActiveId);
-      if (!movedLead) {
-        set({
-          leads: previousLeads,
-          leadOrderByColumn: buildLeadOrderByColumn(previousLeads),
-        });
-        return { success: false, error: "Lead topilmadi" };
-      }
-
-      const result = await updateLead(normalizedActiveId, { columnId: movedLead.columnId });
-      if (!result?.success) {
-        set({
-          leads: previousLeads,
-          leadOrderByColumn: buildLeadOrderByColumn(previousLeads),
-        });
-        return result;
-      }
-
-      return { success: true };
     },
 
     initializeDefaultColumns: async () => {
       const { addColumn, fetchCrmData, columns } = get();
-      const standardNames = ["Yangi", "Qo'ng'iroq qilindi", "Muzokara", "Qaror", "Bitim"];
+      const standardNames = DEFAULT_STAGES.map((stage) => stage.title);
       set({ isLoading: true });
       try {
         const existingNames = columns
-          .filter((column) => !isTempStageId(column.id))
-          .map((column) => (column.name || column.title).toLowerCase());
+          .filter(c => !String(c.id).startsWith("stage-"))
+          .map(c => (c.name || c.title).toLowerCase());
 
         for (const name of standardNames) {
           if (!existingNames.includes(name.toLowerCase())) {
