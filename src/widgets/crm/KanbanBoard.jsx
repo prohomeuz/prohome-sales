@@ -79,7 +79,6 @@ export function KanbanBoard() {
   const deleteLead = useCrmStore((state) => state.deleteLead);
   const updateLead = useCrmStore((state) => state.updateLead);
   const archiveLead = useCrmStore((state) => state.archiveLead);
-  const restoreLead = useCrmStore((state) => state.restoreLead);
 
   // Archive column va visible columnlar
   const archiveColumn = useMemo(() => columns.find(isArchiveColumn), [columns]);
@@ -218,9 +217,6 @@ export function KanbanBoard() {
         onOpenChange={setArchiveOpen}
         leads={archivedLeads}
         stageTitles={visibleStageTitles}
-        visibleColumns={visibleColumns}
-        onRestore={restoreLead}
-        onDelete={deleteLead}
       />
 
       {!error && (
