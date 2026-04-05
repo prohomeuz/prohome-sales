@@ -62,10 +62,6 @@ export default defineConfig(({ mode }) => {
               return "vendor-ui";
             }
 
-            if (id.includes("recharts") || id.includes("d3-")) {
-              return "vendor-charts";
-            }
-
             if (
               id.includes("react-photo-view") ||
               id.includes("canvas-confetti")
