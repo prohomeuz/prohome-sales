@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useCompanies } from "@/shared/hooks/use-companies";
-import { apiUrl } from "@/shared/lib/api";
+import { apiUrl } from "@/shared/lib/api";  
 
 export default function Company() {
   const navigate = useNavigate();
@@ -58,8 +58,9 @@ export default function Company() {
                   onClick={() => navigate(`/company/${id}`)}
                   onKeyDown={(e) => e.key === "Enter" && navigate(`/company/${id}`)}
                 >
-                  <Avatar className="size-14 sm:size-16">
+                  <Avatar className="size-14 sm:size-16 overflow-visible">
                     <AvatarImage
+                      className={'rounded-full object-cover'}
                       src={logo ? apiUrl(logo) : undefined}
                       alt={name}
                     />

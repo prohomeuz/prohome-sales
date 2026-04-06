@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/pdf-service/, "") || "/",
     },
+    "/api": {
+      target: env.VITE_BASE_URL?.trim() || "https://backend.prohome.uz",
+      changeOrigin: true,
+      secure: false,
+      ws: true,
+    },
   };
 
   return {

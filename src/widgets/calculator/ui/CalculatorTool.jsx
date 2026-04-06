@@ -22,7 +22,6 @@ import useSound from "@/shared/hooks/use-sound";
 import {
   formatNumber,
   formatNumberWithPercent,
-  getFormData,
   normalizePeriod,
 } from "@/shared/lib/utils";
 import { Drawer, DrawerContent } from "@/shared/ui/drawer";
@@ -84,11 +83,11 @@ import CalculatorResultPanel from "./CalculatorResultPanel";
 import StatusActionCards from "./StatusActionCards";
 import StatusChangeDialog from "./StatusChangeDialog";
 
-const LazyGenplanViewerButton = lazy(() =>
-  import("@/widgets/GenplanViewerButton"),
+const LazyGenplanViewerButton = lazy(
+  () => import("@/widgets/GenplanViewerButton"),
 );
-const LazyDiscountViewerSlider = lazy(() =>
-  import("@/widgets/DiscountViewerSlider"),
+const LazyDiscountViewerSlider = lazy(
+  () => import("@/widgets/DiscountViewerSlider"),
 );
 
 /**
@@ -127,6 +126,7 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     showDiscount,
     discountType,
     period,
+    price,
     downPayment,
     discount,
     galleryShow,
@@ -147,6 +147,14 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   const isOpen =
     location.search.includes("details=") && location.hash === "#calculator";
   const hasDiscountValue = showDiscount && String(discount ?? "").trim();
+  const resolvedPrice = useMemo(() => {
+    const numeric = Number(calcResult.price ?? home.price ?? 0);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }, [calcResult.price, home.price]);
+  const resolvedSize = useMemo(() => {
+    const numeric = Number(calcResult.size ?? home.size ?? 0);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }, [calcResult.size, home.size]);
 
   // --- Memoized hisob-kitoblar ---
 
@@ -158,8 +166,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   const paymentBonus = useMemo(() => {
     const usdRate = Number(currencyUsd?.rate);
     const hasUsdRate = Number.isFinite(usdRate) && usdRate > 0;
-    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
     const totalSom =
       hasUsdRate && resolvedPrice > 0 && resolvedSize > 0
         ? Math.round(resolvedPrice * resolvedSize * usdRate)
@@ -169,14 +175,7 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       downPayment: resolvedDownPayment,
       totalPrice: totalSom,
     });
-  }, [
-    calcResult.downPayment,
-    calcResult.price,
-    calcResult.size,
-    currencyUsd?.rate,
-    home.price,
-    home.size,
-  ]);
+  }, [calcResult.downPayment, currencyUsd?.rate, resolvedPrice, resolvedSize]);
 
   const bonusItems = useMemo(() => paymentBonus?.items ?? [], [paymentBonus]);
   const hasUmraBonus = calcResult.umra === true;
@@ -184,8 +183,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
   const summaryCards = useMemo(() => {
     const usdRate = Number(currencyUsd?.rate);
     const hasUsdRate = Number.isFinite(usdRate) && usdRate > 0;
-    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
     const totalUsd =
       resolvedPrice > 0 && resolvedSize > 0 ? resolvedPrice * resolvedSize : 0;
     const totalSom = hasUsdRate ? Math.round(totalUsd * usdRate) : 0;
@@ -285,18 +282,153 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     );
 
     return cards;
-  }, [calcResult, currencyUsd?.rate, home.price, home.size, paymentBonus]);
+  }, [
+    calcResult,
+    currencyUsd?.rate,
+    paymentBonus,
+    resolvedPrice,
+    resolvedSize,
+  ]);
+
+  function normalizeCalcApiMessage(message) {
+    const raw = Array.isArray(message)
+      ? message.join(", ")
+      : String(message ?? "");
+
+    return raw
+      .trim()
+      .replace(/price/g, "Narx")
+      .replace(/downPayment/g, "Boshlang'ich to'lov")
+      .replace(/months/g, "Muddat")
+      .replace(/state/g, "Holat")
+      .replace(/discountPerM2/g, "Chegirma")
+      .replace(/discountPercent/g, "Chegirma")
+      .replace(/discountValue/g, "Chegirma")
+      .replace(
+        /must be a number conforming to the specified constraints/g,
+        "raqam formatida bo'lishi kerak",
+      )
+      .replace(/must be a positive number/g, "musbat raqam bo'lishi kerak")
+      .replace(/([a-z])([A-Z])/g, "$1, $2");
+  }
+
+  function resolveDiscountAmountSom({
+    discountKey,
+    discountValue,
+    totalSom,
+    size,
+  }) {
+    const numericValue = Number(digitsOnly(discountValue)) || 0;
+    if (!discountKey || numericValue <= 0) return 0;
+
+    if (discountKey === "discountPerM2") {
+      return Math.round(numericValue * size);
+    }
+
+    if (discountKey === "discountPercent") {
+      return Math.round((totalSom * Math.min(numericValue, 100)) / 100);
+    }
+
+    return Math.round(numericValue);
+  }
+
+  function createCalcRequestContext() {
+    const months = Number(normalizePeriod(String(period ?? "")) || "12");
+    const normalizedDownPayment = Number(digitsOnly(downPayment)) || 0;
+    const requestedPrice = Number(digitsOnly(price)) || 0;
+    const discountKey = hasDiscountValue ? discountType : "";
+    const discountValue = hasDiscountValue
+      ? String(discount ?? "").replace(/\s+/g, "")
+      : "";
+    const params = new URLSearchParams();
+
+    params.append("state", selectedState);
+    params.append("downPayment", String(normalizedDownPayment));
+    params.append("months", String(months));
+
+    if (discountKey && discountValue) {
+      params.append(discountKey, discountValue);
+    }
+
+    return {
+      params,
+      months,
+      requestedPrice,
+      selectedState,
+      downPayment: normalizedDownPayment,
+      discountKey,
+      discountValue,
+    };
+  }
+
+  async function applyPriceOverrideToCalcResult(baseResult, requestContext) {
+    if (!(requestContext?.requestedPrice > 0)) {
+      return baseResult;
+    }
+
+    const currencyRate = await resolveCurrencyRate();
+    const size = Number(baseResult?.size ?? home?.size ?? 0);
+    const originalPrice = Number(baseResult?.price ?? home?.price ?? 0);
+    const safeSize = Number.isFinite(size) && size > 0 ? size : 0;
+    const safeOriginalPrice =
+      Number.isFinite(originalPrice) && originalPrice > 0 ? originalPrice : 0;
+
+    const originalTotalSom = Math.round(
+      safeOriginalPrice * safeSize * currencyRate,
+    );
+    const requestedTotalSom = Math.round(
+      requestContext.requestedPrice * safeSize * currencyRate,
+    );
+    const originalDiscountSom = resolveDiscountAmountSom({
+      discountKey: requestContext.discountKey,
+      discountValue: requestContext.discountValue,
+      totalSom: originalTotalSom,
+      size: safeSize,
+    });
+    const requestedDiscountSom = resolveDiscountAmountSom({
+      discountKey: requestContext.discountKey,
+      discountValue: requestContext.discountValue,
+      totalSom: requestedTotalSom,
+      size: safeSize,
+    });
+    const originalRemainingSom = Math.max(
+      originalTotalSom - originalDiscountSom - requestContext.downPayment,
+      0,
+    );
+    const requestedRemainingSom = Math.max(
+      requestedTotalSom - requestedDiscountSom - requestContext.downPayment,
+      0,
+    );
+    const backendMonthly = Number(baseResult?.monthlyPayment) || 0;
+    const ratio =
+      originalRemainingSom > 0 && backendMonthly > 0
+        ? backendMonthly / originalRemainingSom
+        : requestContext.months > 0
+          ? 1 / requestContext.months
+          : 0;
+    const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
+
+    return {
+      ...baseResult,
+      price: requestContext.requestedPrice,
+      size: safeSize || baseResult?.size || home?.size || 0,
+      state: requestContext.selectedState,
+      downPayment: requestContext.downPayment,
+      months: requestContext.months,
+      monthlyPayment: Math.max(
+        0,
+        Math.round(requestedRemainingSom * safeRatio),
+      ),
+    };
+  }
 
   // --- API ---
 
-  async function calc(url) {
+  async function calc(url, requestContext) {
     let req;
-    const token = localStorage.getItem("token");
     dispatch({ type: "SET_CALC_LOADING", payload: true });
     try {
-      req = await fetch(url, {
-        headers: { Authorization: "Bearer " + token },
-      });
+      req = await apiRequest(url);
     } catch {
       toast.error("Tizimda nosozlik!", { position: "bottom-left" });
     }
@@ -304,15 +436,42 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     if (req) {
       if (req.status === 200) {
         const data = await req.json();
-        console.log(data);
-        dispatch({ type: "SET_CALC_RESULT", payload: data });
-      } else if (req.status === 400) {
-        toast.error(
-          "Boshlang'ich to'lov uyning umumiy summasidan katta bo'lishi mumkin emas!",
-          { position: "bottom-left" },
-        );
+        let nextPayload = data;
+
+        try {
+          nextPayload = await applyPriceOverrideToCalcResult(
+            data,
+            requestContext,
+          );
+        } catch {
+          if (requestContext?.requestedPrice > 0) {
+            nextPayload = { ...data, price: requestContext.requestedPrice };
+          }
+        }
+
+        dispatch({ type: "SET_CALC_RESULT", payload: nextPayload });
       } else {
-        toast.error("Xatolik yuz berdi qayta urunib ko'ring!", {
+        let message = "";
+
+        try {
+          const errorData = await req.json();
+          message = normalizeCalcApiMessage(
+            errorData?.message ??
+              errorData?.error ??
+              errorData?.detail ??
+              errorData?.details ??
+              "",
+          );
+        } catch {
+          message = "";
+        }
+
+        const fallback =
+          req.status === 400
+            ? "Hisoblash uchun kiritilgan ma'lumotlarni tekshirib ko'ring."
+            : "Xatolik yuz berdi qayta urunib ko'ring!";
+
+        toast.error(message || fallback, {
           position: "bottom-left",
         });
       }
@@ -336,16 +495,11 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
 
   function handleCalc(evt) {
     evt.preventDefault();
-    const url = new URL(
-      import.meta.env.VITE_BASE_URL + `/api/v1/room/${home.id}/calculate`,
+    const requestContext = createCalcRequestContext();
+    calc(
+      `/api/v1/room/${home.id}/calculate?${requestContext.params.toString()}`,
+      requestContext,
     );
-    const formData = getFormData(evt.currentTarget);
-    Object.entries(formData).forEach(([key, value]) => {
-      const normalizedValue =
-        key === "months" ? normalizePeriod(value) || "12" : value;
-      url.searchParams.append(key, normalizedValue.replaceAll(/\s+/g, ""));
-    });
-    calc(url.href);
   }
 
   function handlePeriod(p) {
@@ -369,6 +523,14 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     dispatch({ type: "SET_DOWN_PAYMENT", payload: formatNumber(rawValue) });
   }
 
+  function handlePrice(evt) {
+    const rawValue = evt.target.value.replace(/\D/g, "");
+    dispatch({
+      type: "SET_PRICE",
+      payload: rawValue ? formatNumber(rawValue) : "",
+    });
+  }
+
   function handleDiscount(evt) {
     dispatch({
       type: "SET_DISCOUNT",
@@ -381,8 +543,8 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       home?.customer?.downPayment,
       calcResult.downPayment,
       downPayment,
-      Number(home?.price ?? 0) * Number(home?.size ?? 0),
-      home?.price,
+      resolvedPrice * resolvedSize,
+      resolvedPrice,
       1,
     );
     const fallbackInstallments = String(
@@ -392,7 +554,10 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
         ),
       ) || 1,
     );
-    return { downPayment: fallbackDownPayment, installments: fallbackInstallments };
+    return {
+      downPayment: fallbackDownPayment,
+      installments: fallbackInstallments,
+    };
   }
 
   async function resolveCurrencyRate() {
@@ -412,7 +577,9 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     const year = String(contractDate.getFullYear());
     const localKey = `sales_contract_last_seq_${year}`;
     const localLastRaw = Number(window.localStorage.getItem(localKey) ?? 0);
-    const localLast = Number.isFinite(localLastRaw) ? Math.max(localLastRaw, 0) : 0;
+    const localLast = Number.isFinite(localLastRaw)
+      ? Math.max(localLastRaw, 0)
+      : 0;
     const nextSeq = localLast + 1;
     window.localStorage.setItem(localKey, String(nextSeq));
     return `${year}${String(nextSeq).padStart(4, "0")}`;
@@ -420,8 +587,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
 
   async function createReservedContractFile(payload) {
     const currencyRate = await resolveCurrencyRate();
-    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
     const totalUsd =
       resolvedPrice > 0 && resolvedSize > 0 ? resolvedPrice * resolvedSize : 0;
     const totalSom = Math.round(totalUsd * currencyRate);
@@ -479,8 +644,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
     const currencyRate = await resolveCurrencyRate();
     const contractDate = new Date();
     const contractNumber = await resolveNextSalesContractNumber(contractDate);
-    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
     const pdfBlob = await createSaleContractPdfFile({
       home,
       form: payload,
@@ -560,10 +723,11 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
 
   function validateStatusForm(actionCode) {
     const usdRate = Number(currencyUsd?.rate);
-    const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-    const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
     const totalPriceSom =
-      Number.isFinite(usdRate) && usdRate > 0 && resolvedPrice > 0 && resolvedSize > 0
+      Number.isFinite(usdRate) &&
+      usdRate > 0 &&
+      resolvedPrice > 0 &&
+      resolvedSize > 0
         ? Math.round(resolvedPrice * resolvedSize * usdRate)
         : 0;
     const nextErrors = validateStatusFormFields({
@@ -637,8 +801,6 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
         if (!Number.isFinite(currencyRate) || currencyRate <= 0) {
           throw new Error("Dollar kursi topilmadi.");
         }
-        const resolvedPrice = Number(calcResult.price ?? home.price ?? 0);
-        const resolvedSize = Number(calcResult.size ?? home.size ?? 0);
         const totalUsd =
           resolvedPrice > 0 && resolvedSize > 0
             ? resolvedPrice * resolvedSize
@@ -806,7 +968,11 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
         : contractFileUrl || previewUrl;
 
       if (previewUrl) {
-        const revokeDelay = shouldPreferPreview ? 60_000 : contractFileUrl ? 0 : 60_000;
+        const revokeDelay = shouldPreferPreview
+          ? 60_000
+          : contractFileUrl
+            ? 0
+            : 60_000;
         window.setTimeout(() => URL.revokeObjectURL(previewUrl), revokeDelay);
       }
 
@@ -1043,9 +1209,14 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
           </div>
 
           {/* O'ng panel — forma + harakat tugmalari */}
-          <div className="no-scrollbar flex w-full flex-col gap-4 lg:w-[36%] lg:min-h-0 lg:overflow-y-auto lg:pb-2">
+          <div className="no-scrollbar flex w-full flex-col gap-4 lg:min-h-0 lg:w-[36%] lg:overflow-y-auto lg:pb-2">
             <CalculatorForm
               selectedState={selectedState}
+              price={price}
+              pricePlaceholder="Masalan: 850"
+              currentPriceLabel={
+                resolvedPrice > 0 ? `${formatNumber(resolvedPrice)} USD` : ""
+              }
               downPayment={downPayment}
               period={period}
               showDiscount={showDiscount}
@@ -1059,6 +1230,7 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
               onStateChange={(value) =>
                 dispatch({ type: "SET_SELECTED_STATE", payload: value })
               }
+              onPrice={handlePrice}
               onDownPayment={handleDownPayment}
               onDiscount={handleDiscount}
               onDiscountTypeChange={(value) =>
@@ -1093,10 +1265,14 @@ export default function CalculatorTool({ home, projectId, onStatusUpdated }) {
       {/* Holat o'zgartirish dialogi */}
       <StatusChangeDialog
         open={statusDialogOpen}
-        onOpenChange={(v) => { if (!v) dispatch({ type: "CLOSE_STATUS_DIALOG" }); }}
+        onOpenChange={(v) => {
+          if (!v) dispatch({ type: "CLOSE_STATUS_DIALOG" });
+        }}
         onSubmit={handleStatusSubmit}
         activeAction={activeAction}
         home={home}
+        resolvedPrice={resolvedPrice}
+        resolvedSize={resolvedSize}
         statusForm={statusForm}
         statusErrors={statusErrors}
         hasDiscountValue={hasDiscountValue}

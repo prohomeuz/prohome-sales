@@ -15,10 +15,10 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
 import { useBoolean } from "@/shared/hooks/use-boolean";
+import { apiRequest } from "@/shared/lib/api";
 import { getFormData } from "@/shared/lib/utils";
 import { useAppStore } from "@/entities/session/model";
 
-const LOGIN_API = `${import.meta.env.VITE_BASE_URL}/api/v1/auth/login`;
 const SUCCESS_STATUS = 201;
 const BAD_REQUEST_STATUSES = new Set([400, 404]);
 
@@ -91,7 +91,7 @@ export default function Login() {
       dispatch({ type: "SET_ERRORS", payload: INITIAL_ERRORS });
 
       try {
-        const res = await fetch(LOGIN_API, {
+        const res = await apiRequest("/api/v1/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(userData),
@@ -171,7 +171,7 @@ export default function Login() {
         <img
           className="size-96"
           src="/login.svg"
-          alt="Login"
+          alt="Kirish"
           fetchPriority="high"
         />
       </div>
@@ -182,9 +182,9 @@ export default function Login() {
       >
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Prohome Admin Panel</CardTitle>
+            <CardTitle>Prohome Boshqaruv paneli</CardTitle>
             <CardDescription>
-              Prohome loyihasining admin paneliga xush kelibsiz!
+              Prohome loyihasining boshqaruv paneliga xush kelibsiz!
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

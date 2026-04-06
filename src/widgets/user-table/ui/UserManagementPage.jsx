@@ -186,6 +186,7 @@ export default function UserManagementPage({ userRole }) {
                             onClick={() => toggleConfirm(user.id)}
                             variant="ghost"
                             size="icon-sm"
+                            className="focus-visible:border-destructive focus-visible:ring-destructive/30"
                           >
                             {showConfirmation === user.id ? <X /> : <Trash />}
                           </Button>
@@ -196,7 +197,7 @@ export default function UserManagementPage({ userRole }) {
                             <Badge variant="outline">Prohome</Badge>
                           )}
                           {user.permission?.CRM && (
-                            <Badge variant="outline">CRM</Badge>
+                            <Badge variant="outline">CRM</Badge>  
                           )}
                         </div>
 
@@ -204,7 +205,7 @@ export default function UserManagementPage({ userRole }) {
                           <div className="mt-4 flex justify-end">
                             <Badge
                               onClick={() => handleDelete(user.id, user.fullName)}
-                              className={`animate-fade-in cursor-pointer hover:opacity-80 ${removeLoading ? "pointer-events-none opacity-60" : ""}`}
+                              className={`animate-fade-in cursor-pointer hover:opacity-80  ${removeLoading ? "pointer-events-none opacity-60" : ""}`}
                             >
                               {removeLoading ? (
                                 <><Spinner /> O&apos;chirilmoqda...</>
@@ -237,7 +238,7 @@ export default function UserManagementPage({ userRole }) {
                             <TableCell className="font-medium">{user.fullName}</TableCell>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
-                              <div className="flex gap-0.5">
+                              <div className="flex gap-1">
                                 {user.permission?.PROHOME && (
                                   <Badge variant="outline">Prohome</Badge>
                                 )}
@@ -264,6 +265,7 @@ export default function UserManagementPage({ userRole }) {
                                   onClick={() => toggleConfirm(user.id)}
                                   variant="ghost"
                                   size="icon-sm"
+                                  className="focus-visible:border-destructive focus-visible:ring-destructive/30"
                                 >
                                   {showConfirmation === user.id ? <X /> : <Trash />}
                                 </Button>
