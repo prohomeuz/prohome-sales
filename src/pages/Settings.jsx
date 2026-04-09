@@ -18,6 +18,72 @@ import { useAppStore } from "@/entities/session/model";
 
 const INITIAL_ERRORS = { oldPassword: null, newPassword: null, form: null };
 
+async function readResponsePayload(res) {
+  try {
+    const text = await res.text();
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text.trim();
+    }
+  } catch {
+    return null;
+  }
+}
+
+function getResponseMessage(payload) {
+  if (!payload) return "";
+  if (typeof payload === "string") return payload.trim();
+  if (typeof payload.message === "string") return payload.message.trim();
+  if (typeof payload.error === "string") return payload.error.trim();
+  if (typeof payload.detail === "string") return payload.detail.trim();
+  if (typeof payload.msg === "string") return payload.msg.trim();
+  if (Array.isArray(payload.errors)) {
+    const firstError = payload.errors.find((item) => typeof item === "string");
+    if (firstError) return firstError.trim();
+  }
+  return "";
+}
+
+function mapPasswordErrors(status, message) {
+  const normalized = message.toLowerCase();
+
+  if (
+    [401, 403, 404].includes(status) ||
+    normalized.includes("old password") ||
+    normalized.includes("current password") ||
+    normalized.includes("amaldagi parol")
+  ) {
+    return { oldPassword: "Amaldagi parol noto'g'ri." };
+  }
+
+  if (
+    status === 409 ||
+    normalized.includes("same password") ||
+    normalized.includes("same as old") ||
+    normalized.includes("different from old")
+  ) {
+    return { newPassword: "Yangi parol avvalgisidan farq qilishi kerak!" };
+  }
+
+  if (
+    status === 400 ||
+    status === 422 ||
+    normalized.includes("least") ||
+    normalized.includes("minimum") ||
+    normalized.includes("length") ||
+    normalized.includes("6")
+  ) {
+    return {
+      newPassword: message || "Parol eng kamida 6 belgidan iborat bo'lishi kerak!",
+    };
+  }
+
+  return { form: message || "Xatolik yuz berdi, qayta urunib ko'ring!" };
+}
+
 function createInitialState() {
   return {
     dark: localStorage.getItem("theme") === "dark",
@@ -33,6 +99,8 @@ function reducer(state, action) {
       return { ...state, dark: !state.dark };
     case "TOGGLE_UPDATE_MODAL":
       return { ...state, updateModal: !state.updateModal };
+    case "SET_UPDATE_MODAL":
+      return { ...state, updateModal: action.payload };
     case "SET_UPDATE_LOADING":
       return { ...state, updateLoading: action.payload };
     case "SET_ERRORS":
@@ -43,7 +111,7 @@ function reducer(state, action) {
       return state.errors[action.payload]
         ? {
             ...state,
-            errors: { ...state.errors, [action.payload]: null },
+            errors: { ...state.errors, [action.payload]: null, form: null },
           }
         : state;
     default:
@@ -52,7 +120,7 @@ function reducer(state, action) {
 }
 
 export default function Settings() {
-  const { user } = useAppStore();
+  const { user, setUser } = useAppStore();
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
   const { dark, updateModal, updateLoading, errors } = state;
 
@@ -69,6 +137,13 @@ export default function Settings() {
     () => dispatch({ type: "TOGGLE_UPDATE_MODAL" }),
     [],
   );
+  const handleUpdateModalChange = useCallback((open) => {
+    dispatch({ type: "SET_UPDATE_MODAL", payload: open });
+    if (!open) {
+      dispatch({ type: "SET_ERRORS", payload: INITIAL_ERRORS });
+      dispatch({ type: "SET_UPDATE_LOADING", payload: false });
+    }
+  }, []);
   const clearFieldError = useCallback((field) => {
     dispatch({ type: "CLEAR_ERROR", payload: field });
   }, []);
@@ -76,56 +151,62 @@ export default function Settings() {
   const handleSubmit = useCallback(
     async (evt) => {
       evt.preventDefault();
-      const result = getFormData(evt.currentTarget);
+      const form = evt.currentTarget;
+      const result = getFormData(form);
       const oldP = (result.oldPassword ?? "").trim();
       const newP = (result.newPassword ?? "").trim();
 
       const nextErrors = { ...INITIAL_ERRORS };
       if (!oldP) nextErrors.oldPassword = "Amaldagi parolni kiriting!";
       if (!newP) nextErrors.newPassword = "Yangi parolni kiriting!";
+      else if (newP.length < 6) {
+        nextErrors.newPassword = "Parol eng kamida 6 belgidan iborat bo'lishi kerak!";
+      } else if (oldP === newP) {
+        nextErrors.newPassword = "Yangi parol avvalgisidan farq qilishi kerak!";
+      }
       dispatch({ type: "SET_ERRORS", payload: nextErrors });
       if (nextErrors.oldPassword) {
-        evt.currentTarget.oldPassword?.focus();
+        form.oldPassword?.focus();
         return;
       }
       if (nextErrors.newPassword) {
-        evt.currentTarget.newPassword?.focus();
+        form.newPassword?.focus();
         return;
       }
 
       dispatch({ type: "SET_UPDATE_LOADING", payload: true });
       try {
+        const payload = {
+          oldPassword: oldP,
+          newPassword: newP,
+          ...(user?.email ? { email: user.email } : {}),
+          ...(user?.username ? { username: user.username } : {}),
+        };
         const res = await apiRequest("/api/v1/auth/reset-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            oldPassword: oldP,
-            newPassword: newP,
-            email: user?.email,
-          }),
+          body: JSON.stringify(payload),
         });
-        if (res.status === 201) {
-          handleUpdateModal();
-          toast.success("Parolingiz o'zgartirildi!");
+        const data = await readResponsePayload(res);
+        if (res.ok) {
+          if (data?.accessToken) {
+            setUser({
+              user: data.user ?? user,
+              accessToken: data.accessToken,
+            });
+          }
+
+          form.reset();
           dispatch({ type: "SET_ERRORS", payload: INITIAL_ERRORS });
-        } else if (res.status === 400) {
-          dispatch({
-            type: "PATCH_ERRORS",
-            payload: {
-              newPassword: "Parol eng kamida 6 belgidan iborat bo'lishi kerak!",
-            },
-          });
-        } else if (res.status === 404) {
-          dispatch({
-            type: "PATCH_ERRORS",
-            payload: { oldPassword: "Amaldagi parol noto'g'ri." },
-          });
-        } else {
-          dispatch({
-            type: "PATCH_ERRORS",
-            payload: { form: "Xatolik yuz berdi, qayta urunib ko'ring!" },
-          });
+          dispatch({ type: "SET_UPDATE_MODAL", payload: false });
+          toast.success(getResponseMessage(data) || "Parolingiz o'zgartirildi!");
+          return;
         }
+
+        dispatch({
+          type: "PATCH_ERRORS",
+          payload: mapPasswordErrors(res.status, getResponseMessage(data)),
+        });
       } catch {
         dispatch({
           type: "PATCH_ERRORS",
@@ -135,7 +216,7 @@ export default function Settings() {
         dispatch({ type: "SET_UPDATE_LOADING", payload: false });
       }
     },
-    [user?.email, handleUpdateModal]
+    [setUser, user]
   );
 
   if (!user) return <Navigate to="/login" />;
@@ -164,7 +245,7 @@ export default function Settings() {
         </div>
       </section>
 
-      <Dialog open={updateModal} onOpenChange={handleUpdateModal}>
+      <Dialog open={updateModal} onOpenChange={handleUpdateModalChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Parolni yangilash</DialogTitle>
@@ -174,7 +255,7 @@ export default function Settings() {
               parol bilan tizimga kirasiz.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
             <div className="grid gap-2">
               <Label htmlFor="oldPassword">Amaldagi parol*</Label>
               <Input

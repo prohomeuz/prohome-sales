@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCrmStore } from "@/features/crm/model/use-crm-store";
@@ -26,8 +26,8 @@ import { toast } from "sonner";
 
 const leadSchema = z.object({
   title: z.string().min(2, "Ma'lumot kamida 2ta harfdan iborat bo'lishi kerak"),
-  companyName: z.string().min(4, "Kontakt yoki telefon raqamini to'liq kiriting"),
-  price: z.coerce.number().min(0, "Summa 0 bo'lishi mumkin emas"),
+  companyName: z.string().min(3, "Kontakt yoki telefon raqamini to'liq kiriting"),
+  price: z.coerce.number().min(0, "Summa manfiy bo'lmasin"),
   columnId: z.union([z.string(), z.number(), z.null()]).optional(),
 });
 
@@ -36,11 +36,10 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
   const columns = useCrmStore((state) => state.columns);
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(leadSchema),
@@ -66,19 +65,23 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
 
   const onSubmit = async (data) => {
     if (!lead) return;
-    try {
-      await updateLead(lead.id, data);
+    const result = await updateLead(lead.id, {
+      ...data,
+      columnId: data.columnId ? String(data.columnId) : undefined,
+    });
+    if (result?.success) {
       toast.success("Ma'lumotlar saqlandi");
       onClose();
-    } catch (error) {
-      toast.error("Saqlashda xatolik yuz berdi");
+      return;
     }
+
+    toast.error(result?.error || "Saqlashda xatolik yuz berdi");
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="bg-gray-50 flex flex-col p-0 gap-0 sm:max-w-md w-full border-l-0 shadow-2xl rounded-l-2xl">
-        <SheetHeader className="p-6 pb-4 bg-white border-b border-gray-100 rounded-tl-2xl">
+      <SheetContent className="flex h-full w-full max-w-full flex-col gap-0 border-l-0 bg-gray-50 p-0 shadow-2xl sm:max-w-md sm:rounded-l-2xl">
+        <SheetHeader className="border-b border-gray-100 bg-white p-4 pb-4 sm:rounded-tl-2xl sm:p-6">
           <SheetTitle className="text-xl font-black text-gray-900">
             Sdelkani Tahrirlash
           </SheetTitle>
@@ -90,27 +93,37 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
         <form 
           id="lead-edit-form"
           onSubmit={handleSubmit(onSubmit)} 
-          className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar"
+          className="custom-scrollbar flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6"
         >
           <div className="space-y-2">
             <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
               Holati (Kalonka)
             </Label>
-            <Select 
-              value={watch("columnId")} 
-              onValueChange={(val) => setValue("columnId", val, { shouldValidate: true })}
-            >
-              <SelectTrigger className="w-full h-12 bg-white rounded-xl border-gray-200">
-                <SelectValue placeholder="Bosqichni tanlang" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {columns.map((col) => (
-                  <SelectItem key={col.id} value={String(col.id)} className="rounded-lg">
-                    {col.title || col.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="columnId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value ? String(field.value) : ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className="h-12 w-full rounded-xl border-gray-200 bg-white">
+                    <SelectValue placeholder="Bosqichni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {columns.map((col) => (
+                      <SelectItem
+                        key={col.id}
+                        value={String(col.id)}
+                        className="rounded-lg"
+                      >
+                        {col.title || col.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div className="space-y-2">
@@ -137,25 +150,22 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
 
           <div className="space-y-2">
             <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
-              Summa Kutilmasi ($)
+              Summa kutilmasi (so'm)
             </Label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-              <Input
-                type="number"
-                {...register("price")}
-                className="h-12 bg-white pl-8 rounded-xl border-gray-200 focus:border-[#65a30d] focus:ring-1 focus:ring-[#65a30d] transition-all"
-              />
-            </div>
+            <Input
+              type="number"
+              {...register("price")}
+              className="h-12 bg-white rounded-xl border-gray-200 focus:border-[#65a30d] focus:ring-1 focus:ring-[#65a30d] transition-all"
+            />
             {errors.price && <p className="text-[11px] text-red-500 font-bold ml-1">{errors.price.message}</p>}
           </div>
         </form>
 
-        <SheetFooter className="p-6 bg-white border-t border-gray-100 rounded-bl-2xl">
+        <SheetFooter className="border-t border-gray-100 bg-white p-4 sm:rounded-bl-2xl sm:p-6">
           <Button 
             variant="ghost" 
             onClick={onClose}
-            className="rounded-xl h-11 px-6 font-bold text-gray-500 hover:bg-gray-100"
+            className="h-11 w-full rounded-xl px-6 font-bold text-gray-500 hover:bg-gray-100 sm:w-auto"
           >
             Bekor qilish
           </Button>
@@ -163,7 +173,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
             type="submit" 
             form="lead-edit-form"
             disabled={isSubmitting}
-            className="rounded-xl h-11 px-8 font-bold bg-[#65a30d] hover:bg-[#4d7c0f] text-white"
+            className="h-11 w-full rounded-xl bg-[#65a30d] px-8 font-bold text-white hover:bg-[#4d7c0f] sm:w-auto"
           >
             {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saqlanmoqda...</> : "Saqlash"}
           </Button>

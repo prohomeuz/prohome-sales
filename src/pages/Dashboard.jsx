@@ -650,7 +650,7 @@ export default function Dashboard() {
 
                 <div className="flex w-full flex-col gap-3 xl:max-w-[34rem] xl:items-end">
                   <div className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                    <Select value={projectId ?? ""} onValueChange={setProjectId} disabled={projectsLoading || projects.length === 0}>
+                    <Select value={projectId ?? undefined} onValueChange={setProjectId} disabled={projectsLoading || projects.length === 0}>
                       <SelectTrigger className="h-11 w-full rounded-2xl border-[#dce8c0] bg-white/90 px-4 shadow-none">
                         <SelectValue placeholder={projectsLoading ? "Loyihalar yuklanmoqda..." : "Loyihani tanlang"} />
                       </SelectTrigger>
