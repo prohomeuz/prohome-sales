@@ -6,6 +6,51 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/shared/lib/api";
 
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function unwrapProjectsPayload(payload) {
+  let current = payload;
+  const keys = [
+    "data",
+    "items",
+    "results",
+    "result",
+    "rows",
+    "list",
+    "payload",
+    "projects",
+  ];
+
+  for (let i = 0; i < 5; i += 1) {
+    if (Array.isArray(current)) return current;
+    if (!isObject(current)) return [];
+
+    const nextKey = keys.find((key) => {
+      const candidate = current[key];
+      return Array.isArray(candidate) || isObject(candidate);
+    });
+
+    if (!nextKey) {
+      return typeof current.id !== "undefined" ? [current] : [];
+    }
+
+    current = current[nextKey];
+  }
+
+  if (Array.isArray(current)) return current;
+  return isObject(current) && typeof current.id !== "undefined"
+    ? [current]
+    : [];
+}
+
+function normalizeProjects(payload) {
+  return unwrapProjectsPayload(payload).filter(
+    (project) => isObject(project) && typeof project.id !== "undefined",
+  );
+}
+
 /**
  * Barcha loyihalar ro'yxatini yuklaydi.
  * @returns {{ projects: object[], error: string|null, loading: boolean, get: Function }}
@@ -29,7 +74,7 @@ export function useProjects() {
       if (controller.signal.aborted) return;
       if (res.ok) {
         const data = await res.json();
-        setProjects(Array.isArray(data) ? data : []);
+        setProjects(normalizeProjects(data));
       } else {
         setError("Xatolik yuz berdi qayta urunib ko'ring!");
       }

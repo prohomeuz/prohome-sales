@@ -328,9 +328,9 @@ export default function CompanyDetails() {
       </div>
 
       <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
-        <div className="relative mx-auto h-32 w-32 shrink-0 overflow-hidden rounded-lg sm:h-40 sm:w-40 xl:mx-0">
-          <Avatar className="h-full w-full rounded-lg">
-            <AvatarImage src={avatarSrc} alt={details.name?.[0]} />
+        <div className="relative mx-auto h-32 w-32 shrink-0 overflow-visible rounded-lg sm:h-40 sm:w-40 xl:mx-0">
+          <Avatar className="h-full w-full rounded-lg overflow-visible">
+            <AvatarImage src={avatarSrc} alt={details.name?.[0]} className={'rounded-lg'} />
             <AvatarFallback className="rounded-lg uppercase select-none">
               <span className="text-5xl">{details.name?.[0]}</span>
             </AvatarFallback>
@@ -338,7 +338,7 @@ export default function CompanyDetails() {
           {editMode && (
             <div
               className={cn(
-              "animate-fade-in absolute inset-0 z-10 flex bg-black/50",
+              "animate-fade-in absolute inset-0 z-10 flex bg-black/50 rounded-lg",
               editLoading && "pointer-events-none opacity-80",
             )}
             >

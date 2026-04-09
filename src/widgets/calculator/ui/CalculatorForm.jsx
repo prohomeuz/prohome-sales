@@ -6,14 +6,8 @@
  * Faqat presentational — state va handlerlar props orqali keladi.
  */
 
-import { cn, formatNumberWithPercent } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldTitle,
-  FieldLabel,
-} from "@/shared/ui/field";
+import { Field, FieldContent, FieldTitle, FieldLabel } from "@/shared/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -30,6 +24,9 @@ import { states, paymentPeriods } from "../lib/constants";
 /**
  * @param {{
  *   selectedState: string,
+ *   price: string,
+ *   pricePlaceholder?: string,
+ *   currentPriceLabel?: string,
  *   downPayment: string,
  *   period: string | number,
  *   showDiscount: boolean,
@@ -41,6 +38,7 @@ import { states, paymentPeriods } from "../lib/constants";
  *   LazyDiscountViewerSlider: React.LazyExoticComponent,
  *   onSubmit: (evt: React.FormEvent) => void,
  *   onStateChange: (value: string) => void,
+ *   onPrice: (evt: React.ChangeEvent) => void,
  *   onDownPayment: (evt: React.ChangeEvent) => void,
  *   onDiscount: (evt: React.ChangeEvent) => void,
  *   onDiscountTypeChange: (value: string) => void,
@@ -53,6 +51,9 @@ import { states, paymentPeriods } from "../lib/constants";
  */
 export default function CalculatorForm({
   selectedState,
+  price,
+  pricePlaceholder,
+  currentPriceLabel,
   downPayment,
   period,
   showDiscount,
@@ -64,6 +65,7 @@ export default function CalculatorForm({
   LazyDiscountViewerSlider,
   onSubmit,
   onStateChange,
+  onPrice,
   onDownPayment,
   onDiscount,
   onDiscountTypeChange,
@@ -98,6 +100,31 @@ export default function CalculatorForm({
             </FieldLabel>
           ))}
         </RadioGroup>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="price">Narx (1 kv.m)</Label>
+        <InputGroup className="w-full">
+          <InputGroupInput
+            id="price"
+            name="price"
+            autoComplete="off"
+            onChange={onPrice}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9 ]*"
+            value={price}
+            placeholder={pricePlaceholder}
+          />
+          <InputGroupAddon align="inline-end">
+            <InputGroupText>USD</InputGroupText>
+          </InputGroupAddon>
+        </InputGroup>
+        <p className="text-muted-foreground text-xs">
+          {currentPriceLabel
+            ? `Xohlasangiz yangi narx yozing. Yozmasangiz ${currentPriceLabel} olinadi.`
+            : "Xohlasangiz yangi narx yozing. Yozmasangiz o'zidagi narx olinadi."}
+        </p>
       </div>
 
       {/* Boshlang'ich to'lov */}

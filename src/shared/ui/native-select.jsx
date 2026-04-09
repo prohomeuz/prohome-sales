@@ -5,12 +5,16 @@ import { cn } from "@/shared/lib/utils"
 
 function NativeSelect({
   className,
+  wrapperClassName,
   size = "default",
   ...props
 }) {
   return (
     <div
-      className="group/native-select relative w-fit has-[select:disabled]:opacity-50"
+      className={cn(
+        "group/native-select relative w-fit has-[select:disabled]:opacity-50",
+        wrapperClassName,
+      )}
       data-slot="native-select-wrapper">
       <select
         data-slot="native-select"

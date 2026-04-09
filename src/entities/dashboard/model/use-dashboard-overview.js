@@ -76,14 +76,12 @@ export function useDashboardOverview({ projectId, period = "last30", role }) {
       const scopedQuery = buildQuery({ filter: period });
       const requests = [];
 
-      if (role !== "SALESMANAGER") {
-        requests.push(
-          { key: "stats", path: `/api/v1/dashboard/stats?${sharedQuery}` },
-          { key: "floors", path: `/api/v1/dashboard/floors?${sharedQuery}` },
-          { key: "growth", path: `/api/v1/dashboard/growth?${sharedQuery}` },
-          { key: "cashflow", path: `/api/v1/dashboard/cashflow?${sharedQuery}` },
-        );
-      }
+      requests.push(
+        { key: "stats", path: `/api/v1/dashboard/stats?${sharedQuery}` },
+        { key: "floors", path: `/api/v1/dashboard/floors?${sharedQuery}` },
+        { key: "growth", path: `/api/v1/dashboard/growth?${sharedQuery}` },
+        { key: "cashflow", path: `/api/v1/dashboard/cashflow?${sharedQuery}` },
+      );
 
       requests.push(
         {
@@ -134,7 +132,11 @@ export function useDashboardOverview({ projectId, period = "last30", role }) {
       });
 
       setData(next);
-      setError(successCount === 0 ? "Boshqaruv paneli ma'lumotlarini yuklab bo'lmadi." : null);
+      setError(
+        successCount === 0
+          ? "Boshqaruv paneli ma'lumotlarini yuklab bo'lmadi."
+          : null,
+      );
 
       if (controllerRef.current === controller) {
         controllerRef.current = null;

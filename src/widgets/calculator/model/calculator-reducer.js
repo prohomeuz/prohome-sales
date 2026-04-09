@@ -19,6 +19,7 @@ export function createCalculatorInitialState() {
     showDiscount: false,
     discountType: "discountPerM2",
     period: 60,
+    price: "",
     downPayment: "0",
     discount: "",
     galleryShow: false,
@@ -39,7 +40,7 @@ export function createCalculatorInitialState() {
  * Action turlari:
  * - SET_CALC_LOADING, SET_CALC_RESULT
  * - SET_SELECTED_STATE, TOGGLE_DISCOUNT, SET_DISCOUNT_TYPE
- * - SET_PERIOD, SET_DOWN_PAYMENT, SET_DISCOUNT
+ * - SET_PERIOD, SET_PRICE, SET_DOWN_PAYMENT, SET_DISCOUNT
  * - SET_GALLERY_SHOW
  * - OPEN_STATUS_DIALOG, CLOSE_STATUS_DIALOG, CLEAR_STATUS_DIALOG
  * - SET_STATUS_FIELD, SET_STATUS_ERRORS, SET_PENDING_ACTION
@@ -68,6 +69,8 @@ export function calculatorReducer(state, action) {
       return { ...state, discountType: action.payload };
     case "SET_PERIOD":
       return { ...state, period: action.payload };
+    case "SET_PRICE":
+      return { ...state, price: action.payload };
     case "SET_DOWN_PAYMENT":
       return { ...state, downPayment: action.payload };
     case "SET_DISCOUNT":

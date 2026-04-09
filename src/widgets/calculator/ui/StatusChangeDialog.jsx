@@ -21,15 +21,15 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Spinner } from "@/shared/ui/spinner";
 import { Textarea } from "@/shared/ui/textarea";
-import {
-  FileText,
-  MessageSquareText,
-  Phone,
-  UserRound,
-} from "lucide-react";
+import { FileText, MessageSquareText, Phone, UserRound } from "lucide-react";
 import { normalizePeriod } from "@/shared/lib/utils";
 import { formatUzPhoneDisplay, digitsOnly } from "../lib/helpers";
-import { statusBadgeClass, statusLabels, MIN_INSTALLMENTS, MAX_INSTALLMENTS } from "../lib/constants";
+import {
+  statusBadgeClass,
+  statusLabels,
+  MIN_INSTALLMENTS,
+  MAX_INSTALLMENTS,
+} from "../lib/constants";
 import SoldContractFields from "./SoldContractFields";
 
 function sanitizeNameInput(raw) {
@@ -45,6 +45,8 @@ function sanitizeNameInput(raw) {
  *   onSubmit: (evt: React.FormEvent) => void,
  *   activeAction: object | null,
  *   home: object,
+ *   resolvedPrice?: number,
+ *   resolvedSize?: number,
  *   statusForm: object,
  *   statusErrors: object,
  *   hasDiscountValue: boolean,
@@ -59,6 +61,8 @@ export default function StatusChangeDialog({
   onSubmit,
   activeAction,
   home,
+  resolvedPrice,
+  resolvedSize,
   statusForm,
   statusErrors,
   hasDiscountValue,
@@ -78,6 +82,11 @@ export default function StatusChangeDialog({
         ? "border-destructive/70 ring-1 ring-destructive/20 focus-visible:border-destructive focus-visible:ring-destructive/20"
         : "",
     );
+  const priceValue = Number(resolvedPrice ?? home?.price ?? 0);
+  const sizeValue = Number(resolvedSize ?? home?.size ?? 0);
+  const totalPriceUsd =
+    (Number.isFinite(priceValue) && priceValue > 0 ? priceValue : 0) *
+    (Number.isFinite(sizeValue) && sizeValue > 0 ? sizeValue : 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,7 +132,7 @@ export default function StatusChangeDialog({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Umumiy qiymat</span>
                 <span className="font-mono">
-                  {formatNumber(home.price * home.size)}
+                  {formatNumber(totalPriceUsd.toFixed(1))}
                 </span>
               </div>
             </div>
