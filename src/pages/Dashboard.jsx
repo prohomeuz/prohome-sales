@@ -9,7 +9,13 @@ import { cn, formatNumber } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import GeneralError from "@/widgets/error/GeneralError";
 import LoadTransition from "@/widgets/loading/LoadTransition";
@@ -644,22 +650,18 @@ export default function Dashboard() {
 
                 <div className="flex w-full flex-col gap-3 xl:max-w-[34rem] xl:items-end">
                   <div className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                    <NativeSelect
-                      value={projectId ?? ""}
-                      onChange={(event) => setProjectId(event.target.value)}
-                      disabled={projectsLoading || projects.length === 0}
-                      wrapperClassName="w-full"
-                      className="h-11 w-full rounded-2xl border-[#dce8c0] bg-white/90 px-4 shadow-none"
-                    >
-                      <NativeSelectOption value="" disabled>
-                        {projectsLoading ? "Loyihalar yuklanmoqda..." : "Loyihani tanlang"}
-                      </NativeSelectOption>
-                      {projects.map((project) => (
-                        <NativeSelectOption key={project.id} value={String(project.id)}>
-                          {project.name ?? `Loyiha #${project.id}`}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <Select value={projectId ?? undefined} onValueChange={setProjectId} disabled={projectsLoading || projects.length === 0}>
+                      <SelectTrigger className="h-11 w-full rounded-2xl border-[#dce8c0] bg-white/90 px-4 shadow-none">
+                        <SelectValue placeholder={projectsLoading ? "Loyihalar yuklanmoqda..." : "Loyihani tanlang"} />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl">
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={String(project.id)}>
+                            {project.name ?? `Loyiha #${project.id}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
                     <Button
                       variant="outline"

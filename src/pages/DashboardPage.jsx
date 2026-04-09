@@ -8,7 +8,13 @@ import {
 import { formatNumber } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import GeneralError from "@/widgets/error/GeneralError";
@@ -40,7 +46,14 @@ import {
   YAxis,
 } from "recharts";
 
-const CHART_COLORS = ["#65a30d", "#84cc16", "#0ea5e9", "#f59e0b", "#8b5cf6", "#14b8a6"];
+const CHART_COLORS = [
+  "#65a30d",
+  "#84cc16",
+  "#0ea5e9",
+  "#f59e0b",
+  "#8b5cf6",
+  "#14b8a6",
+];
 
 const LABEL_TRANSLATIONS = {
   amount: "Summa",
@@ -210,7 +223,15 @@ function toNumber(value) {
 
 function unwrapPayload(payload) {
   let current = payload;
-  const keys = ["data", "items", "results", "result", "rows", "list", "payload"];
+  const keys = [
+    "data",
+    "items",
+    "results",
+    "result",
+    "rows",
+    "list",
+    "payload",
+  ];
 
   for (let i = 0; i < 5; i += 1) {
     if (Array.isArray(current) || !isRecord(current)) return current;
@@ -239,7 +260,10 @@ function findMatchingKey(source, candidates) {
   }
 
   for (const candidate of normalizedCandidates) {
-    const partial = entries.find(([, normalized]) => normalized.includes(candidate) || candidate.includes(normalized));
+    const partial = entries.find(
+      ([, normalized]) =>
+        normalized.includes(candidate) || candidate.includes(normalized),
+    );
     if (partial) return partial[0];
   }
 
@@ -255,7 +279,9 @@ function pickLabel(source, candidates, fallback) {
   const key = findMatchingKey(source, candidates);
   if (!key) return fallback;
   const value = source[key];
-  return value === null || value === undefined || value === "" ? fallback : localizeDisplayLabel(String(value));
+  return value === null || value === undefined || value === ""
+    ? fallback
+    : localizeDisplayLabel(String(value));
 }
 
 function humanize(value) {
@@ -311,7 +337,12 @@ function formatCompact(value) {
   return formatNumber(Math.round(value));
 }
 
-function AnimatedNumber({ value, formatter = formatCompact, className, duration = 900 }) {
+function AnimatedNumber({
+  value,
+  formatter = formatCompact,
+  className,
+  duration = 900,
+}) {
   const [displayValue, setDisplayValue] = useState(() =>
     typeof value === "number" && Number.isFinite(value) ? 0 : null,
   );
@@ -324,7 +355,10 @@ function AnimatedNumber({ value, formatter = formatCompact, className, duration 
       return undefined;
     }
 
-    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    ) {
       previousValueRef.current = value;
       setDisplayValue(value);
       return undefined;
@@ -364,7 +398,12 @@ function AnimatedNumber({ value, formatter = formatCompact, className, duration 
     };
   }, [duration, value]);
 
-  if (value === null || value === undefined || !Number.isFinite(value) || displayValue === null) {
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(value) ||
+    displayValue === null
+  ) {
     return <span className={className}>---</span>;
   }
 
@@ -377,7 +416,10 @@ function getNumericEntries(source, limit = 6) {
 
   return Object.entries(raw)
     .map(([key, value]) => ({ key, value: toNumber(value) }))
-    .filter(({ key, value }) => value !== null && !["id", "projectId", "managerId"].includes(key))
+    .filter(
+      ({ key, value }) =>
+        value !== null && !["id", "projectId", "managerId"].includes(key),
+    )
     .slice(0, limit)
     .map(({ key, value }) => ({
       label: humanize(key),
@@ -398,16 +440,46 @@ function normalizeStats(source) {
     };
   }
 
-  const totalSalesAmount = pickNumber(raw, ["totalSalesAmount", "salesAmount", "soldAmount", "totalRevenue", "revenue"]);
-  const totalEmptyAmount = pickNumber(raw, ["totalEmptyAmount", "emptyAmount", "availableAmount", "remainingAmount"]);
-  const totalCustomers = pickNumber(raw, ["totalCustomers", "customers", "clients", "clientCount"]);
-  const totalSales = pickNumber(raw, ["totalSales", "sales", "soldCount", "deals"]);
-  const totalBookings = pickNumber(raw, ["totalBookings", "bookings", "bron", "reserved"]);
+  const totalSalesAmount = pickNumber(raw, [
+    "totalSalesAmount",
+    "salesAmount",
+    "soldAmount",
+    "totalRevenue",
+    "revenue",
+  ]);
+  const totalEmptyAmount = pickNumber(raw, [
+    "totalEmptyAmount",
+    "emptyAmount",
+    "availableAmount",
+    "remainingAmount",
+  ]);
+  const totalCustomers = pickNumber(raw, [
+    "totalCustomers",
+    "customers",
+    "clients",
+    "clientCount",
+  ]);
+  const totalSales = pickNumber(raw, [
+    "totalSales",
+    "sales",
+    "soldCount",
+    "deals",
+  ]);
+  const totalBookings = pickNumber(raw, [
+    "totalBookings",
+    "bookings",
+    "bron",
+    "reserved",
+  ]);
 
   return {
-    hasData: [totalSalesAmount, totalEmptyAmount, totalCustomers, totalSales, totalBookings].some(
-      (value) => value !== null,
-    ),
+    hasData: [
+      totalSalesAmount,
+      totalEmptyAmount,
+      totalCustomers,
+      totalSales,
+      totalBookings,
+    ].some((value) => value !== null),
     totalSalesAmount,
     totalEmptyAmount,
     totalCustomers,
@@ -418,7 +490,17 @@ function normalizeStats(source) {
 
 function normalizeSeries(source, preferredKeys = []) {
   const raw = unwrapPayload(source);
-  const labelCandidates = ["label", "name", "title", "date", "day", "month", "week", "period", "time"];
+  const labelCandidates = [
+    "label",
+    "name",
+    "title",
+    "date",
+    "day",
+    "month",
+    "week",
+    "period",
+    "time",
+  ];
 
   if (Array.isArray(raw)) {
     const rows = raw.filter(isRecord);
@@ -435,7 +517,11 @@ function normalizeSeries(source, preferredKeys = []) {
         if (["id", "projectId", "managerId"].includes(key)) return;
         if (toNumber(row[key]) === null) return;
 
-        const bonus = preferredKeys.some((candidate) => normalizeKey(key).includes(normalizeKey(candidate))) ? 10 : 1;
+        const bonus = preferredKeys.some((candidate) =>
+          normalizeKey(key).includes(normalizeKey(candidate)),
+        )
+          ? 10
+          : 1;
         scores.set(key, (scores.get(key) ?? 0) + bonus);
       });
     });
@@ -448,7 +534,9 @@ function normalizeSeries(source, preferredKeys = []) {
     return {
       items: rows.map((row, index) => {
         const item = {
-          label: labelKey ? localizeDisplayLabel(String(row[labelKey] ?? `#${index + 1}`)) : `#${index + 1}`,
+          label: labelKey
+            ? localizeDisplayLabel(String(row[labelKey] ?? `#${index + 1}`))
+            : `#${index + 1}`,
         };
 
         series.forEach(({ key }) => {
@@ -479,7 +567,12 @@ function normalizeSeries(source, preferredKeys = []) {
 
 function normalizeCollection(source, config) {
   const raw = unwrapPayload(source);
-  const { labelCandidates, primaryCandidates, secondaryCandidates = [], tertiaryCandidates = [] } = config;
+  const {
+    labelCandidates,
+    primaryCandidates,
+    secondaryCandidates = [],
+    tertiaryCandidates = [],
+  } = config;
 
   let rows = [];
 
@@ -494,28 +587,47 @@ function normalizeCollection(source, config) {
   const items = rows
     .map((row, index) => {
       const resolvedRow =
-        isRecord(row.value) && !Array.isArray(row.value) ? { ...row.value, title: row.title } : row;
+        isRecord(row.value) && !Array.isArray(row.value)
+          ? { ...row.value, title: row.title }
+          : row;
 
       const numericKeys = Object.keys(resolvedRow).filter((key) => {
         if (["id", "projectId", "managerId"].includes(key)) return false;
         return toNumber(resolvedRow[key]) !== null;
       });
 
-      const primaryKey = findMatchingKey(resolvedRow, primaryCandidates) ?? numericKeys[0];
-      const secondaryKey = findMatchingKey(resolvedRow, secondaryCandidates) ?? numericKeys[1];
-      const tertiaryKey = findMatchingKey(resolvedRow, tertiaryCandidates) ?? numericKeys[2];
+      const primaryKey =
+        findMatchingKey(resolvedRow, primaryCandidates) ?? numericKeys[0];
+      const secondaryKey =
+        findMatchingKey(resolvedRow, secondaryCandidates) ?? numericKeys[1];
+      const tertiaryKey =
+        findMatchingKey(resolvedRow, tertiaryCandidates) ?? numericKeys[2];
 
       return {
-        label: pickLabel(resolvedRow, labelCandidates, resolvedRow.title ?? `#${index + 1}`),
+        label: pickLabel(
+          resolvedRow,
+          labelCandidates,
+          resolvedRow.title ?? `#${index + 1}`,
+        ),
         primary: primaryKey ? toNumber(resolvedRow[primaryKey]) : null,
-        secondary: secondaryKey && secondaryKey !== primaryKey ? toNumber(resolvedRow[secondaryKey]) : null,
+        secondary:
+          secondaryKey && secondaryKey !== primaryKey
+            ? toNumber(resolvedRow[secondaryKey])
+            : null,
         tertiary:
-          tertiaryKey && tertiaryKey !== primaryKey && tertiaryKey !== secondaryKey
+          tertiaryKey &&
+          tertiaryKey !== primaryKey &&
+          tertiaryKey !== secondaryKey
             ? toNumber(resolvedRow[tertiaryKey])
             : null,
       };
     })
-    .filter((item) => item.primary !== null || item.secondary !== null || item.tertiary !== null);
+    .filter(
+      (item) =>
+        item.primary !== null ||
+        item.secondary !== null ||
+        item.tertiary !== null,
+    );
 
   return {
     items,
@@ -528,22 +640,35 @@ function normalizeCollection(source, config) {
   };
 }
 
-function SectionCard({ title, description, meta, action, children, className }) {
+function SectionCard({
+  title,
+  description,
+  meta,
+  action,
+  children,
+  className,
+}) {
   return (
     <Card
       className={
         className
-          ? `gap-0 rounded-[20px] border-border/40 py-0 shadow-none ${className}`
-          : "gap-0 rounded-[20px] border-border/40 py-0 shadow-none"
+          ? `border-border/40 gap-0 rounded-[20px] py-0 shadow-none ${className}`
+          : "border-border/40 gap-0 rounded-[20px] py-0 shadow-none"
       }
     >
-      <div className="flex items-start justify-between gap-3 border-b border-border/30 px-4 py-3 sm:px-5">
+      <div className="border-border/30 flex items-start justify-between gap-3 border-b px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-          {description ? <p className="mt-1 text-sm leading-5 text-muted-foreground">{description}</p> : null}
+          {description ? (
+            <p className="text-muted-foreground mt-1 text-sm leading-5">
+              {description}
+            </p>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {meta ? <p className="text-[11px] text-muted-foreground">{meta}</p> : null}
+          {meta ? (
+            <p className="text-muted-foreground text-[11px]">{meta}</p>
+          ) : null}
           {action}
         </div>
       </div>
@@ -552,11 +677,20 @@ function SectionCard({ title, description, meta, action, children, className }) 
   );
 }
 
-function StatCard({ title, value, hint, formatter = formatCompact, icon: Icon, tone = "lime" }) {
+function StatCard({
+  title,
+  value,
+  hint,
+  formatter = formatCompact,
+  icon: Icon,
+  tone = "lime",
+}) {
   const styles = STAT_CARD_TONES[tone] ?? STAT_CARD_TONES.lime;
 
   return (
-    <Card className={`gap-0 rounded-[20px] py-0 shadow-none ${styles.cardClass}`}>
+    <Card
+      className={`gap-0 rounded-[20px] py-0 shadow-none ${styles.cardClass}`}
+    >
       <CardContent className="p-4 sm:p-5">
         <div className="flex min-h-[116px] flex-col justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -567,16 +701,20 @@ function StatCard({ title, value, hint, formatter = formatCompact, icon: Icon, t
                 <Icon className={`size-4 ${styles.iconClass}`} />
               </div>
             ) : null}
-            <p className="text-[12px] font-medium text-muted-foreground">{title}</p>
+            <p className="text-muted-foreground text-[12px] font-medium">
+              {title}
+            </p>
           </div>
 
           <div>
             <AnimatedNumber
               value={value}
               formatter={formatter}
-              className="text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-[1.75rem]"
+              className="text-foreground text-2xl font-semibold tracking-[-0.03em] sm:text-[1.75rem]"
             />
-            {hint ? <p className="mt-1.5 text-sm text-muted-foreground">{hint}</p> : null}
+            {hint ? (
+              <p className="text-muted-foreground mt-1.5 text-sm">{hint}</p>
+            ) : null}
           </div>
         </div>
       </CardContent>
@@ -584,11 +722,16 @@ function StatCard({ title, value, hint, formatter = formatCompact, icon: Icon, t
   );
 }
 
-function EmptyState({ title = "Ma'lumot topilmadi", description = "Bu bo'lim uchun hozircha ko'rsatkich kelmadi." }) {
+function EmptyState({
+  title = "Ma'lumot topilmadi",
+  description = "Bu bo'lim uchun hozircha ko'rsatkich kelmadi.",
+}) {
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center rounded-[18px] border border-dashed border-border/40 bg-muted/[0.08] px-5 text-center">
+    <div className="border-border/40 bg-muted/[0.08] flex min-h-[200px] flex-col items-center justify-center rounded-[18px] border border-dashed px-5 text-center">
       <p className="text-sm font-medium">{title}</p>
-      <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">{description}</p>
+      <p className="text-muted-foreground mt-2 max-w-sm text-xs leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
@@ -597,10 +740,21 @@ function MetricGrid({ metrics, columns = 2 }) {
   if (!metrics.length) return <EmptyState />;
 
   return (
-    <div className={columns === 3 ? "grid gap-2.5 sm:grid-cols-3" : "grid gap-2.5 sm:grid-cols-2"}>
+    <div
+      className={
+        columns === 3
+          ? "grid gap-2.5 sm:grid-cols-3"
+          : "grid gap-2.5 sm:grid-cols-2"
+      }
+    >
       {metrics.map((metric) => (
-        <div key={metric.label} className="rounded-[16px] bg-muted/[0.08] px-3 py-2.5">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{metric.label}</p>
+        <div
+          key={metric.label}
+          className="bg-muted/[0.08] rounded-[16px] px-3 py-2.5"
+        >
+          <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase">
+            {metric.label}
+          </p>
           <AnimatedNumber
             value={metric.value}
             formatter={formatCompact}
@@ -612,16 +766,54 @@ function MetricGrid({ metrics, columns = 2 }) {
   );
 }
 
-function ChartTooltipCard({ active, payload, label, formatter = formatCompact }) {
+function InsightCard({
+  label,
+  value,
+  formatter = formatCompact,
+  caption,
+  children,
+}) {
+  return (
+    <div className="border-border/40 bg-background rounded-[16px] border px-3 py-3">
+      <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase">
+        {label}
+      </p>
+      {children ? (
+        children
+      ) : (
+        <AnimatedNumber
+          value={value}
+          formatter={formatter}
+          className="mt-1.5 text-lg font-semibold tracking-tight"
+        />
+      )}
+      {caption ? (
+        <p className="text-muted-foreground mt-1 text-xs">{caption}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function ChartTooltipCard({
+  active,
+  payload,
+  label,
+  formatter = formatCompact,
+}) {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-[16px] border border-border/40 bg-background px-3 py-2 shadow-none">
+    <div className="border-border/40 bg-background rounded-[16px] border px-3 py-2 shadow-none">
       {label ? <p className="text-xs font-medium">{label}</p> : null}
       {payload.map((entry) => (
-        <p key={entry.dataKey ?? entry.name} className="mt-1 text-xs text-muted-foreground">
+        <p
+          key={entry.dataKey ?? entry.name}
+          className="text-muted-foreground mt-1 text-xs"
+        >
           {humanize(entry.name ?? entry.dataKey)}:{" "}
-          <span className="font-medium text-foreground">{formatter(entry.value)}</span>
+          <span className="text-foreground font-medium">
+            {formatter(entry.value)}
+          </span>
         </p>
       ))}
     </div>
@@ -630,7 +822,7 @@ function ChartTooltipCard({ active, payload, label, formatter = formatCompact })
 
 function SectionSkeletonHeader() {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-border/40 px-4 py-3.5 sm:px-5 sm:py-4">
+    <div className="border-border/40 flex items-start justify-between gap-3 border-b px-4 py-3.5 sm:px-5 sm:py-4">
       <div className="space-y-2">
         <Skeleton className="h-5 w-40 rounded-full" />
         <Skeleton className="h-4 w-56 rounded-full" />
@@ -642,7 +834,7 @@ function SectionSkeletonHeader() {
 
 function StatCardSkeleton() {
   return (
-    <Card className="gap-0 rounded-[20px] border-border/40 py-0 shadow-none">
+    <Card className="border-border/40 gap-0 rounded-[20px] py-0 shadow-none">
       <CardContent className="p-4 sm:p-5">
         <div className="flex min-h-[116px] flex-col justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -661,7 +853,7 @@ function StatCardSkeleton() {
 
 function ChartSectionSkeleton() {
   return (
-    <Card className="gap-0 rounded-[20px] border-border/40 py-0 shadow-none">
+    <Card className="border-border/40 gap-0 rounded-[20px] py-0 shadow-none">
       <SectionSkeletonHeader />
       <CardContent className="space-y-3 p-4 sm:p-5">
         <Skeleton className="h-[280px] rounded-[18px]" />
@@ -678,7 +870,7 @@ function ChartSectionSkeleton() {
 
 function PieSectionSkeleton() {
   return (
-    <Card className="gap-0 rounded-[20px] border-border/40 py-0 shadow-none">
+    <Card className="border-border/40 gap-0 rounded-[20px] py-0 shadow-none">
       <SectionSkeletonHeader />
       <CardContent className="p-4 sm:p-5">
         <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
@@ -697,11 +889,11 @@ function PieSectionSkeleton() {
 
 function ManagerSectionSkeleton() {
   return (
-    <Card className="gap-0 rounded-[20px] border-border/40 py-0 shadow-none">
+    <Card className="border-border/40 gap-0 rounded-[20px] py-0 shadow-none">
       <SectionSkeletonHeader />
       <CardContent className="space-y-2.5 p-4 sm:p-5">
-        <div className="overflow-hidden rounded-[18px] border border-border/40">
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b border-border/30 px-3.5 py-3 sm:grid">
+        <div className="border-border/40 overflow-hidden rounded-[18px] border">
+          <div className="border-border/30 hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b px-3.5 py-3 sm:grid">
             <Skeleton className="h-3 w-16 rounded-full" />
             <Skeleton className="h-3 w-12 rounded-full" />
             <Skeleton className="h-3 w-12 rounded-full" />
@@ -710,7 +902,7 @@ function ManagerSectionSkeleton() {
           {[0, 1, 2].map((item) => (
             <div
               key={item}
-              className="grid gap-3 px-3.5 py-3 [&+&]:border-t [&+&]:border-border/30 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center"
+              className="[&+&]:border-border/30 grid gap-3 px-3.5 py-3 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center [&+&]:border-t"
             >
               <div className="space-y-2">
                 <Skeleton className="h-4 w-32 rounded-full" />
@@ -727,6 +919,22 @@ function ManagerSectionSkeleton() {
   );
 }
 
+function QuickStatusSkeleton() {
+  return (
+    <Card className="border-border/40 gap-0 rounded-[20px] py-0 shadow-none">
+      <SectionSkeletonHeader />
+      <CardContent className="p-4 sm:p-5">
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <Skeleton className="h-[84px] rounded-[16px]" />
+          <Skeleton className="h-[84px] rounded-[16px]" />
+          <Skeleton className="h-[84px] rounded-[16px]" />
+          <Skeleton className="h-[84px] rounded-[16px]" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function DashboardContentSkeleton({ executiveRole }) {
   return (
     <>
@@ -737,21 +945,20 @@ function DashboardContentSkeleton({ executiveRole }) {
         <StatCardSkeleton />
       </div>
 
-      {executiveRole ? (
-        <>
-          <div className="grid gap-3 xl:grid-cols-2">
-            <ChartSectionSkeleton />
-            <ChartSectionSkeleton />
-          </div>
+      <div className="grid gap-3 xl:grid-cols-2">
+        <ChartSectionSkeleton />
+        <ChartSectionSkeleton />
+      </div>
 
-          <div className="grid gap-3 xl:grid-cols-2">
-            <ChartSectionSkeleton />
-            <PieSectionSkeleton />
-          </div>
-        </>
-      ) : null}
+      <div className="grid gap-3 xl:grid-cols-2">
+        <ChartSectionSkeleton />
+        <PieSectionSkeleton />
+      </div>
 
-      <ManagerSectionSkeleton />
+      <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+        <ManagerSectionSkeleton />
+        <QuickStatusSkeleton />
+      </div>
     </>
   );
 }
@@ -795,19 +1002,38 @@ export default function DashboardPage() {
   const floorsModel = useMemo(
     () =>
       normalizeCollection(floors, {
-        labelCandidates: ["floorName", "floor", "name", "title", "label", "level"],
+        labelCandidates: [
+          "floorName",
+          "floor",
+          "name",
+          "title",
+          "label",
+          "level",
+        ],
         primaryCandidates: ["sold", "sales", "occupied", "count", "amount"],
         secondaryCandidates: ["empty", "available", "remaining", "free"],
         tertiaryCandidates: ["booked", "reserved", "booking"],
       }),
     [floors],
   );
-  const growthModel = useMemo(() => normalizeSeries(growth, ["sales", "amount", "growth"]), [growth]);
-  const cashflowModel = useMemo(() => normalizeSeries(cashflow, ["income", "cash", "amount", "expense"]), [cashflow]);
+  const growthModel = useMemo(
+    () => normalizeSeries(growth, ["sales", "amount", "growth"]),
+    [growth],
+  );
+  const cashflowModel = useMemo(
+    () => normalizeSeries(cashflow, ["income", "cash", "amount", "expense"]),
+    [cashflow],
+  );
   const managerModel = useMemo(
     () =>
       normalizeCollection(manager, {
-        labelCandidates: ["managerName", "fullName", "name", "manager", "username"],
+        labelCandidates: [
+          "managerName",
+          "fullName",
+          "name",
+          "manager",
+          "username",
+        ],
         primaryCandidates: ["sales", "sold", "deals", "closed", "count"],
         secondaryCandidates: ["leads", "leadCount", "customers", "clients"],
         tertiaryCandidates: ["amount", "totalAmount", "revenue", "salesAmount"],
@@ -817,7 +1043,14 @@ export default function DashboardPage() {
   const crmModel = useMemo(
     () =>
       normalizeCollection(crm, {
-        labelCandidates: ["stage", "status", "name", "title", "column", "voronka"],
+        labelCandidates: [
+          "stage",
+          "status",
+          "name",
+          "title",
+          "column",
+          "voronka",
+        ],
         primaryCandidates: ["count", "leadCount", "leads", "total", "sales"],
         secondaryCandidates: ["amount", "totalAmount", "sum", "summa"],
       }),
@@ -847,6 +1080,24 @@ export default function DashboardPage() {
     refreshing ||
     loading ||
     (!projectId && projects.length > 0);
+  const activeSectionCount = useMemo(
+    () =>
+      [
+        growthModel.items.length > 0,
+        cashflowModel.items.length > 0,
+        floorsModel.items.length > 0,
+        crmModel.items.length > 0,
+        managerModel.items.length > 0 || managerModel.metrics.length > 0,
+      ].filter(Boolean).length,
+    [
+      cashflowModel.items.length,
+      crmModel.items.length,
+      floorsModel.items.length,
+      growthModel.items.length,
+      managerModel.items.length,
+      managerModel.metrics.length,
+    ],
+  );
 
   const summaryCards = useMemo(() => {
     if (statsModel.hasData) {
@@ -887,38 +1138,38 @@ export default function DashboardPage() {
     }
 
     return [
-        {
-          title: "Murojaatlar",
-          value: crmModel.totals.primary,
-          formatter: formatCompact,
-          hint: "CRM bo'yicha",
-          icon: Users,
-          tone: "emerald",
-        },
-        {
-          title: "Voronka summasi",
-          value: crmModel.totals.secondary,
-          formatter: formatMoney,
-          hint: "Jami summa",
-          icon: Wallet,
-          tone: "lime",
-        },
-        {
-          title: "Menejer natijasi",
-          value: managerModel.totals.primary,
-          formatter: formatCompact,
-          hint: "Jamoa bo'yicha",
-          icon: UserRound,
-          tone: "sky",
-        },
-        {
-          title: "Bosqichlar",
-          value: crmModel.items.length,
-          formatter: formatCompact,
-          hint: "Faol holatlar",
-          icon: Layers3,
-          tone: "amber",
-        },
+      {
+        title: "Murojaatlar",
+        value: crmModel.totals.primary,
+        formatter: formatCompact,
+        hint: "CRM bo'yicha",
+        icon: Users,
+        tone: "emerald",
+      },
+      {
+        title: "Voronka summasi",
+        value: crmModel.totals.secondary,
+        formatter: formatMoney,
+        hint: "Jami summa",
+        icon: Wallet,
+        tone: "lime",
+      },
+      {
+        title: "Menejer natijasi",
+        value: managerModel.totals.primary,
+        formatter: formatCompact,
+        hint: "Jamoa bo'yicha",
+        icon: UserRound,
+        tone: "sky",
+      },
+      {
+        title: "Bosqichlar",
+        value: crmModel.items.length,
+        formatter: formatCompact,
+        hint: "Faol holatlar",
+        icon: Layers3,
+        tone: "amber",
+      },
     ];
   }, [crmModel, managerModel, statsModel]);
 
@@ -931,16 +1182,17 @@ export default function DashboardPage() {
       {error && !hasAnyData ? (
         <GeneralError />
       ) : (
-        <section className="flex h-full min-h-0 flex-col overflow-y-auto bg-background p-3 sm:p-5">
+        <section className="bg-background flex h-full min-h-0 flex-col overflow-y-auto p-3 sm:p-5">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
-            <Card className="gap-0 rounded-[24px] border-border/40 py-0 shadow-none">
+            <Card className="border-border/40 gap-0 rounded-[24px] py-0 shadow-none">
               <CardContent className="space-y-4 p-4 sm:p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                   <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground/80">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                      <span className="text-foreground/80 font-medium">
                         {selectedProject
-                          ? selectedProject.name ?? `Loyiha #${selectedProject.id}`
+                          ? (selectedProject.name ??
+                            `Loyiha #${selectedProject.id}`)
                           : projectsLoading
                             ? "Loyihalar yuklanmoqda..."
                             : "Loyiha tanlanmagan"}
@@ -952,10 +1204,10 @@ export default function DashboardPage() {
                     </div>
 
                     <div>
-                      <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">
+                      <h1 className="text-foreground text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">
                         Boshqaruv paneli
                       </h1>
-                      <p className="mt-1 text-sm text-muted-foreground sm:text-[15px]">
+                      <p className="text-muted-foreground mt-1 text-sm sm:text-[15px]">
                         Asosiy ko'rsatkichlar va joriy holat.
                       </p>
                     </div>
@@ -963,45 +1215,64 @@ export default function DashboardPage() {
 
                   <div className="flex w-full max-w-2xl flex-col gap-2.5 xl:items-end">
                     <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
-                      <NativeSelect
-                        value={projectId ?? ""}
-                        onChange={(event) => setProjectId(event.target.value)}
+                      <Select
+                        value={projectId ?? undefined}
+                        onValueChange={setProjectId}
                         disabled={projectsLoading || projects.length === 0}
-                        wrapperClassName="w-full"
-                        className="h-10 w-full rounded-[12px] border-border/40 bg-background px-4"
                       >
-                        <NativeSelectOption value="" disabled>
-                          {projectsLoading ? "Loyihalar yuklanmoqda..." : "Loyihani tanlang"}
-                        </NativeSelectOption>
-                        {projects.map((project) => (
-                          <NativeSelectOption key={project.id} value={String(project.id)}>
-                            {project.name ?? `Loyiha #${project.id}`}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelect>
+                        <SelectTrigger className="border-border/40 bg-background h-10 rounded-[12px] px-4">
+                          <SelectValue
+                            placeholder={
+                              projectsLoading
+                                ? "Loyihalar yuklanmoqda..."
+                                : "Loyihani tanlang"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((project) => (
+                            <SelectItem
+                              key={project.id}
+                              value={String(project.id)}
+                            >
+                              {project.name ?? `Loyiha #${project.id}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
                       <Button
                         variant="outline"
-                        className="h-10 rounded-[12px] border-border/40 px-4 shadow-none"
+                        className="border-border/40 h-10 rounded-[12px] px-4 shadow-none"
                         onClick={() => get({ silent: true })}
                         disabled={!projectId || refreshing}
                       >
-                        <RefreshCcw className={refreshing ? "size-4 animate-spin" : "size-4"} />
+                        <RefreshCcw
+                          className={
+                            refreshing ? "size-4 animate-spin" : "size-4"
+                          }
+                        />
                         Yangilash
                       </Button>
                     </div>
 
-                    <Tabs value={period} onValueChange={setPeriod} className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 rounded-[12px] border border-border/40 bg-muted/[0.08] !p-[3px] sm:grid-cols-4">
-                        {Object.entries(DASHBOARD_PERIODS).map(([key, label]) => (
-                          <TabsTrigger
-                            key={key}
-                            value={key}
-                            className="h-9 rounded-[10px] data-[state=active]:border-border/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
-                          >
-                            {label}
-                          </TabsTrigger>
-                        ))}
+                    <Tabs
+                      value={period}
+                      onValueChange={setPeriod}
+                      className="w-full"
+                    >
+                      <TabsList className="border-border/40 bg-muted/[0.08] grid w-full grid-cols-2 rounded-[12px] border !p-[3px] sm:grid-cols-4">
+                        {Object.entries(DASHBOARD_PERIODS).map(
+                          ([key, label]) => (
+                            <TabsTrigger
+                              key={key}
+                              value={key}
+                              className="data-[state=active]:border-border/60 data-[state=active]:bg-background data-[state=active]:text-foreground h-9 rounded-[10px] data-[state=active]:shadow-none"
+                            >
+                              {label}
+                            </TabsTrigger>
+                          ),
+                        )}
                       </TabsList>
                     </Tabs>
                   </div>
@@ -1032,252 +1303,456 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                {executiveRole ? (
-                  <>
-                    <div className="grid gap-3 xl:grid-cols-2">
-                      <SectionCard
-                        title="O'sish dinamikasi"
-                        description="Davr bo'yicha o'sish"
-                        meta={sectionErrors.growth ?? null}
-                      >
-                        {growthModel.items.length > 0 && growthModel.series.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="h-[280px] rounded-[18px] bg-muted/[0.08] p-2.5 sm:p-3">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={growthModel.items} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
-                                  <defs>
-                                    <linearGradient id="dashboard-growth-fill" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#65a30d" stopOpacity={0.22} />
-                                      <stop offset="95%" stopColor="#65a30d" stopOpacity={0.02} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid vertical={false} stroke="#e5e7eb" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <Tooltip content={(props) => <ChartTooltipCard {...props} />} />
-                                  <Area
-                                    type="monotone"
-                                    dataKey={growthModel.series[0].key}
-                                    stroke="#65a30d"
-                                    fill="url(#dashboard-growth-fill)"
-                                    strokeWidth={2.5}
-                                  />
-                                  {growthModel.series[1] ? (
-                                    <Line type="monotone" dataKey={growthModel.series[1].key} stroke="#0ea5e9" strokeWidth={2} dot={false} />
-                                  ) : null}
-                                </AreaChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <MetricGrid metrics={growthModel.metrics.slice(0, 4)} />
-                          </div>
-                        ) : (
-                          <EmptyState description="O'sish bo'limi uchun yetarli ma'lumot kelmadi." />
-                        )}
-                      </SectionCard>
-
-                      <SectionCard
-                        title="Pul oqimi"
-                        description="Kirim va chiqimlar"
-                        meta={sectionErrors.cashflow ?? null}
-                      >
-                        {cashflowModel.items.length > 0 && cashflowModel.series.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="h-[280px] rounded-[18px] bg-muted/[0.08] p-2.5 sm:p-3">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={cashflowModel.items} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
-                                  <CartesianGrid vertical={false} stroke="#e5e7eb" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <Tooltip content={(props) => <ChartTooltipCard {...props} formatter={formatMoney} />} />
-                                  {cashflowModel.series.map((series, index) => (
-                                    <Line
-                                      key={series.key}
-                                      type="monotone"
-                                      dataKey={series.key}
-                                      stroke={CHART_COLORS[index]}
-                                      strokeWidth={2.25}
-                                      dot={false}
-                                    />
-                                  ))}
-                                </LineChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <MetricGrid metrics={cashflowModel.metrics.slice(0, 4)} />
-                          </div>
-                        ) : (
-                          <EmptyState description="Pul oqimi bo'limi uchun mos ko'rsatkich topilmadi." />
-                        )}
-                      </SectionCard>
-                    </div>
-
-                    <div className="grid gap-3 xl:grid-cols-2">
-                      <SectionCard
-                        title="Qavatlar kesimi"
-                        description="Sotuv va qoldiq"
-                        meta={sectionErrors.floors ?? null}
-                      >
-                        {floorsModel.items.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="h-[280px] rounded-[18px] bg-muted/[0.08] p-2.5 sm:p-3">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={floorsModel.items} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
-                                  <CartesianGrid vertical={false} stroke="#e5e7eb" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <Tooltip content={(props) => <ChartTooltipCard {...props} />} />
-                                  <Bar dataKey="primary" fill="#65a30d" radius={[6, 6, 0, 0]} />
-                                  {floorsModel.items.some((item) => item.secondary !== null) ? (
-                                    <Bar dataKey="secondary" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
-                                  ) : null}
-                                  {floorsModel.items.some((item) => item.tertiary !== null) ? (
-                                    <Bar dataKey="tertiary" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-                                  ) : null}
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <MetricGrid
-                              metrics={[
-                                { label: "Sotilgan", value: floorsModel.totals.primary },
-                                { label: "Bo'sh", value: floorsModel.totals.secondary },
-                                { label: "Band", value: floorsModel.totals.tertiary },
-                              ]}
-                              columns={3}
-                            />
-                          </div>
-                        ) : (
-                          <EmptyState description="Qavatlar bo'limi uchun ko'rsatkich topilmadi." />
-                        )}
-                      </SectionCard>
-
-                      <SectionCard
-                        title="CRM voronkasi"
-                        description="Holatlar kesimi"
-                        meta={sectionErrors.crm ?? null}
-                      >
-                        {crmModel.items.length > 0 ? (
-                          <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
-                            <div className="h-[260px] rounded-[18px] bg-muted/[0.08] p-2.5 sm:p-3">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                  <Tooltip content={(props) => <ChartTooltipCard {...props} />} />
-                                  <Pie data={crmModel.items} dataKey="primary" nameKey="label" innerRadius={58} outerRadius={88} paddingAngle={3}>
-                                    {crmModel.items.map((item, index) => (
-                                      <Cell key={item.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                    ))}
-                                  </Pie>
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </div>
-
-                            <div className="overflow-hidden rounded-[18px] border border-border/40 bg-muted/[0.06]">
-                              {crmModel.items.map((item, index) => (
-                                <div
-                                  key={item.label}
-                                  className="flex items-center justify-between gap-3 px-3 py-3 [&+&]:border-t [&+&]:border-border/30"
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <SectionCard
+                    title="O'sish dinamikasi"
+                    description="Davr bo'yicha o'sish"
+                    meta={sectionErrors.growth ?? null}
+                  >
+                    {growthModel.items.length > 0 &&
+                    growthModel.series.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="bg-muted/[0.08] h-[280px] rounded-[18px] p-2.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                              data={growthModel.items}
+                              margin={{
+                                top: 10,
+                                right: 10,
+                                left: -18,
+                                bottom: 0,
+                              }}
+                            >
+                              <defs>
+                                <linearGradient
+                                  id="dashboard-growth-fill"
+                                  x1="0"
+                                  y1="0"
+                                  x2="0"
+                                  y2="1"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <span className="block size-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
-                                    <div>
-                                      <p className="text-sm font-medium">{item.label}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {item.secondary !== null ? (
-                                          <AnimatedNumber value={item.secondary} formatter={formatMoney} />
-                                        ) : (
-                                          "Summa yo'q"
-                                        )}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <AnimatedNumber
-                                      value={item.primary}
-                                      formatter={formatCompact}
-                                      className="text-sm font-semibold"
-                                    />
-                                    <p className="mt-0.5 text-[11px] text-muted-foreground">ta</p>
-                                  </div>
-                                </div>
+                                  <stop
+                                    offset="5%"
+                                    stopColor="#65a30d"
+                                    stopOpacity={0.22}
+                                  />
+                                  <stop
+                                    offset="95%"
+                                    stopColor="#65a30d"
+                                    stopOpacity={0.02}
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid
+                                vertical={false}
+                                stroke="#e5e7eb"
+                              />
+                              <XAxis
+                                dataKey="label"
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <Tooltip
+                                content={(props) => (
+                                  <ChartTooltipCard {...props} />
+                                )}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey={growthModel.series[0].key}
+                                stroke="#65a30d"
+                                fill="url(#dashboard-growth-fill)"
+                                strokeWidth={2.5}
+                              />
+                              {growthModel.series[1] ? (
+                                <Line
+                                  type="monotone"
+                                  dataKey={growthModel.series[1].key}
+                                  stroke="#0ea5e9"
+                                  strokeWidth={2}
+                                  dot={false}
+                                />
+                              ) : null}
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <MetricGrid metrics={growthModel.metrics.slice(0, 4)} />
+                      </div>
+                    ) : (
+                      <EmptyState description="O'sish bo'limi uchun yetarli ma'lumot kelmadi." />
+                    )}
+                  </SectionCard>
+
+                  <SectionCard
+                    title="Pul oqimi"
+                    description="Kirim va chiqimlar"
+                    meta={sectionErrors.cashflow ?? null}
+                  >
+                    {cashflowModel.items.length > 0 &&
+                    cashflowModel.series.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="bg-muted/[0.08] h-[280px] rounded-[18px] p-2.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                              data={cashflowModel.items}
+                              margin={{
+                                top: 10,
+                                right: 10,
+                                left: -18,
+                                bottom: 0,
+                              }}
+                            >
+                              <CartesianGrid
+                                vertical={false}
+                                stroke="#e5e7eb"
+                              />
+                              <XAxis
+                                dataKey="label"
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <Tooltip
+                                content={(props) => (
+                                  <ChartTooltipCard
+                                    {...props}
+                                    formatter={formatMoney}
+                                  />
+                                )}
+                              />
+                              {cashflowModel.series.map((series, index) => (
+                                <Line
+                                  key={series.key}
+                                  type="monotone"
+                                  dataKey={series.key}
+                                  stroke={CHART_COLORS[index]}
+                                  strokeWidth={2.25}
+                                  dot={false}
+                                />
                               ))}
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <MetricGrid
+                          metrics={cashflowModel.metrics.slice(0, 4)}
+                        />
+                      </div>
+                    ) : (
+                      <EmptyState description="Pul oqimi bo'limi uchun mos ko'rsatkich topilmadi." />
+                    )}
+                  </SectionCard>
+                </div>
+
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <SectionCard
+                    title="Qavatlar kesimi"
+                    description="Sotuv va qoldiq"
+                    meta={sectionErrors.floors ?? null}
+                  >
+                    {floorsModel.items.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="bg-muted/[0.08] h-[280px] rounded-[18px] p-2.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={floorsModel.items}
+                              margin={{
+                                top: 10,
+                                right: 10,
+                                left: -18,
+                                bottom: 0,
+                              }}
+                            >
+                              <CartesianGrid
+                                vertical={false}
+                                stroke="#e5e7eb"
+                              />
+                              <XAxis
+                                dataKey="label"
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                              />
+                              <Tooltip
+                                content={(props) => (
+                                  <ChartTooltipCard {...props} />
+                                )}
+                              />
+                              <Bar
+                                dataKey="primary"
+                                fill="#65a30d"
+                                radius={[6, 6, 0, 0]}
+                              />
+                              {floorsModel.items.some(
+                                (item) => item.secondary !== null,
+                              ) ? (
+                                <Bar
+                                  dataKey="secondary"
+                                  fill="#0ea5e9"
+                                  radius={[6, 6, 0, 0]}
+                                />
+                              ) : null}
+                              {floorsModel.items.some(
+                                (item) => item.tertiary !== null,
+                              ) ? (
+                                <Bar
+                                  dataKey="tertiary"
+                                  fill="#f59e0b"
+                                  radius={[6, 6, 0, 0]}
+                                />
+                              ) : null}
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <MetricGrid
+                          metrics={[
+                            {
+                              label: "Sotilgan",
+                              value: floorsModel.totals.primary,
+                            },
+                            {
+                              label: "Bo'sh",
+                              value: floorsModel.totals.secondary,
+                            },
+                            {
+                              label: "Band",
+                              value: floorsModel.totals.tertiary,
+                            },
+                          ]}
+                          columns={3}
+                        />
+                      </div>
+                    ) : (
+                      <EmptyState description="Qavatlar bo'limi uchun ko'rsatkich topilmadi." />
+                    )}
+                  </SectionCard>
+
+                  <SectionCard
+                    title="CRM voronkasi"
+                    description="Holatlar kesimi"
+                    meta={sectionErrors.crm ?? null}
+                  >
+                    {crmModel.items.length > 0 ? (
+                      <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+                        <div className="bg-muted/[0.08] h-[260px] rounded-[18px] p-2.5 sm:p-3">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Tooltip
+                                content={(props) => (
+                                  <ChartTooltipCard {...props} />
+                                )}
+                              />
+                              <Pie
+                                data={crmModel.items}
+                                dataKey="primary"
+                                nameKey="label"
+                                innerRadius={58}
+                                outerRadius={88}
+                                paddingAngle={3}
+                              >
+                                {crmModel.items.map((item, index) => (
+                                  <Cell
+                                    key={item.label}
+                                    fill={
+                                      CHART_COLORS[index % CHART_COLORS.length]
+                                    }
+                                  />
+                                ))}
+                              </Pie>
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        <div className="border-border/40 bg-muted/[0.06] overflow-hidden rounded-[18px] border">
+                          {crmModel.items.map((item, index) => (
+                            <div
+                              key={item.label}
+                              className="[&+&]:border-border/30 flex items-center justify-between gap-3 px-3 py-3 [&+&]:border-t"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className="block size-2.5 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      CHART_COLORS[index % CHART_COLORS.length],
+                                  }}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {item.label}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {item.secondary !== null ? (
+                                      <AnimatedNumber
+                                        value={item.secondary}
+                                        formatter={formatMoney}
+                                      />
+                                    ) : (
+                                      "Summa yo'q"
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <AnimatedNumber
+                                  value={item.primary}
+                                  formatter={formatCompact}
+                                  className="text-sm font-semibold"
+                                />
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                  ta
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyState description="CRM statistikasi hali shakllanmagan." />
+                    )}
+                  </SectionCard>
+                </div>
+
+                <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+                  <SectionCard
+                    title="Menejerlar kesimi"
+                    description="Jamoa natijalari"
+                    meta={sectionErrors.manager ?? null}
+                    action={
+                      refreshing ? (
+                        <div className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                          <RefreshCcw className="size-3 animate-spin" />
+                          Yangilanmoqda
+                        </div>
+                      ) : null
+                    }
+                  >
+                    {managerModel.items.length > 0 ? (
+                      <div className="border-border/40 overflow-hidden rounded-[18px] border">
+                        <div className="border-border/30 bg-muted/[0.05] text-muted-foreground hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b px-3.5 py-3 text-[11px] tracking-[0.12em] uppercase sm:grid">
+                          <p>Menejer</p>
+                          <p>Sotuv</p>
+                          <p>Murojaat</p>
+                          <p>Summa</p>
+                        </div>
+
+                        {managerModel.items.map((item, index) => (
+                          <div
+                            key={`${item.label}-${index}`}
+                            className="[&+&]:border-border/30 grid gap-3 px-3.5 py-3 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center [&+&]:border-t"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">
+                                {item.label}
+                              </p>
+                              <p className="text-muted-foreground mt-0.5 text-xs sm:hidden">
+                                Menejer
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 sm:block">
+                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
+                                Sotuv
+                              </p>
+                              <AnimatedNumber
+                                value={item.primary}
+                                formatter={formatCompact}
+                                className="text-sm font-medium"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 sm:block">
+                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
+                                Murojaat
+                              </p>
+                              <AnimatedNumber
+                                value={item.secondary}
+                                formatter={formatCompact}
+                                className="text-sm font-medium"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 sm:block">
+                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
+                                Summa
+                              </p>
+                              <AnimatedNumber
+                                value={item.tertiary}
+                                formatter={formatMoney}
+                                className="text-sm font-medium"
+                              />
                             </div>
                           </div>
-                        ) : (
-                          <EmptyState description="CRM statistikasi hali shakllanmagan." />
-                        )}
-                      </SectionCard>
-                    </div>
-                  </>
-                ) : null}
-
-                <SectionCard
-                  title="Menejerlar kesimi"
-                  description="Jamoa natijalari"
-                  meta={sectionErrors.manager ?? null}
-                  action={
-                    refreshing ? (
-                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <RefreshCcw className="size-3 animate-spin" />
-                        Yangilanmoqda
+                        ))}
                       </div>
-                    ) : null
-                  }
-                >
-                  {managerModel.items.length > 0 ? (
-                    <div className="overflow-hidden rounded-[18px] border border-border/40">
-                      <div className="hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b border-border/30 bg-muted/[0.05] px-3.5 py-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:grid">
-                        <p>Menejer</p>
-                        <p>Sotuv</p>
-                        <p>Murojaat</p>
-                        <p>Summa</p>
-                      </div>
+                    ) : (
+                      <MetricGrid metrics={managerModel.metrics} columns={3} />
+                    )}
+                  </SectionCard>
 
-                      {managerModel.items.map((item, index) => (
-                        <div
-                          key={`${item.label}-${index}`}
-                          className="grid gap-3 px-3.5 py-3 [&+&]:border-t [&+&]:border-border/30 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{item.label}</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground sm:hidden">Menejer</p>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-3 sm:block">
-                            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:hidden">Sotuv</p>
-                            <AnimatedNumber
-                              value={item.primary}
-                              formatter={formatCompact}
-                              className="text-sm font-medium"
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between gap-3 sm:block">
-                            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:hidden">Murojaat</p>
-                            <AnimatedNumber
-                              value={item.secondary}
-                              formatter={formatCompact}
-                              className="text-sm font-medium"
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between gap-3 sm:block">
-                            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:hidden">Summa</p>
-                            <AnimatedNumber
-                              value={item.tertiary}
-                              formatter={formatMoney}
-                              className="text-sm font-medium"
-                            />
-                          </div>
-                        </div>
-                      ))}
+                  <SectionCard
+                    title="Qisqa holat"
+                    description="Tanlangan loyiha va joriy holat"
+                    meta={
+                      selectedProject
+                        ? (selectedProject.name ??
+                          `Loyiha #${selectedProject.id}`)
+                        : "Loyiha"
+                    }
+                  >
+                    <div className="grid gap-2.5 sm:grid-cols-2">
+                      <InsightCard label="Davr" caption="Tanlangan filter">
+                        <p className="mt-1.5 text-lg font-semibold tracking-tight">
+                          {DASHBOARD_PERIODS[period] ?? "Oy"}
+                        </p>
+                      </InsightCard>
+                      <InsightCard
+                        label="Leadlar"
+                        value={crmModel.totals.primary}
+                        formatter={formatCompact}
+                        caption="CRM bo'yicha jami oqim"
+                      />
+                      <InsightCard
+                        label="Sectionlar"
+                        value={activeSectionCount}
+                        formatter={formatCompact}
+                        caption="Sahifadagi faol bloklar"
+                      />
+                      <InsightCard
+                        label="Holat"
+                        caption={
+                          refreshing
+                            ? "Ma'lumot yangilanmoqda"
+                            : "Dashboard tayyor"
+                        }
+                      >
+                        <p className="mt-1.5 text-lg font-semibold tracking-tight">
+                          {refreshing ? "Yuklanmoqda" : "Tayyor"}
+                        </p>
+                      </InsightCard>
                     </div>
-                  ) : (
-                    <MetricGrid metrics={managerModel.metrics} columns={3} />
-                  )}
-                </SectionCard>
+                  </SectionCard>
+                </div>
               </>
             )}
           </div>
         </section>
       )}
     </LoadTransition>
-  );  
+  );
 }

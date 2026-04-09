@@ -295,11 +295,11 @@ export function KanbanBoard() {
         <div className="border-b border-gray-100 bg-white">
           <div className="flex flex-col gap-3 px-3 py-3.5 sm:px-6 sm:py-5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
             <div className="min-w-0 flex-1 text-center sm:text-left">
-              <h1 className="text-2xl leading-tight font-black tracking-tight text-gray-900 sm:text-3xl">
-                Kalonkalar & Leadlar
+              <h1 className="text-xl leading-tight font-semibold tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
+                CRM Boshqaruvi
               </h1>
-              <p className="mt-1 text-[10px] font-bold tracking-[0.22em] text-gray-300 uppercase sm:text-xs">
-                SOTUV BO'LIMI KANBAN DOSKASI
+              <p className="mt-1 text-[10px] leading-relaxed font-medium text-gray-400 sm:text-[11px]">
+                Sotuv kanban
               </p>
             </div>
 

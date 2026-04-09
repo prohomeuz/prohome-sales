@@ -171,7 +171,7 @@ export function ColumnContainer({
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex h-full max-h-full min-h-[400px] w-[calc(100vw-1rem)] max-w-[380px] shrink-0 snap-center flex-col items-center self-stretch overflow-hidden rounded-2xl border bg-white py-2 shadow-sm transition-colors sm:w-[320px] sm:snap-start lg:max-w-none lg:rounded-none lg:border-0 lg:border-r lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:first:border-l ${
+      className={`relative flex h-full max-h-full min-h-[400px] w-[calc(100vw-1rem)] max-w-[380px] !pl-2 shrink-0 snap-center flex-col items-center self-stretch overflow-hidden rounded-2xl border bg-white py-2 shadow-sm transition-colors sm:w-[320px] sm:snap-start lg:max-w-none lg:rounded-none lg:border-0 lg:border-r lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:first:border-l ${
         isOver
           ? "border-[#65a30d] ring-1 ring-[#65a30d]/20 lg:border-r-[#65a30d]"
           : "border-gray-100 lg:border-gray-200"
@@ -245,109 +245,111 @@ export function ColumnContainer({
         </div>
       </div>
 
-      <div className="mt-auto w-full shrink-0 border-t border-gray-100 bg-white px-2 py-1.5 lg:border-t lg:border-gray-200 lg:bg-white lg:py-2.5 lg:pr-3 lg:pl-3">
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
-          <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-full items-center gap-1 rounded-lg border border-transparent px-2 text-[11px] font-bold text-gray-400 hover:border-[#588f0b] hover:bg-[#ecfccb]/20 hover:text-[#65a30d]"
-            >
-              <Plus size={13} />
-              Qo'shish
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="w-[calc(100vw-1rem)] max-w-sm rounded-2xl">
-            <DialogHeader>
-              <DialogTitle>Yangi sdelka</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateLead} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="title"
-                  className="text-xs font-bold text-gray-400 uppercase"
-                >
-                  Ma'lumot
-                </Label>
-                <Input
-                  id="title"
-                  autoFocus
-                  placeholder="..."
-                  value={newLeadData.title}
-                  onChange={(e) => handleFieldChange("title", e.target.value)}
-                  required
-                  aria-invalid={!!formErrors.title}
-                  className="h-10 rounded-xl text-sm"
-                />
-                {formErrors.title && (
-                  <p className="text-xs font-medium text-red-500">
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="companyName"
-                  className="text-xs font-bold text-gray-400 uppercase"
-                >
-                  Kontakt
-                </Label>
-                <Input
-                  id="companyName"
-                  placeholder="..."
-                  value={newLeadData.companyName}
-                  onChange={(e) =>
-                    handleFieldChange("companyName", e.target.value)
-                  }
-                  required
-                  aria-invalid={!!formErrors.companyName}
-                  className="h-10 rounded-xl text-sm"
-                />
-                {formErrors.companyName && (
-                  <p className="text-xs font-medium text-red-500">
-                    {formErrors.companyName}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="price"
-                  className="text-xs font-bold text-gray-400 uppercase"
-                >
-                  Summa (so'm)
-                </Label>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="0"
-                  value={newLeadData.price}
-                  onChange={(e) => handleFieldChange("price", e.target.value)}
-                  required
-                  aria-invalid={!!formErrors.price}
-                  className="h-10 rounded-xl text-sm"
-                />
-                {formErrors.price && (
-                  <p className="text-xs font-medium text-red-500">
-                    {formErrors.price}
-                  </p>
-                )}
-              </div>
+      <div className="mt-auto w-full shrink-0 border-t border-gray-100 bg-white lg:border-gray-200 lg:bg-white">
+        <div className="px-2 py-1.5 lg:px-3 lg:py-2.5">
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+            <DialogTrigger asChild>
               <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#65a30d] text-sm font-bold text-white hover:bg-[#4d7c0f] disabled:cursor-not-allowed disabled:opacity-50"
+                variant="ghost"
+                className="h-8 w-full items-center gap-1 rounded-lg border border-transparent px-2 text-[11px] font-bold text-gray-400 hover:border-[#588f0b] hover:bg-[#ecfccb]/20 hover:text-[#65a30d]"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Bajarilmoqda...
-                  </>
-                ) : (
-                  "Saqlash"
-                )}
+                <Plus size={13} />
+                Qo'shish
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="w-[calc(100vw-1rem)] max-w-sm rounded-2xl">
+              <DialogHeader>
+                <DialogTitle>Yangi sdelka</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreateLead} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="title"
+                    className="text-xs font-bold text-gray-400 uppercase"
+                  >
+                    Ma'lumot
+                  </Label>
+                  <Input
+                    id="title"
+                    autoFocus
+                    placeholder="..."
+                    value={newLeadData.title}
+                    onChange={(e) => handleFieldChange("title", e.target.value)}
+                    required
+                    aria-invalid={!!formErrors.title}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                  {formErrors.title && (
+                    <p className="text-xs font-medium text-red-500">
+                      {formErrors.title}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="companyName"
+                    className="text-xs font-bold text-gray-400 uppercase"
+                  >
+                    Kontakt
+                  </Label>
+                  <Input
+                    id="companyName"
+                    placeholder="..."
+                    value={newLeadData.companyName}
+                    onChange={(e) =>
+                      handleFieldChange("companyName", e.target.value)
+                    }
+                    required
+                    aria-invalid={!!formErrors.companyName}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                  {formErrors.companyName && (
+                    <p className="text-xs font-medium text-red-500">
+                      {formErrors.companyName}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="price"
+                    className="text-xs font-bold text-gray-400 uppercase"
+                  >
+                    Summa (so'm)
+                  </Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder="0"
+                    value={newLeadData.price}
+                    onChange={(e) => handleFieldChange("price", e.target.value)}
+                    required
+                    aria-invalid={!!formErrors.price}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                  {formErrors.price && (
+                    <p className="text-xs font-medium text-red-500">
+                      {formErrors.price}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#65a30d] text-sm font-bold text-white hover:bg-[#4d7c0f] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Bajarilmoqda...
+                    </>
+                  ) : (
+                    "Saqlash"
+                  )}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );

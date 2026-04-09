@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProHome Sales Product Audit</title>
+    <style>
+      :root{--bg:#f4f7f1;--card:#fff;--text:#152016;--muted:#5f6b60;--line:#d7ddd5;--accent:#5ea500}
+      *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Arial,sans-serif}
+      .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+      .toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px;padding:12px 14px;border:1px solid var(--line);background:#fff;border-radius:14px}
+      .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);text-decoration:none;font-weight:700;cursor:pointer}
+      .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+      .doc{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+      .hero{padding:32px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fafff6,#f2f7eb)}
+      .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(94,165,0,.1);color:#456f09;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+      h1,h2,h3{margin:0 0 10px;line-height:1.2} h1{font-size:40px;letter-spacing:-.04em} h2{font-size:24px;letter-spacing:-.03em} h3{font-size:18px}
+      p{margin:0 0 10px} .muted{color:var(--muted)}
+      .meta,.scores,.roadmap{display:grid;gap:12px} .meta{grid-template-columns:repeat(3,1fr);margin-top:18px} .scores{grid-template-columns:repeat(3,1fr)} .roadmap{grid-template-columns:repeat(3,1fr)}
+      .box,.item{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+      .content{padding:28px 32px 36px} section+section{margin-top:26px}
+      .note{padding:14px 16px;border-left:4px solid #b7791f;background:#fff8ed;border-radius:12px;color:#6e4c1a}
+      .item{background:#fafcf8} .label{font-weight:700;color:var(--muted);display:block;margin-bottom:4px}
+      .score strong{font-size:30px;letter-spacing:-.04em} .score span{color:var(--muted);font-weight:700}
+      ul{margin:10px 0 0 20px;padding:0} li{margin:6px 0}
+      .priority{display:inline-block;margin-top:10px;padding:5px 10px;border-radius:999px;background:rgba(94,165,0,.1);color:#456f09;font-size:12px;font-weight:700}
+      footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+      @page{size:A4;margin:14mm}
+      @media print{body{background:#fff}.wrap{max-width:none;margin:0;padding:0}.toolbar{display:none}.doc{border:0;border-radius:0}.hero,.item,.box{break-inside:avoid}}
+      @media (max-width:900px){.meta,.scores,.roadmap{grid-template-columns:1fr}.hero,.content{padding:22px}.toolbar{flex-direction:column;align-items:flex-start}h1{font-size:32px}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="toolbar">
+        <div>
+          <div><strong>product-audit.html</strong></div>
+          <div class="muted">Brauzerda ochib, Print -> Save as PDF qiling.</div>
+        </div>
+        <div>
+          <button class="btn primary" onclick="window.print()">Print / PDF</button>
+        </div>
+      </div>
+
+      <main class="doc">
+        <header class="hero">
+          <div class="tag">Product Audit Draft</div>
+          <h1>ProHome Sales Product Audit</h1>
+          <p class="muted">Ushbu hujjat lokal repo auditiga asoslangan product, UX, CRO va business tahlildir. Repo ichida topilgan live domenlar: <strong>b2b.prohome.uz</strong> va <strong>sales.prohome.uz</strong>.</p>
+          <div class="meta">
+            <div class="box"><div class="label">Holat</div><div>Internal audit draft</div></div>
+            <div class="box"><div class="label">Sana</div><div>2026-04-03</div></div>
+            <div class="box"><div class="label">Eslatma</div><div>Benchmark URL hali yuborilmagan</div></div>
+          </div>
+        </header>
+
+        <div class="content">
+          <section>
+            <div class="note">Sales House benchmark linki yuborilmagan. Shu sabab bu versiya to'liq side-by-side audit emas, balki ProHome Sales uchun chuqur internal audit.</div>
+          </section>
+
+          <section>
+            <h2>1. Executive Summary</h2>
+            <div class="box">
+              <p>ProHome Sales operatsion chuqurlik bo'yicha kuchli, lekin product polish, orientation va commercial readiness bo'yicha notekis. Tizim ichida foydali modullar bor, ammo foydalanuvchi birinchi kirganda premium va to'liq mahsulot hissi har doim ham shakllanmaydi.</p>
+              <ul>
+                <li>Operatsion chuqurlik bor, lekin entry-point sifati past.</li>
+                <li>TJM va contract flow kuchli, CRM esa semantik va strukturaviy jihatdan zaifroq.</li>
+                <li>Dashboard zamonaviy ko'rinadi, lekin actionability yetarli emas.</li>
+                <li>UI komponentlari yaxshi, lekin product orchestration notekis.</li>
+                <li>Production ichidagi unfinished signallar trustni pasaytiradi.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>2. Kritik Muammolar</h2>
+            <div class="item">
+              <h3>Muammo 1: Root navigatsiya bo'sh sahifaga olib boradi</h3>
+              <p><span class="label">Qayerda</span>Bosh sahifa route</p>
+              <p><span class="label">Muammo</span>Home sahifasi placeholder bo'lib, faqat "Tez kunda" ko'rsatadi.</p>
+              <p><span class="label">User impact</span>Login'dan keyin tizim tayyormi yoki yo'qmi degan shubha paydo bo'ladi.</p>
+              <p><span class="label">Business impact</span>Trust, onboarding va adoption tezligi tushadi.</p>
+              <p><span class="label">Taxminiy sabab</span>Role-based landing strategy hali qurilmagan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 2: Settings production'da ham yarim tayyor ko'rinadi</h3>
+              <p><span class="label">Qayerda</span>Sozlamalar sahifasi</p>
+              <p><span class="label">Muammo</span>"Mavzu" bo'limida "Tez kunda.." yozuvi bor.</p>
+              <p><span class="label">User impact</span>Tizim yakunlanmagan mahsulotdek ko'rinadi.</p>
+              <p><span class="label">Business impact</span>Premium perception va product trust pasayadi.</p>
+              <p><span class="label">Taxminiy sabab</span>Rollout oldidan placeholder tozalanmagan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 3: CRM data modeli semantik jihatdan chalkash</h3>
+              <p><span class="label">Qayerda</span>CRM lead modeli va filtrlar</p>
+              <p><span class="label">Muammo</span><code>companyName</code> maydoni telefon o'rnida ishlatilgan, "Telefon raqam" filtri ham shu maydon bo'yicha ishlaydi.</p>
+              <p><span class="label">User impact</span>Qidiruv, filter va lead understanding noto'g'ri ishlashi mumkin.</p>
+              <p><span class="label">Business impact</span>CRM reporting ishonchsiz bo'ladi, conversion tahlili buziladi.</p>
+              <p><span class="label">Taxminiy sabab</span>Backend mapping tez yig'ilgan, domain model standardlashtirilmagan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 4: CRM flow real sales operation uchun juda yuzaki</h3>
+              <p><span class="label">Qayerda</span>Lead create/edit drawer va store modeli</p>
+              <p><span class="label">Muammo</span>Owner, source, next step, task, reminder, note va last contact kabi atributlar yo'q.</p>
+              <p><span class="label">User impact</span>Menejer pipeline'ni ko'radi, lekin follow-up'ni tizim ichida boshqara olmaydi.</p>
+              <p><span class="label">Business impact</span>Lead leak oshadi, close rate pasayadi.</p>
+              <p><span class="label">Taxminiy sabab</span>CRM board UI qurilgan, ammo CRM operation system sifatida yakunlanmagan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 5: Global header va navigatsiya ish tezligini oshirmaydi</h3>
+              <p><span class="label">Qayerda</span>Sidebar va top header</p>
+              <p><span class="label">Muammo</span>Global search, project switcher, quick actions va notifications yo'q.</p>
+              <p><span class="label">User impact</span>Tizim ichida tezkor harakat qilish qiyinlashadi.</p>
+              <p><span class="label">Business impact</span>Team efficiency pasayadi.</p>
+              <p><span class="label">Taxminiy sabab</span>Shell UX utility darajasida qolgan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 6: Dashboard actionability past</h3>
+              <p><span class="label">Qayerda</span>Dashboard page</p>
+              <p><span class="label">Muammo</span>Alert, drilldown, compare, export va recommended actions yo'q.</p>
+              <p><span class="label">User impact</span>Rahbar ko'rsatkichni ko'radi, lekin keyingi qarorni tizim ichida ololmaydi.</p>
+              <p><span class="label">Business impact</span>Analytics action'ga aylanmay qoladi.</p>
+              <p><span class="label">Taxminiy sabab</span>Dashboard visual first tarzda qurilgan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 7: Modullar o'zaro yetarli ulanmagan</h3>
+              <p><span class="label">Qayerda</span>CRM, TJM, contracts va dashboard o'rtasida</p>
+              <p><span class="label">Muammo</span>Unified sales journey hissi yetarli emas.</p>
+              <p><span class="label">User impact</span>Tizim bir butun emas, bir nechta alohida vositaga o'xshaydi.</p>
+              <p><span class="label">Business impact</span>Manual handoff va reconciliation ko'payadi.</p>
+              <p><span class="label">Taxminiy sabab</span>Modullar parallel qurilgan.</p>
+            </div>
+            <div class="item">
+              <h3>Muammo 8: Performance riski mavjud</h3>
+              <p><span class="label">Muammo</span>Chunklar og'ir: vendor-charts 432 KB, TjmDetails 271 KB, Crm 139 KB.</p>
+              <p><span class="label">User impact</span>Mobil yoki sust internetda ekranlar sekinroq his qilinishi mumkin.</p>
+              <p><span class="label">Business impact</span>Satisfaction va daily adoption pasayishi mumkin.</p>
+              <p><span class="label">Taxminiy sabab</span>Chart-heavy va feature-dense route'lar optimallashtirilmagan.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>3. Hozirning O'zida Kuchli Joylar</h2>
+            <div class="box">
+              <ul>
+                <li>TJM flow kuchli: filter, block select, status legend, statistik summary va URL state sync mavjud.</li>
+                <li>Room details ichida calculator va contract generation mavjud, bu real business value beradi.</li>
+                <li>Contracts moduli pishiq: project switch, search, status tabs, stats va file download flow mavjud.</li>
+                <li>Dashboard vizual tili tartibli va professional ko'rinadi.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>4. Bizda Yo'q Narsalar</h2>
+            <div class="box">
+              <ul>
+                <li>Role-based real home dashboard.</li>
+                <li>Global command center: project switch, universal search, notifications va quick actions.</li>
+                <li>Full CRM fields: source, owner, reminder, note, next step, last interaction.</li>
+                <li>Lead to inventory link va aniq unit binding.</li>
+                <li>Decision support: alerts, anomaly signal va recommended actions.</li>
+                <li>Saved filters va views.</li>
+                <li>Audit trail va accountability layer.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>5. Internal Baho</h2>
+            <div class="scores">
+              <div class="box"><h3>UI sifati</h3><div class="score"><strong>7</strong> <span>/10</span></div><p class="muted">Komponentlar zamonaviy, lekin product polish notekis.</p></div>
+              <div class="box"><h3>UX sifati</h3><div class="score"><strong>6</strong> <span>/10</span></div><p class="muted">Ichki modullar foydali, entry-point va shell UX zaif.</p></div>
+              <div class="box"><h3>Trust</h3><div class="score"><strong>5</strong> <span>/10</span></div><p class="muted">Placeholder va unfinished states ishonchni pasaytiradi.</p></div>
+              <div class="box"><h3>Funksionallik</h3><div class="score"><strong>8</strong> <span>/10</span></div><p class="muted">TJM, contracts va calculator real value beradi.</p></div>
+              <div class="box"><h3>Conversion potential</h3><div class="score"><strong>6</strong> <span>/10</span></div><p class="muted">Potensial bor, lekin CRM va decision layer kuchsiz.</p></div>
+              <div class="box"><h3>Premium ko'rinish</h3><div class="score"><strong>6</strong> <span>/10</span></div><p class="muted">Vizual qatlam yaxshi, lekin consistency yetarli emas.</p></div>
+            </div>
+          </section>
+
+          <section>
+            <h2>6. Yechimlar</h2>
+            <div class="item">
+              <h3>Yechim 1: Root home'ni role-based command center qilish</h3>
+              <p>Top metrics, pending tasks, latest contracts, hot leads va quick actions bloklarini root route'da yig'ish.</p>
+              <div class="priority">Impact: high | Effort: medium | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 2: Settings placeholder'larini tozalash</h3>
+              <p>Placeholderni olib tashlash yoki to'liq yakunlash, kerak bo'lsa feature flag bilan yashirish.</p>
+              <div class="priority">Impact: high | Effort: low | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 3: CRM schema'ni normalizatsiya qilish</h3>
+              <p>Fieldlarni aniq <code>phone</code>, <code>client_name</code>, <code>company</code>, <code>source</code>, <code>note</code> maydonlariga ajratish va backend mapping contractini tozalash.</p>
+              <div class="priority">Impact: high | Effort: high | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 4: CRM follow-up engine qo'shish</h3>
+              <p>Reminder, task, owner, next action va SLA qo'shish; lead drawer va dashboard bilan ulash.</p>
+              <div class="priority">Impact: high | Effort: medium | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 5: Global navigation'ni chuqurlashtirish</h3>
+              <p>Universal search, project switch va quick actions bilan shell UX'ni control center darajasiga olib chiqish.</p>
+              <div class="priority">Impact: medium | Effort: medium | Priority: P2</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 6: Dashboard'ni action-oriented qilish</h3>
+              <p>Alerts, compare mode, drilldown va recommended next steps qo'shish.</p>
+              <div class="priority">Impact: high | Effort: medium | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 7: Modullar integratsiyasini kuchaytirish</h3>
+              <p>Lead -> unit -> contract lifecycle ni bitta data storyga aylantirish.</p>
+              <div class="priority">Impact: high | Effort: high | Priority: P1</div>
+            </div>
+            <div class="item">
+              <h3>Yechim 8: Performance optimizatsiyasi</h3>
+              <p>Qo'shimcha code-splitting va visibility-based lazy loading bilan heavy route'larni yengillashtirish.</p>
+              <div class="priority">Impact: medium | Effort: medium | Priority: P2</div>
+            </div>
+          </section>
+
+          <section>
+            <h2>7. Nimalarni Qo'shish Kerak</h2>
+            <div class="box">
+              <ul>
+                <li>Role-based home command center</li>
+                <li>CRM task/reminder subsystem</li>
+                <li>Lead source va campaign attribution</li>
+                <li>Universal search va quick actions</li>
+                <li>Saved filters va views</li>
+                <li>Dashboard alerts va anomaly signals</li>
+                <li>Activity log va accountability history</li>
+                <li>Empty state va onboarding help content</li>
+                <li>Deep linking between CRM, TJM and Contracts</li>
+                <li>Mobile optimization for dense screens</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>8. Eng Katta 10 Improvement</h2>
+            <div class="box">
+              <ol>
+                <li>Root home'ni command center qilish</li>
+                <li>Settings placeholder'larini tozalash</li>
+                <li>CRM field modelini to'liq normalizatsiya qilish</li>
+                <li>Reminder va task flow qo'shish</li>
+                <li>Lead va inventory bog'lanishini kuchaytirish</li>
+                <li>Dashboard drilldown va action CTA qo'shish</li>
+                <li>Global search va quick actions qo'shish</li>
+                <li>Saved filters va role-based views yaratish</li>
+                <li>Performance optimization qilish</li>
+                <li>Trust layer: polished empty, loading va error holatlarini standartlashtirish</li>
+              </ol>
+            </div>
+          </section>
+
+          <section>
+            <h2>9. Roadmap</h2>
+            <div class="roadmap">
+              <div class="box"><h3>1-hafta</h3><ul><li>Root home command center skeleton</li><li>Settings cleanup</li><li>Header va sidebar quick wins</li><li>Placeholder va rough copy'larni tozalash</li></ul></div>
+              <div class="box"><h3>1 oy</h3><ul><li>CRM schema refactor</li><li>Task/reminder system</li><li>Dashboard drilldown va alerts</li><li>Deep links between CRM, TJM and Contracts</li></ul></div>
+              <div class="box"><h3>Strategik rivojlanish</h3><ul><li>Unified sales data model</li><li>Full pipeline attribution</li><li>Automation va accountability layer</li><li>Executive decision support system</li></ul></div>
+            </div>
+          </section>
+
+          <section>
+            <h2>10. Final Xulosa</h2>
+            <div class="box">
+              <p>ProHome Sales'ning eng kuchli tomoni real operatsion chuqurlik. Eng katta zaifligi esa tizimning tashqi qatlami, CRM semantikasi va modul birligi hali enterprise-grade darajaga chiqmaganidir.</p>
+              <p>Agar P1 tavsiyalar bajarilsa, mahsulot oddiy feature collection bo'lib qolmaydi; u real sales operating system sifatida qabul qilina boshlaydi.</p>
+              <p>Agar benchmark URL yuborilsa, keyingi versiyada Sales House vs ProHome to'liq solishtirma audit, /10 jadval va gap analysis ham qo'shiladi.</p>
+            </div>
+          </section>
+
+          <footer>Fayl project rootga chiqarildi. PDF olish uchun brauzerda ochib Print -> Save as PDF qiling.</footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

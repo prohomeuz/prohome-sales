@@ -1,0 +1,222 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}{\f1 Arial;}}
+\paperw12240\paperh15840\margl1440\margr1440\margt1440\margb1440
+\fs24
+\pard\qc\b\f0\fs32 ProHome Sales Product Audit\par
+\pard\qc\b0\fs22 Word-compatible draft\par
+\pard\qc\fs20 Generated: 2026-04-03\par
+\par
+\pard\b\f0\fs26 Audit Note\par
+\pard\b0\fs22 Bu hujjat lokal repo auditiga asoslangan. Repo ichida topilgan live domenlar: b2b.prohome.uz va sales.prohome.uz. Benchmark sifatida ko'rsatilgan Sales House URL'i foydalanuvchi tomonidan yuborilmaganligi sababli, ushbu versiya to'liq side-by-side benchmark audit emas, balki joriy mahsulotning kritik product, UX, CRO va business auditidir.\par
+\par
+\pard\b\fs26 1. Executive Summary\par
+\pard\b0\fs22 Hozirgi ProHome Sales mahsuloti operatsion chuqurlik bo'yicha kuchli, lekin product polish, orientation va commercial readiness bo'yicha notekis. Tizim ichida foydali modullar bor, ammo foydalanuvchi birinchi kirgan paytda premium, to'liq va ishonchli tizim hissini har doim ham olmaydi.\par
+\par
+\pard\b Asosiy 5 farq:\b0\par
+\pard\tx360\tab - Operatsion chuqurlik bor, lekin entry-point sifati past.\par
+\pard\tx360\tab - TJM va contract flow kuchli, CRM esa semantik va strukturaviy jihatdan zaifroq.\par
+\pard\tx360\tab - Dashboard zamonaviy ko'rinadi, lekin actionability darajasi yetarli emas.\par
+\pard\tx360\tab - UI komponentlari yaxshi, lekin product orchestration notekis.\par
+\pard\tx360\tab - Production ichida "Tez kunda" kabi unfinished signallar trustni pasaytiradi.\par
+\par
+\pard\b\fs26 2. Kritic Muammolar\par
+\pard\b0\fs22\b Muammo 1: Root navigatsiya foydalanuvchini bo'sh sahifaga olib boradi.\b0\par
+\pard Qayerda: Bosh sahifa route.\par
+\pard Dalil: src/pages/Home.jsx placeholder holatda "Tez kunda" deb turibdi.\par
+\pard Foydalanuvchiga ta'siri: login'dan keyin tizim tayyormi yoki yo'qmi degan shubha paydo bo'ladi.\par
+\pard Biznesga zarari: trust, adoption va onboarding tezligi tushadi.\par
+\pard Taxminiy sabab: role-based landing page hali ishlab chiqilmagan.\par
+\par
+\pard\b Muammo 2: Settings bo'limi production'da ham yarim tayyor ko'rinadi.\b0\par
+\pard Qayerda: Sozlamalar sahifasi.\par
+\pard Dalil: "Mavzu" bo'limida "Tez kunda.." yozuvi bor.\par
+\pard Foydalanuvchiga ta'siri: tizim yakunlanmagan mahsulotdek ko'rinadi.\par
+\pard Biznesga zarari: premium perception va product trust pasayadi.\par
+\pard Taxminiy sabab: rollout oldidan placeholder tozalanmagan.\par
+\par
+\pard\b Muammo 3: CRM data modeli semantik jihatdan chalkash.\b0\par
+\pard Qayerda: CRM lead modeli va filtrlar.\par
+\pard Dalil: lead ichida companyName maydoni telefon o'rnida ishlatilgan; "Telefon raqam" filteri ham shu field bo'yicha qidiradi.\par
+\pard Foydalanuvchiga ta'siri: qidiruv, filter va lead understanding noto'g'ri ishlashi mumkin.\par
+\pard Biznesga zarari: CRM reporting ishonchsiz bo'ladi, conversion tahlili buziladi.\par
+\pard Taxminiy sabab: backend mapping tez yig'ilgan, domain model standardlashtirilmagan.\par
+\par
+\pard\b Muammo 4: CRM flow real sales operation uchun juda yuzaki.\b0\par
+\pard Qayerda: lead create/edit drawer va store modeli.\par
+\pard Dalil: owner, source, next step, task, reminder, note, last contact kabi atributlar yo'q.\par
+\pard Foydalanuvchiga ta'siri: menejer pipeline'ni ko'radi, lekin tizim ichida follow-up boshqara olmaydi.\par
+\pard Biznesga zarari: lead leak oshadi, close rate pasayadi, retentionga salbiy ta'sir qiladi.\par
+\pard Taxminiy sabab: CRM board UI qurilgan, ammo CRM operation system sifatida yakunlanmagan.\par
+\par
+\pard\b Muammo 5: Global header va navigatsiya ish tezligini oshirmaydi.\b0\par
+\pard Qayerda: sidebar va top header.\par
+\pard Dalil: header'da faqat sidebar trigger va settings icon bor; global search, project switcher, quick actions, notifications yo'q.\par
+\pard Foydalanuvchiga ta'siri: tizim ichida tezkor harakat qilish qiyinlashadi.\par
+\pard Biznesga zarari: team efficiency pasayadi, high-frequency tasks sekinlashadi.\par
+\pard Taxminiy sabab: shell UX utility darajasida qolgan.\par
+\par
+\pard\b Muammo 6: Dashboard ko'rinishdan kuchli, lekin actionability past.\b0\par
+\pard Qayerda: Dashboard page.\par
+\pard Dalil: loyiha tanlash, period tabs va refresh bor, lekin alert, drilldown, compare, export va recommended actions yo'q.\par
+\pard Foydalanuvchiga ta'siri: rahbar ko'rsatkichni ko'radi, lekin keyingi qarorni tizim ichida ololmaydi.\par
+\pard Biznesga zarari: analytics action'ga aylanmay qoladi.\par
+\pard Taxminiy sabab: dashboard visual first tarzda qurilgan, decision workflow ikkinchi planda qolgan.\par
+\par
+\pard\b Muammo 7: Modullar o'zaro yetarli ulanmagan.\b0\par
+\pard Qayerda: CRM, TJM, contracts va dashboard o'rtasida.\par
+\pard Dalil: inventory, lead va contract flow'lari kuchli, lekin unified sales journey hissi yetarli emas.\par
+\pard Foydalanuvchiga ta'siri: tizim bir butun emas, bir nechta alohida vositaga o'xshaydi.\par
+\pard Biznesga zarari: manual handoff va reconciliation ko'payadi.\par
+\pard Taxminiy sabab: modullar parallel qurilgan, yagona sales data model hali yakunlanmagan.\par
+\par
+\pard\b Muammo 8: Performance riski mavjud.\b0\par
+\pard Qayerda: production build natijalari.\par
+\pard Dalil: vendor-charts 432 KB, TjmDetails 271 KB, Crm 139 KB chunklar.\par
+\pard Foydalanuvchiga ta'siri: mobil yoki sust internetda ekranlar sekinroq his qilinishi mumkin.\par
+\pard Biznesga zarari: satisfaction, usability va daily adoption pasayishi mumkin.\par
+\pard Taxminiy sabab: chart-heavy va feature-dense route'lar optimallashtirilmagan.\par
+\par
+\pard\b\fs26 3. Hozirning O'zida Kuchli Joylar\par
+\pard\b0\fs22\b Ustunlik 1: TJM flow product darajasida kuchli.\b0\par
+\pard Nima: filter, block select, status legend, statistik summary va URL state sync bor.\par
+\pard Nega ishlayapti: real inventory management workflow'ni tezlashtiradi.\par
+\pard Bizda bormi: ha, bu mahsulotning eng kuchli qismlaridan biri.\par
+\par
+\pard\b Ustunlik 2: Room details ichida calculator va contract generation bor.\b0\par
+\pard Nima: tanlangan uy bo'yicha hisoblash, status update va hujjat yaratish mumkin.\par
+\pard Nega ishlayapti: foydalanuvchini alohida tizimga o'tkazmaydi, action bir joyda tugaydi.\par
+\pard Bizda bormi: ha, bu real business value beradi.\par
+\par
+\pard\b Ustunlik 3: Contracts moduli pishiqroq ko'rinadi.\b0\par
+\pard Nima: project switch, search, status tabs, summary stats va file download bor.\par
+\pard Nega ishlayapti: completed transaction layer ko'proq ishonch uyg'otadi.\par
+\pard Bizda bormi: ha.\par
+\par
+\pard\b Ustunlik 4: Dashboard vizual tili ancha yaxshi.\b0\par
+\pard Nima: card hierarchy, chart treatment va sectioning tartibli.\par
+\pard Nega ishlayapti: product boshqaruv paneli hissini beradi.\par
+\pard Bizda bormi: ha, lekin actionability yetishmaydi.\par
+\par
+\pard\b\fs26 4. Bizda Yo'q Narsalar\par
+\pard\b0\fs22\tx360\tab - Role-based real home dashboard. Hozir root sahifa bo'sh, bu orientationni yo'qotadi.\par
+\pard\tx360\tab - Global command center. Project switch, universal search, notifications va quick actions yo'q.\par
+\pard\tx360\tab - Full CRM fields. Source, owner, reminder, note, next step, last interaction kabi maydonlar yo'q.\par
+\pard\tx360\tab - Lead to inventory link. Leadni aniq unit yoki project bilan bog'lash strukturasi kuchsiz.\par
+\pard\tx360\tab - Decision support. Dashboard ichida alert, anomaly signal, recommended actions yo'q.\par
+\pard\tx360\tab - Trust layer. Empty states va unfinished states production hissini buzmoqda.\par
+\pard\tx360\tab - Saved filters/views. Power-user flow uchun zarur bo'lgan tezkor saqlangan view'lar yo'q.\par
+\pard\tx360\tab - Audit trail va accountability layer. Kim qachon nima qilgani ko'rinishi kuchli emas.\par
+\par
+\pard\b\fs26 5. Solishtirma Baho (Internal Baseline)\par
+\pard\b0\fs22 Bu versiyada Sales House aniq URL'i yo'qligi sababli formal side-by-side scoring berilmadi. Ichki baholash sifatida joriy mahsulot quyidagicha ko'rinadi:\par
+\pard\tx360\tab - UI sifati: 7/10\par
+\pard\tx360\tab - UX sifati: 6/10\par
+\pard\tx360\tab - Trust: 5/10\par
+\pard\tx360\tab - Funksionallik: 8/10\par
+\pard\tx360\tab - CTA kuchi: 5/10\par
+\pard\tx360\tab - Content sifati: 4/10\par
+\pard\tx360\tab - Conversion potential: 6/10\par
+\pard\tx360\tab - Premium ko'rinish: 6/10\par
+\pard\tx360\tab - Mobile usability: 6/10\par
+\par
+\pard\b\fs26 6. Yechimlar\par
+\pard\b0\fs22\b Muammo: Root home placeholder.\b0\par
+\pard Yechim: har bir rol uchun real command center yaratish.\par
+\pard Qanday implement qilish: root route'da role-based widget composition; top metrics, pending tasks, latest contracts, hot leads va quick actions bloklari chiqarilsin.\par
+\pard Natija: foydalanuvchi tizimga kirishi bilan qaerga qarash kerakligini biladi.\par
+\pard Impact: high. Effort: medium. Priority: P1.\par
+\par
+\pard\b Muammo: Settings unfinished.\b0\par
+\pard Yechim: placeholderni olib tashlash yoki dark mode/settings stack'ni yakunlash.\par
+\pard Qanday implement qilish: production feature flag yoki temporary hide; tayyor bo'lsa theme controls va preference save qo'shish.\par
+\pard Natija: product ishonchliligi oshadi.\par
+\pard Impact: high. Effort: low. Priority: P1.\par
+\par
+\pard\b Muammo: CRM schema chalkash.\b0\par
+\pard Yechim: phone, client_name, company, note, source kabi fieldlarni alohida qilish.\par
+\pard Qanday implement qilish: frontend store va form layer'ni normalizatsiya qilish, backend mapping contractini tozalash.\par
+\pard Natija: search, filter, analytics va lead management aniq ishlaydi.\par
+\pard Impact: high. Effort: high. Priority: P1.\par
+\par
+\pard\b Muammo: CRM follow-up engine yo'q.\b0\par
+\pard Yechim: reminder, task, owner, next action va SLA qo'shish.\par
+\pard Qanday implement qilish: lead drawer'ga task timeline va reminder block kiritish; dashboardga overdue tasks chiqarish.\par
+\pard Natija: lead leakage kamayadi.\par
+\pard Impact: high. Effort: medium. Priority: P1.\par
+\par
+\pard\b Muammo: Global navigation shallow.\b0\par
+\pard Yechim: universal search, project switch va quick actions qo'shish.\par
+\pard Qanday implement qilish: top bar redesign; searchable command palette va recent activity panel.\par
+\pard Natija: team speed oshadi.\par
+\pard Impact: medium. Effort: medium. Priority: P2.\par
+\par
+\pard\b Muammo: Dashboard actionability past.\b0\par
+\pard Yechim: alerts, compare mode, drilldown va recommended next steps qo'shish.\par
+\pard Qanday implement qilish: KPI cards ostiga trend delta, anomaly flags va clickable detail paths qo'shish.\par
+\pard Natija: analytics qarorga aylanadi.\par
+\pard Impact: high. Effort: medium. Priority: P1.\par
+\par
+\pard\b Muammo: Modullar integratsiyasi past.\b0\par
+\pard Yechim: lead -> unit -> contract lifecycle ni bitta data storyga aylantirish.\par
+\pard Qanday implement qilish: CRM lead card'lardan TJM yoki contract view'ga deep link; contract yaratilganda lead state sync.\par
+\pard Natija: tizim bir butun sales OS ko'rinishiga keladi.\par
+\pard Impact: high. Effort: high. Priority: P1.\par
+\par
+\pard\b Muammo: Performance riski.\b0\par
+\pard Yechim: chart-heavy route va dense modules uchun qo'shimcha code-splitting va lazy strategy.\par
+\pard Qanday implement qilish: charts va large detail panels'ni visibility asosida load qilish; heavy vendor bundles'ni optimallashtirish.\par
+\pard Natija: ayniqsa mobil qurilmalarda perceived speed yaxshilanadi.\par
+\pard Impact: medium. Effort: medium. Priority: P2.\par
+\par
+\pard\b\fs26 7. Nimalarni Qo'shish Kerak\par
+\pard\b0\fs22\tx360\tab - Role-based home command center.\par
+\pard\tx360\tab - CRM task/reminder subsystem.\par
+\pard\tx360\tab - Lead source va campaign attribution.\par
+\pard\tx360\tab - Universal search va quick actions.\par
+\pard\tx360\tab - Saved filters va saved views.\par
+\pard\tx360\tab - Dashboard alerts va anomaly signals.\par
+\pard\tx360\tab - Activity log va accountability history.\par
+\pard\tx360\tab - Empty state va onboarding help content.\par
+\pard\tx360\tab - Deep linking between CRM, TJM and Contracts.\par
+\pard\tx360\tab - Mobile optimization for high-density screens.\par
+\par
+\pard\b\fs26 8. Eng Katta 10 Improvement\par
+\pard\b0\fs22\tx360\tab 1. Root home'ni command center qilish.\par
+\pard\tx360\tab 2. Settings placeholder'larini tozalash.\par
+\pard\tx360\tab 3. CRM field modelini to'liq normalizatsiya qilish.\par
+\pard\tx360\tab 4. Reminder va task flow qo'shish.\par
+\pard\tx360\tab 5. Lead va inventory bog'lanishini kuchaytirish.\par
+\pard\tx360\tab 6. Dashboard drilldown va action CTA qo'shish.\par
+\pard\tx360\tab 7. Global search va quick actions qo'shish.\par
+\pard\tx360\tab 8. Saved filters va role-based views yaratish.\par
+\pard\tx360\tab 9. Performance optimization qilish.\par
+\pard\tx360\tab 10. Trust layer: polished empty, loading va error holatlarini standartlashtirish.\par
+\par
+\pard Nega aynan shu 10 ta: ular bir vaqtning o'zida trust, productivity, conversion discipline va premium perception'ga eng katta ta'sir qiladi.\par
+\par
+\pard\b\fs26 9. Roadmap\par
+\pard\b0\fs22\b 1-hafta:\b0\par
+\pard\tx360\tab - Root home command center skeleton.\par
+\pard\tx360\tab - Settings cleanup.\par
+\pard\tx360\tab - Header va sidebar quick wins.\par
+\pard\tx360\tab - Placeholder va rough copy'larni tozalash.\par
+\par
+\pard\b 1 oy:\b0\par
+\pard\tx360\tab - CRM schema refactor.\par
+\pard\tx360\tab - Task/reminder system.\par
+\pard\tx360\tab - Dashboard drilldown va alerts.\par
+\pard\tx360\tab - Deep links between CRM, TJM and Contracts.\par
+\par
+\pard\b Strategik rivojlanish:\b0\par
+\pard\tx360\tab - Unified sales data model.\par
+\pard\tx360\tab - Full pipeline attribution.\par
+\pard\tx360\tab - Automation va accountability layer.\par
+\pard\tx360\tab - Executive decision support system.\par
+\par
+\pard\b\fs26 10. Final Xulosa\par
+\pard\b0\fs22 ProHome Sales'ning eng kuchli tomoni - real operatsion chuqurlik. Eng katta zaifligi - tizimning tashqi qatlami, CRM semantikasi va modul birligi hali enterprise-grade darajaga chiqmagan. Agar P1 tavsiyalar bajarilsa, mahsulot oddiy feature collection bo'lib qolmaydi; u real sales operating system sifatida qabul qilina boshlaydi.\par
+\par
+\pard Agar benchmark URL yuborilsa, ushbu hujjatning keyingi versiyasida Sales House vs ProHome to'liq solishtirma audit, /10 jadval va gap analysis ham qo'shiladi.\par
+\par
+\pard\qc\b End of document\b0\par
+}
