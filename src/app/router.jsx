@@ -121,5 +121,5 @@ export default function App() {
     [user],
   );
 
-  return <RouterProvider router={router} fallbackElement={<PageFallback />} />;
+  return <RouterProvider router={router} fallbackElement={<PageFallback />} future={{ v7_startTransition: true }} />;
 }
