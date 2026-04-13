@@ -57,11 +57,15 @@ export default function TjmDetails() {
     [searchParams],
   );
   const activeDetailsId = searchParams.get("details");
-  const urlBlock = searchParams.get("block");
+  const urlBlocks = useMemo(() => {
+    const val = searchParams.get("blocks");
+    return val ? val.split(",").filter(Boolean) : [];
+  }, [searchParams]);
 
-  const [selectedBlock, setSelectedBlock] = useState(() =>
-    urlBlock ? urlBlock : "all",
-  );
+  const [selectedBlocks, setSelectedBlocks] = useState(() => {
+    const val = searchParams.get("blocks");
+    return val ? val.split(",").filter(Boolean) : [];
+  });
   const [filterOpen, setFilterOpen] = useState(false);
   const [matchedRoomIds, setMatchedRoomIds] = useState([]);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -88,9 +92,9 @@ export default function TjmDetails() {
   );
 
   const visibleBlocksEntries = useMemo(() => {
-    if (selectedBlock === "all") return blocksEntries;
-    return blocksEntries.filter(([blockName]) => blockName === selectedBlock);
-  }, [blocksEntries, selectedBlock]);
+    if (!selectedBlocks.length) return blocksEntries;
+    return blocksEntries.filter(([blockName]) => selectedBlocks.includes(blockName));
+  }, [blocksEntries, selectedBlocks]);
 
   const roomOptions = useMemo(() => {
     const set = new Set();
@@ -111,13 +115,30 @@ export default function TjmDetails() {
     [blocksEntries],
   );
 
+  const visibleMaxFloor = useMemo(() => {
+    if (!visibleBlocksEntries.length) return Number(home?.maxFloor ?? 0);
+    return Math.max(0, ...visibleBlocksEntries.map(([, block]) => block?.floor ?? 0));
+  }, [visibleBlocksEntries, home?.maxFloor]);
+
+  // Er osti qavatlar soni (masalan -1 qavatlar bor bloklar uchun)
+  const visibleBasementFloors = useMemo(() => {
+    if (!visibleBlocksEntries.length) return 0;
+    return Math.max(
+      0,
+      ...visibleBlocksEntries.map(([, block]) =>
+        Math.max(0, (block?.appartment?.length ?? 0) - (block?.floor ?? 0)),
+      ),
+    );
+  }, [visibleBlocksEntries]);
+
   const roomDataset = useMemo(() => {
     if (!home) return [];
-    const maxFloor = Number(home.maxFloor ?? 0);
     const dataset = [];
     visibleBlocksEntries.forEach(([, block]) => {
+      // block.floor = yuqori qavatlar soni (er osti kiritmaydi)
+      const blockFloors = block?.floor ?? 0;
       (block?.appartment ?? []).forEach((floorRooms, index) => {
-        const floorNum = maxFloor - index;
+        const floorNum = blockFloors - index; // er osti uchun: 0, -1, -2...
         (floorRooms ?? []).forEach((room) => {
           if (!room) return;
           dataset.push({
@@ -181,9 +202,21 @@ export default function TjmDetails() {
 
   const activeStatistics = useMemo(() => {
     if (!home) return null;
-    if (selectedBlock === "all") return totalStatistics;
-    return home?.blocks?.[selectedBlock]?.statistics ?? null;
-  }, [home, selectedBlock, totalStatistics]);
+    if (!selectedBlocks.length) return totalStatistics;
+    return selectedBlocks.reduce(
+      (acc, blockName) => {
+        const s = home?.blocks?.[blockName]?.statistics ?? {};
+        return {
+          total: acc.total + (s.total ?? 0),
+          totalEmpty: acc.totalEmpty + (s.totalEmpty ?? 0),
+          totalReserved: acc.totalReserved + (s.totalReserved ?? 0),
+          totalSold: acc.totalSold + (s.totalSold ?? 0),
+          totalNot: acc.totalNot + (s.totalNot ?? 0),
+        };
+      },
+      { total: 0, totalEmpty: 0, totalReserved: 0, totalSold: 0, totalNot: 0 },
+    );
+  }, [home, selectedBlocks, totalStatistics]);
 
   const resolvedStatistics = activeStatistics ??
     totalStatistics ?? {
@@ -282,15 +315,18 @@ export default function TjmDetails() {
   }, [loading, start, complete]);
 
   useEffect(() => {
-    if (selectedBlock === "all") return;
-    if (!blockOptions.includes(selectedBlock)) setSelectedBlock("all");
-  }, [blockOptions, selectedBlock]);
+    if (!selectedBlocks.length) return;
+    const valid = selectedBlocks.filter((b) => blockOptions.includes(b));
+    if (valid.length !== selectedBlocks.length) setSelectedBlocks(valid);
+  }, [blockOptions, selectedBlocks]);
 
   useEffect(() => {
-    if (!urlBlock) return;
-    const next = blockOptions.includes(urlBlock) ? urlBlock : "all";
-    if (selectedBlock !== next) setSelectedBlock(next);
-  }, [blockOptions, selectedBlock, urlBlock]);
+    if (!urlBlocks.length) return;
+    const valid = urlBlocks.filter((b) => blockOptions.includes(b));
+    const cur = JSON.stringify([...selectedBlocks].sort());
+    const nxt = JSON.stringify([...valid].sort());
+    if (cur !== nxt) setSelectedBlocks(valid);
+  }, [blockOptions, urlBlocks]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (filterOpen) setDraftFilters(cloneFilters(filters));
@@ -414,11 +450,11 @@ export default function TjmDetails() {
     [updateSearch],
   );
 
-  const handleBlockChange = useCallback(
-    (value) => {
-      setSelectedBlock(value);
+  const handleBlocksChange = useCallback(
+    (blocks) => {
+      setSelectedBlocks(blocks);
       updateSearch(
-        { block: value === "all" ? null : value },
+        { blocks: blocks.length ? blocks.join(",") : null },
         { replace: true },
       );
     },
@@ -487,9 +523,9 @@ export default function TjmDetails() {
               onToggleFilter={() => setFilterOpen((prev) => !prev)}
               hasActiveFilters={hasActiveFilters}
               activeFilterCount={activeFilterCount}
-              selectedBlock={selectedBlock}
+              selectedBlocks={selectedBlocks}
               blockOptions={blockOptions}
-              onBlockChange={handleBlockChange}
+              onBlocksChange={handleBlocksChange}
               statisticsCards={statisticsCards}
               draftFilters={draftFilters}
               onDraftFiltersChange={setDraftFilters}
@@ -503,7 +539,8 @@ export default function TjmDetails() {
             <div className="flex min-h-0 w-full flex-1 overflow-hidden">
               <TjmFloorGrid
                 blockLayouts={blockLayouts}
-                maxFloor={home.maxFloor ?? 0}
+                maxFloor={visibleMaxFloor}
+                basementFloors={visibleBasementFloors}
                 activeDetailsId={activeDetailsId}
                 hasActiveFilters={hasActiveFilters}
                 isFiltering={isFiltering}
