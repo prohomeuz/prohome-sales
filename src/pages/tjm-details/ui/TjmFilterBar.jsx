@@ -10,15 +10,14 @@
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import CurrencyBadge from "@/shared/ui/currency-badge";
 import { Label } from "@/shared/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 import { Slider } from "@/shared/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
@@ -27,6 +26,7 @@ import {
   ArrowLeft,
   Banknote,
   Building2,
+  ChevronDown,
   Filter,
   Ruler,
   Tag,
@@ -41,9 +41,9 @@ import { STATUS_CLASS, STATUS_LABEL } from "../lib/constants";
  *   onToggleFilter: () => void,
  *   hasActiveFilters: boolean,
  *   activeFilterCount: number,
- *   selectedBlock: string,
+ *   selectedBlocks: string[],
  *   blockOptions: string[],
- *   onBlockChange: (value: string) => void,
+ *   onBlocksChange: (blocks: string[]) => void,
  *   statisticsCards: Array<object>,
  *   draftFilters: object,
  *   onDraftFiltersChange: (updater: function) => void,
@@ -58,9 +58,9 @@ export default function TjmFilterBar({
   onToggleFilter,
   hasActiveFilters,
   activeFilterCount,
-  selectedBlock,
+  selectedBlocks,
   blockOptions,
-  onBlockChange,
+  onBlocksChange,
   statisticsCards,
   draftFilters,
   onDraftFiltersChange,
@@ -117,19 +117,61 @@ export default function TjmFilterBar({
               )}
             </Button>
 
-            <Select value={selectedBlock} onValueChange={onBlockChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Barchasi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                {blockOptions.map((blockName) => (
-                  <SelectItem key={blockName} value={blockName}>
-                    {blockName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="truncate">
+                    {selectedBlocks.length === 0
+                      ? "Barchasi"
+                      : selectedBlocks.length === 1
+                        ? selectedBlocks[0]
+                        : `${selectedBlocks.length} ta blok`}
+                  </span>
+                  <ChevronDown className="text-muted-foreground ml-2 size-4 shrink-0" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-48 p-2">
+                <button
+                  type="button"
+                  onClick={() => onBlocksChange([])}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                    selectedBlocks.length === 0
+                      ? "bg-accent font-medium"
+                      : "hover:bg-accent",
+                  )}
+                >
+                  <span className="size-4 shrink-0" />
+                  Barchasi
+                </button>
+                {blockOptions.map((blockName) => {
+                  const checked = selectedBlocks.includes(blockName);
+                  return (
+                    <button
+                      key={blockName}
+                      type="button"
+                      onClick={() => {
+                        const next = checked
+                          ? selectedBlocks.filter((b) => b !== blockName)
+                          : [...selectedBlocks, blockName];
+                        onBlocksChange(next);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        className="pointer-events-none"
+                      />
+                      {blockName}
+                    </button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Statistika kartalar */}

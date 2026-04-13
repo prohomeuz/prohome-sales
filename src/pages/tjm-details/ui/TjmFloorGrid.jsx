@@ -25,6 +25,7 @@ import { STATUS_CLASS } from "../lib/constants";
 export default function TjmFloorGrid({
   blockLayouts,
   maxFloor,
+  basementFloors = 0,
   activeDetailsId,
   hasActiveFilters,
   isFiltering,
@@ -66,14 +67,18 @@ export default function TjmFloorGrid({
 
       {/* Qavat satrlari */}
       <div className="flex w-max min-w-full flex-col">
-        {Array.from({ length: maxFloor ?? 0 }, (_, index) => index + 1).map(
-          (_, index, arr) => {
-            const floorNum = arr.length - index;
-            const rowHasActive = blockLayouts.some(({ block }) =>
-              (block?.appartment?.[index] ?? []).some(
+        {Array.from({ length: (maxFloor ?? 0) + (basementFloors ?? 0) }, (_, index) => index).map(
+          (index) => {
+            const floorNum = index < (maxFloor ?? 0)
+              ? (maxFloor ?? 0) - index
+              : -(index - (maxFloor ?? 0) + 1);
+            const rowHasActive = blockLayouts.some(({ block }) => {
+              const blockOffset = maxFloor - (block?.floor ?? 0);
+              const bIdx = index - blockOffset;
+              return (block?.appartment?.[bIdx] ?? []).some(
                 (h) => String(h.id) === activeDetailsId,
-              ),
-            );
+              );
+            });
 
             return (
               <div
@@ -105,14 +110,20 @@ export default function TjmFloorGrid({
 
                 {/* Bloklar qatori */}
                 <div className="flex gap-8 px-2 sm:gap-12 sm:px-3 lg:gap-16 xl:gap-20">
-                  {blockLayouts.map(({ blockName, block, widthStyle }) =>
-                    floorNum <= (block?.floor ?? 0) ? (
+                  {blockLayouts.map(({ blockName, block, widthStyle }) => {
+                    const blockOffset = maxFloor - (block?.floor ?? 0);
+                    const blockIndex = index - blockOffset;
+                    const floorRooms = blockIndex < 0
+                      ? []
+                      : block?.appartment?.[blockIndex] ?? [];
+
+                    return (
                       <div
                         key={blockName}
                         style={widthStyle}
                         className="flex gap-2"
                       >
-                        {(block?.appartment?.[index] ?? []).map((h) => {
+                        {floorRooms.map((h) => {
                           const isActive = String(h.id) === activeDetailsId;
                           const isFilteredOut =
                             hasActiveFilters &&
@@ -166,8 +177,8 @@ export default function TjmFloorGrid({
                           );
                         })}
                       </div>
-                    ) : null,
-                  )}
+                    );
+                  })}
                 </div>
 
                 {/* O'ng qavat raqami */}
@@ -193,6 +204,7 @@ export default function TjmFloorGrid({
             );
           },
         )}
+
       </div>
     </div>
   );
