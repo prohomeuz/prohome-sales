@@ -20,6 +20,8 @@ import { STATUS_CLASS } from "../lib/constants";
  *   isFiltering: boolean,
  *   matchedRoomIdSet: Set<string>,
  *   onRoomClick: (id: string | number) => void,
+ *   showRoomCount: boolean,
+ *   variant?: "default" | "expanded",
  * }} props
  */
 export default function TjmFloorGrid({
@@ -30,6 +32,9 @@ export default function TjmFloorGrid({
   isFiltering,
   matchedRoomIdSet,
   onRoomClick,
+  showRoomCount,
+  scale = 1,
+  variant = "default",
 }) {
   if (!blockLayouts.length) {
     return (
@@ -45,8 +50,28 @@ export default function TjmFloorGrid({
     );
   }
 
+  const baseSize = variant === "expanded" ? 40 : 32;
+  const baseTileGap = variant === "expanded" ? 10 : 8;
+  const baseRowGap = variant === "expanded" ? 6 : 4;
+  const baseFontSize = variant === "expanded" ? 13 : 11;
+
+  const tileSize = baseSize * scale;
+  const tileGap = baseTileGap * scale;
+  const rowGap = baseRowGap * scale;
+  const fontSize = baseFontSize * scale;
+
   return (
-    <div className="no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [--room-tile-gap:0.5rem] [--room-tile-size:2rem] [scrollbar-gutter:auto] sm:[--room-tile-size:2.25rem]">
+    <div
+      className={cn(
+        "no-scrollbar min-h-0 flex-1 overflow-auto pb-4 [scrollbar-gutter:auto]",
+      )}
+      style={{
+        "--room-tile-size": `${tileSize}px`,
+        "--room-tile-gap": `${tileGap}px`,
+        "--room-row-gap": `${rowGap}px`,
+        "--room-font-size": `${fontSize}px`,
+      }}
+    >
       {/* Blok sarlavhalari (sticky) */}
       <div className="bg-background sticky top-0 z-30 mb-6 flex w-max min-w-full items-start border-b py-4">
         <div className="w-10 shrink-0 sm:w-11" />
@@ -65,7 +90,7 @@ export default function TjmFloorGrid({
       </div>
 
       {/* Qavat satrlari */}
-      <div className="flex w-max min-w-full flex-col">
+      <div className="flex w-max min-w-full flex-col gap-[var(--room-row-gap)]">
         {Array.from({ length: maxFloor ?? 0 }, (_, index) => index + 1).map(
           (_, index, arr) => {
             const floorNum = arr.length - index;
@@ -79,24 +104,26 @@ export default function TjmFloorGrid({
               <div
                 key={index}
                 className={cn(
-                  "group relative flex h-10 w-full cursor-pointer transition-colors sm:h-11",
-                  rowHasActive ? "bg-accent/70" : "hover:bg-accent",
+                  "group relative flex h-[var(--room-tile-size)] w-full cursor-pointer transition-all duration-300",
+                  rowHasActive ? "bg-primary/5" : "hover:bg-slate-50/80",
                 )}
               >
                 {/* Chap qavat raqami */}
                 <div
                   className={cn(
-                    "text-muted-foreground bg-background sticky left-0 z-20 flex w-10 items-center justify-center text-center text-xs sm:w-11",
-                    rowHasActive && "bg-primary",
-                    !rowHasActive && "group-hover:bg-primary",
+                    "sticky left-0 z-20 flex w-10 items-center justify-center text-center font-bold tracking-tighter sm:w-11 backdrop-blur-sm border-r border-border/50 transition-all duration-300",
+                    rowHasActive 
+                      ? "bg-primary text-white border-primary shadow-[4px_0_12px_-4px_rgba(var(--primary),0.3)]" 
+                      : "bg-background/80 text-muted-foreground/60 group-hover:bg-primary group-hover:text-white group-hover:border-primary",
                   )}
+                  style={{ fontSize: "var(--room-font-size)" }}
                 >
                   <span
                     className={cn(
-                      "transition-transform",
+                      "transition-all duration-500",
                       rowHasActive
-                        ? "text-primary-foreground scale-150 font-bold"
-                        : "group-hover:text-primary-foreground group-hover:scale-150 group-hover:font-bold",
+                        ? "scale-110"
+                        : "group-hover:scale-150",
                     )}
                   >
                     {floorNum}
@@ -118,6 +145,9 @@ export default function TjmFloorGrid({
                             hasActiveFilters &&
                             !isFiltering &&
                             !matchedRoomIdSet.has(String(h.id));
+                          const tileLabel = showRoomCount
+                            ? `${h.room}x`
+                            : (h.houseNumber ?? h.room);
 
                           return (
                             <Tooltip key={h.id}>
@@ -128,14 +158,20 @@ export default function TjmFloorGrid({
                                 <div
                                   onClick={() => onRoomClick(h.id)}
                                   className={cn(
-                                    "relative flex size-8 shrink-0 items-center justify-center rounded-md text-sm leading-none font-bold text-primary-foreground transition-[opacity,transform] duration-300 sm:size-9",
-                                    STATUS_CLASS[h.status] ?? "",
+                                    "relative flex shrink-0 items-center justify-center rounded-lg leading-none font-bold transition-all duration-300 cursor-pointer hover:scale-105 hover:z-20 active:scale-95",
+                                    "size-[var(--room-tile-size)]",
+                                    STATUS_CLASS[h.status] || "bg-muted/30 text-muted-foreground",
+                                    "text-white shadow-sm ring-inset ring-black/5",
                                     isActive &&
-                                      "ring-destructive ring-offset-background z-10 shadow-[0_10px_24px_-14px_color-mix(in_oklab,var(--destructive)_95%,transparent)] ring-2 ring-offset-2",
-                                    isFilteredOut && "scale-[0.96] opacity-30",
+                                      "ring-[#B70000] ring-offset-background z-20 shadow-[0_0_20px_-5px_rgba(183,0,0,0.5)] ring-2 ring-offset-2 scale-110",
+                                    isFilteredOut && "grayscale-[0.5] opacity-20 scale-90",
                                   )}
+                                  style={{ fontSize: "var(--room-font-size)" }}
                                 >
-                                  {h.room}
+                                  {tileLabel}
+                                  {isActive && (
+                                    <div className="absolute -top-1 -right-1 size-2.5 rounded-full bg-white border-2 border-[#B70000] animate-pulse" />
+                                  )}
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent className="pointer-events-none">
@@ -145,6 +181,10 @@ export default function TjmFloorGrid({
                                     <span className="font-mono">
                                       #{h.houseNumber}
                                     </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <h4 className="font-bold">Xonalar soni:</h4>
+                                    <span className="font-mono">{h.room}x</span>
                                   </div>
                                   <div className="flex gap-1">
                                     <h4 className="font-bold">Narxi:</h4>
@@ -173,17 +213,19 @@ export default function TjmFloorGrid({
                 {/* O'ng qavat raqami */}
                 <div
                   className={cn(
-                    "text-muted-foreground bg-background sticky right-0 z-20 ml-auto flex w-10 shrink-0 items-center justify-center text-center text-xs sm:w-11",
-                    rowHasActive && "bg-primary",
-                    !rowHasActive && "group-hover:bg-primary",
+                    "sticky right-0 z-20 ml-auto flex w-10 shrink-0 items-center justify-center text-center font-bold tracking-tighter sm:w-11 backdrop-blur-sm border-l border-border/50 transition-all duration-300",
+                    rowHasActive 
+                      ? "bg-primary text-white border-primary shadow-[-4px_0_12px_-4px_rgba(var(--primary),0.3)]" 
+                      : "bg-background/80 text-muted-foreground/60 group-hover:bg-primary group-hover:text-white group-hover:border-primary",
                   )}
+                  style={{ fontSize: "var(--room-font-size)" }}
                 >
                   <span
                     className={cn(
-                      "transition-transform",
+                      "transition-all duration-500",
                       rowHasActive
-                        ? "text-primary-foreground scale-150 font-bold"
-                        : "group-hover:text-primary-foreground group-hover:scale-150 group-hover:font-bold",
+                        ? "scale-110"
+                        : "group-hover:scale-150",
                     )}
                   >
                     {floorNum}

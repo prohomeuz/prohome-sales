@@ -5,10 +5,10 @@
 
 /** Xona holati badge rang klasslari */
 export const STATUS_CLASS = {
-  SOLD: "bg-red-700",
-  RESERVED: "bg-yellow-400",
-  EMPTY: "bg-green-500",
-  NOT: "bg-slate-400",
+  SOLD: "bg-[#B70000]",
+  RESERVED: "bg-[#FFBA01]",
+  EMPTY: "bg-[#00C347]",
+  NOT: "bg-[#90A0B7]",
 };
 
 /** Xona holati o'zbek tilidagi nomlari */
