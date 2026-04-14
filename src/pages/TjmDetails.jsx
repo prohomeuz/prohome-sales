@@ -13,7 +13,7 @@ import { useAppStore } from "@/entities/session/model";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { useProjectStructure } from "@/shared/hooks/use-project-structure";
 import { formatNumber } from "@/shared/lib/utils";
-import { buttonVariants } from "@/shared/ui/button";
+import { Button, buttonVariants } from "@/shared/ui/button";
 import GeneralError from "@/widgets/error/GeneralError";
 import HomeDetails from "@/widgets/HomeDetails";
 import LoadTransition from "@/widgets/loading/LoadTransition";
@@ -35,6 +35,17 @@ import {
 } from "./tjm-details/lib/filter-utils";
 import TjmFilterBar from "./tjm-details/ui/TjmFilterBar";
 import TjmFloorGrid from "./tjm-details/ui/TjmFloorGrid";
+import TjmRoomsTable from "./tjm-details/ui/TjmRoomsTable";
+import TjmVisualGrid from "./tjm-details/ui/TjmVisualGrid";
+
+const VIEW_OPTIONS = [
+  { value: "shaxmatka", label: "Shaxmatka" },
+  { value: "shaxmatka-plus", label: "Shaxmatka+" },
+  { value: "vizual", label: "Vizual" },
+  { value: "jadval", label: "Jadval" },
+];
+
+const VIEW_OPTION_VALUES = VIEW_OPTIONS.map((option) => option.value);
 
 export default function TjmDetails() {
   const { id } = useParams();
@@ -58,6 +69,7 @@ export default function TjmDetails() {
   );
   const activeDetailsId = searchParams.get("details");
   const urlBlock = searchParams.get("block");
+  const urlView = searchParams.get("view");
 
   const [selectedBlock, setSelectedBlock] = useState(() =>
     urlBlock ? urlBlock : "all",
@@ -66,7 +78,9 @@ export default function TjmDetails() {
   const [matchedRoomIds, setMatchedRoomIds] = useState([]);
   const [isFiltering, setIsFiltering] = useState(false);
   const [workerReady, setWorkerReady] = useState(false);
+  const [showRoomCount, setShowRoomCount] = useState(false);
 
+  const [scale, setScale] = useState(1);
   const workerRef = useRef(null);
   const filterRequestIdRef = useRef(0);
   const pendingToastRequestIdRef = useRef(null);
@@ -135,9 +149,12 @@ export default function TjmDetails() {
   }, [home, visibleBlocksEntries]);
 
   const rangeBounds = useMemo(() => {
-    let sizeMin = Infinity, sizeMax = -Infinity;
-    let priceMin = Infinity, priceMax = -Infinity;
-    let floorMin = Infinity, floorMax = -Infinity;
+    let sizeMin = Infinity,
+      sizeMax = -Infinity;
+    let priceMin = Infinity,
+      priceMax = -Infinity;
+    let floorMin = Infinity,
+      floorMax = -Infinity;
 
     roomDataset.forEach((room) => {
       const size = Number(room?.size);
@@ -176,6 +193,7 @@ export default function TjmDetails() {
 
   const [filters, setFilters] = useState(() => filterDefaults);
   const [draftFilters, setDraftFilters] = useState(() => filterDefaults);
+  const viewMode = VIEW_OPTION_VALUES.includes(urlView) ? urlView : "shaxmatka";
 
   const totalStatistics = home?.totalStatistics ?? null;
 
@@ -199,36 +217,39 @@ export default function TjmDetails() {
     [matchedRoomIds],
   );
 
-  const statisticsCards = useMemo(() => [
-    {
-      key: "total",
-      label: "Jami",
-      value: resolvedStatistics.total,
-      tone: "border-slate-200/70 bg-slate-50/70 text-slate-700",
-      dot: "bg-slate-500",
-    },
-    {
-      key: "totalEmpty",
-      label: "Bo'sh",
-      value: resolvedStatistics.totalEmpty,
-      tone: "border-green-200/70 bg-green-50/70 text-green-700",
-      dot: "bg-green-500",
-    },
-    {
-      key: "totalReserved",
-      label: "Bron qilingan",
-      value: resolvedStatistics.totalReserved,
-      tone: "border-orange-200/70 bg-orange-50/70 text-orange-700",
-      dot: "bg-orange-400",
-    },
-    {
-      key: "totalSold",
-      label: "Sotilgan",
-      value: resolvedStatistics.totalSold,
-      tone: "border-red-200/70 bg-red-50/70 text-red-700",
-      dot: "bg-red-600",
-    },
-  ], [resolvedStatistics]);
+  const statisticsCards = useMemo(
+    () => [
+      {
+        key: "total",
+        label: "Jami",
+        value: resolvedStatistics.total,
+        tone: "border-slate-200/70 bg-slate-50/70 text-slate-700",
+        dot: "bg-slate-500",
+      },
+      {
+        key: "totalEmpty",
+        label: "Bo'sh",
+        value: resolvedStatistics.totalEmpty,
+        tone: "border-green-200/70 bg-green-50/70 text-green-700",
+        dot: "bg-green-500",
+      },
+      {
+        key: "totalReserved",
+        label: "Bron qilingan",
+        value: resolvedStatistics.totalReserved,
+        tone: "border-orange-200/70 bg-orange-50/70 text-orange-700",
+        dot: "bg-orange-400",
+      },
+      {
+        key: "totalSold",
+        label: "Sotilgan",
+        value: resolvedStatistics.totalSold,
+        tone: "border-red-200/70 bg-red-50/70 text-red-700",
+        dot: "bg-red-600",
+      },
+    ],
+    [resolvedStatistics],
+  );
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -264,6 +285,31 @@ export default function TjmDetails() {
       }),
     [visibleBlocksEntries],
   );
+
+  const viewRooms = useMemo(() => {
+    if (!home) return [];
+
+    const maxFloor = Number(home.maxFloor ?? 0);
+
+    return visibleBlocksEntries.flatMap(([blockName, block]) =>
+      (block?.appartment ?? []).flatMap((floorRooms, index) => {
+        const floorNumber = maxFloor - index;
+
+        return (floorRooms ?? []).filter(Boolean).map((room) => ({
+          ...room,
+          blockName,
+          floorNumber,
+          totalPrice: Number(room.price ?? 0) * Number(room.size ?? 0),
+        }));
+      }),
+    );
+  }, [home, visibleBlocksEntries]);
+
+  const filteredViewRooms = useMemo(() => {
+    if (!hasActiveFilters || isFiltering) return viewRooms;
+
+    return viewRooms.filter((room) => matchedRoomIdSet.has(String(room.id)));
+  }, [hasActiveFilters, isFiltering, matchedRoomIdSet, viewRooms]);
 
   // --- Effects ---
 
@@ -310,7 +356,8 @@ export default function TjmDetails() {
       rangeBounds,
       prevBoundsRef.current,
     );
-    if (serializeFilterState(filters) === serializeFilterState(normalized)) return;
+    if (serializeFilterState(filters) === serializeFilterState(normalized))
+      return;
     setFilters(normalized);
     setDraftFilters(normalized);
   }, [filters, rangeBounds, urlFilters]);
@@ -319,11 +366,15 @@ export default function TjmDetails() {
     const allowedRooms = new Set(roomOptions.map(String));
     setFilters((prev) => ({
       ...prev,
-      rooms: (prev.rooms ?? []).filter((room) => allowedRooms.has(String(room))),
+      rooms: (prev.rooms ?? []).filter((room) =>
+        allowedRooms.has(String(room)),
+      ),
     }));
     setDraftFilters((prev) => ({
       ...prev,
-      rooms: (prev.rooms ?? []).filter((room) => allowedRooms.has(String(room))),
+      rooms: (prev.rooms ?? []).filter((room) =>
+        allowedRooms.has(String(room)),
+      ),
     }));
   }, [roomOptions]);
 
@@ -389,7 +440,26 @@ export default function TjmDetails() {
     workerRef.current.postMessage({ type: "filter", requestId, filters });
   }, [filters, roomDataset, workerReady]);
 
-  // --- Handlerlar ---
+  // --- Handlers ---
+  const handleZoom = (delta) => {
+    setScale((prev) => {
+      const next = Math.min(Math.max(prev + delta, 0.5), 2);
+      return Math.round(next * 10) / 10;
+    });
+  };
+
+  const onWheel = useCallback((e) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      handleZoom(delta);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [onWheel]);
 
   const updateSearch = useCallback(
     (patch, options = {}) => {
@@ -404,13 +474,15 @@ export default function TjmDetails() {
     [location.pathname, location.search, navigate],
   );
 
-  useEffect(() => {
-    if (!searchParams.has("view")) return;
-    updateSearch({ view: null }, { replace: true });
-  }, [searchParams, updateSearch]);
-
   const handleActiveHome = useCallback(
-    (detailsId) => updateSearch({ details: detailsId }),
+    (detailsId) => {
+      if (String(detailsId).startsWith("draft:")) {
+        toast.info("Draft xonadon hali saqlanmagan");
+        return;
+      }
+
+      updateSearch({ details: detailsId });
+    },
     [updateSearch],
   );
 
@@ -419,6 +491,17 @@ export default function TjmDetails() {
       setSelectedBlock(value);
       updateSearch(
         { block: value === "all" ? null : value },
+        { replace: true },
+      );
+    },
+    [updateSearch],
+  );
+
+  const handleViewModeChange = useCallback(
+    (value) => {
+      if (!VIEW_OPTION_VALUES.includes(value)) return;
+      updateSearch(
+        { view: value === "shaxmatka" ? null : value },
         { replace: true },
       );
     },
@@ -479,8 +562,12 @@ export default function TjmDetails() {
           </div>
         </div>
       ) : !home ? null : (
-        <section className="animate-fade-in flex h-full min-h-0 w-full flex-col overflow-hidden">
-          <section className="flex h-full min-h-0 w-full flex-col">
+        <section className="animate-fade-in flex h-full min-h-0 w-full flex-col overflow-hidden relative">
+           {/* Sophisticated Background Pattern */}
+           <div className="absolute inset-0 z-[-1] pointer-events-none opacity-[0.03] dark:opacity-[0.05]" 
+                style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          
+          <section className="flex h-full min-h-0 w-full flex-col relative z-10">
             {/* Filter paneli sarlavhasi + statistika */}
             <TjmFilterBar
               filterOpen={filterOpen}
@@ -497,19 +584,47 @@ export default function TjmDetails() {
               roomOptions={roomOptions}
               onReset={resetFilters}
               onApply={applyFilters}
+              showRoomCount={showRoomCount}
+              onShowRoomCountChange={setShowRoomCount}
+              viewMode={viewMode}
+              viewOptions={VIEW_OPTIONS}
+              onViewModeChange={handleViewModeChange}
+              onOpenAddBlock={() => navigate(`/tjm/${id}/add-block`)}
             />
 
             {/* Asosiy kontent: shaxmatka + xona tafsiloti */}
             <div className="flex min-h-0 w-full flex-1 overflow-hidden">
-              <TjmFloorGrid
-                blockLayouts={blockLayouts}
-                maxFloor={home.maxFloor ?? 0}
-                activeDetailsId={activeDetailsId}
-                hasActiveFilters={hasActiveFilters}
-                isFiltering={isFiltering}
-                matchedRoomIdSet={matchedRoomIdSet}
-                onRoomClick={handleActiveHome}
-              />
+              {viewMode === "vizual" ? (
+                <TjmVisualGrid
+                  rooms={filteredViewRooms}
+                  activeDetailsId={activeDetailsId}
+                  onRoomClick={handleActiveHome}
+                  showRoomCount={showRoomCount}
+                />
+              ) : viewMode === "jadval" ? (
+                <TjmRoomsTable
+                  rooms={filteredViewRooms}
+                  activeDetailsId={activeDetailsId}
+                  onRoomClick={handleActiveHome}
+                />
+              ) : (
+                <div className="relative flex flex-1 flex-col overflow-hidden bg-white/50">
+                  <TjmFloorGrid
+                    blockLayouts={blockLayouts}
+                    maxFloor={home.maxFloor ?? 0}
+                    activeDetailsId={activeDetailsId}
+                    hasActiveFilters={hasActiveFilters}
+                    isFiltering={isFiltering}
+                    matchedRoomIdSet={matchedRoomIdSet}
+                    onRoomClick={handleActiveHome}
+                    showRoomCount={showRoomCount}
+                    scale={scale}
+                    variant={
+                      viewMode === "shaxmatka-plus" ? "expanded" : "default"
+                    }
+                  />
+                </div>
+              )}
 
               <HomeDetails onRoomStatusUpdated={updateRoomStatus} />
             </div>

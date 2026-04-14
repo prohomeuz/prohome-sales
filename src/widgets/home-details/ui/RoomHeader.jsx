@@ -131,6 +131,13 @@ export default function RoomHeader({
           </div>
         )}
 
+        {/* Uy haqida sarlavha */}
+        <div className="mb-2">
+          <h2 className="text-lg font-bold tracking-tight text-foreground uppercase">
+            Uy haqida
+          </h2>
+        </div>
+
         {/* Uy raqami + narx */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <i className="font-mono text-sm sm:text-base">№ {home.houseNumber}</i>

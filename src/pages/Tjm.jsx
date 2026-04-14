@@ -42,14 +42,16 @@ export default function Tjm() {
                   key={id}
                   role="button"
                   tabIndex={0}
-                  className="hover:border-primary group flex cursor-pointer items-center gap-3 rounded-[22px] border-2 bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+                  className="group flex cursor-pointer items-center gap-3 rounded-xl border bg-background p-4 text-left transition-colors hover:border-primary/30 hover:bg-accent/20"
                   onClick={() => handleClick(id)}
                   onKeyDown={(e) => e.key === "Enter" && handleClick(id)}
                 >
-                  <Folder className="animate-fade-in group-hover:hidden" />
-                  <FolderOpen className="animate-fade-in hidden group-hover:inline-block" />
+                  <div className="relative size-5 shrink-0">
+                    <Folder className="absolute inset-0 size-5 transition-opacity duration-200 group-hover:opacity-0" />
+                    <FolderOpen className="absolute inset-0 size-5 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                  </div>
                   <p className="min-w-0 flex-1 truncate">{name}</p>
-                  <ArrowRight className="animate-fade-in ml-auto hidden group-hover:inline-block" />
+                  <ArrowRight className="ml-auto size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground" />
                 </div>
               ))}
             </div>

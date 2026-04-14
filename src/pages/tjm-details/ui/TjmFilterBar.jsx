@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui/select";
 import { Separator } from "@/shared/ui/separator";
 import { Slider } from "@/shared/ui/slider";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 import { buttonVariants } from "@/shared/ui/button";
 import {
@@ -28,6 +29,7 @@ import {
   Banknote,
   Building2,
   Filter,
+  Plus,
   Ruler,
   Tag,
   UsersRound,
@@ -51,6 +53,12 @@ import { STATUS_CLASS, STATUS_LABEL } from "../lib/constants";
  *   roomOptions: string[],
  *   onReset: () => void,
  *   onApply: () => void,
+ *   showRoomCount: boolean,
+ *   onShowRoomCountChange: (checked: boolean) => void,
+ *   viewMode: string,
+ *   viewOptions: Array<{ value: string, label: string }>,
+ *   onViewModeChange: (value: string) => void,
+ *   onOpenAddBlock: () => void,
  * }} props
  */
 export default function TjmFilterBar({
@@ -68,10 +76,24 @@ export default function TjmFilterBar({
   roomOptions,
   onReset,
   onApply,
+  showRoomCount,
+  onShowRoomCountChange,
+  viewMode,
+  viewOptions,
+  onViewModeChange,
+  onOpenAddBlock,
 }) {
   const draftSizeRange = draftFilters?.sizeRange ?? rangeBounds.size;
   const draftPriceRange = draftFilters?.priceRange ?? rangeBounds.price;
   const draftFloorRange = draftFilters?.floorRange ?? rangeBounds.floor;
+  const segmentedShellClass =
+    "border-border/70 bg-background inline-flex h-11 max-w-full items-center rounded-xl border shadow-sm";
+  const segmentedTrackClass =
+    "bg-muted/40 inline-flex items-center rounded-lg p-0.5";
+  const toggleItemClass =
+    "data-[state=off]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-none transition-all hover:bg-background hover:text-slate-800 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:ring-1 data-[state=on]:ring-emerald-200/80";
+  const tabsItemClass =
+    "data-[state=inactive]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-none transition-all hover:bg-background hover:text-slate-800 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:ring-1 data-[state=active]:ring-emerald-200/80";
 
   return (
     <div className="bg-background/95 flex w-full flex-col border-b backdrop-blur-sm">
@@ -85,11 +107,11 @@ export default function TjmFilterBar({
           Orqaga
         </Link>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3 ml-auto">
           <CurrencyBadge />
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-1.5">
             {Object.entries(STATUS_CLASS).map(([key, value]) => (
-              <Badge key={key} className={cn("text-primary-foreground", value)}>
+              <Badge key={key} className={cn("text-primary-foreground rounded-full px-3 py-0.5 text-[10px] font-bold border-none", value)}>
                 {STATUS_LABEL[key]}
               </Badge>
             ))}
@@ -97,63 +119,141 @@ export default function TjmFilterBar({
         </div>
       </div>
 
+
+
       {/* Quyi qator: Filter + blok select + statistika */}
       <div className="border-border/60 border-t">
-        <div className="flex flex-col gap-3 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:px-6">
-          <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
+        <div className="flex flex-col gap-3 px-4 py-3 sm:px-5 lg:px-6">
+          <div className="flex w-full items-center gap-2 lg:gap-3 overflow-x-auto no-scrollbar">
             <Button
               type="button"
               variant={hasActiveFilters ? "default" : "outline"}
-              className="justify-start gap-2 sm:w-auto"
+              className={cn(
+                  "justify-start gap-2 rounded-[10px] h-10 transition-all min-w-[90px] shrink-0",
+                  hasActiveFilters && "shadow-[0_0_15px_-3px_rgba(var(--primary),0.4)]"
+              )}
               aria-expanded={filterOpen}
               onClick={onToggleFilter}
             >
-              <Filter className="size-4" />
-              Filter
+              <Filter className={cn("size-4 transition-transform", filterOpen && "rotate-180")} />
+              <span className="font-semibold text-sm">Filter</span>
               {hasActiveFilters && (
-                <span className="bg-primary text-primary-foreground ml-auto inline-flex size-5 items-center justify-center rounded-full text-[11px] font-semibold sm:ml-1">
+                <span className="bg-white text-primary inline-flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
 
-            <Select value={selectedBlock} onValueChange={onBlockChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Barchasi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                {blockOptions.map((blockName) => (
-                  <SelectItem key={blockName} value={blockName}>
-                    {blockName}
-                  </SelectItem>
+            <div className="w-[160px] shrink-0">
+              <Select value={selectedBlock} onValueChange={onBlockChange}>
+                <SelectTrigger className="w-full h-10 rounded-[10px] bg-background border-border focus:ring-primary/20">
+                  <SelectValue placeholder="Barchasi" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                  <SelectItem value="all" className="rounded-lg">Barchasi</SelectItem>
+                  {blockOptions.map((blockName) => (
+                    <SelectItem key={blockName} value={blockName} className="rounded-lg">
+                      {blockName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="justify-start gap-2 rounded-[10px] h-10 border-dashed hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary shrink-0"
+              onClick={onOpenAddBlock}
+            >
+              <Plus className="size-4" />
+              <span className="font-semibold text-sm">Blok qo'shish</span>
+            </Button>
+
+            {/* Statistika kartalar */}
+            {!!statisticsCards.length && (
+              <div className="flex flex-1 items-center gap-2 lg:gap-3 min-w-max ml-auto">
+                {statisticsCards.map((stat) => (
+                  <div
+                    key={stat.key}
+                    className={cn(
+                      "flex h-10 flex-1 items-center justify-between rounded-[10px] border px-3 sm:px-4 transition-all duration-300 hover:shadow-sm min-w-[130px]",
+                      stat.tone,
+                      "border-opacity-40"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                       <span className={cn("size-1.5 sm:size-2 rounded-full shrink-0", stat.dot)} />
+                       <span className="text-[13px] font-medium capitalize">
+                        {stat.label.toLowerCase()}
+                      </span>
+                    </div>
+                    <span className="text-[14px] font-bold pl-2 sm:pl-3">
+                      {formatNumber(stat.value ?? 0)}
+                    </span>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            )}
           </div>
 
-          {/* Statistika kartalar */}
-          {!!statisticsCards.length && (
-            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {statisticsCards.map((stat) => (
-                <div
-                  key={stat.key}
-                  className={cn(
-                    "flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs sm:text-sm",
-                    stat.tone,
-                  )}
+          <div className="flex flex-wrap items-center gap-2 pt-3">
+            <div
+              className={cn(
+                segmentedShellClass,
+                "gap-3 px-1 pr-1 pl-3",
+              )}
+            >
+              <div className="min-w-[9.75rem]">
+                <p className="text-foreground text-xs font-semibold whitespace-nowrap">
+                  {showRoomCount ? "Xonalar soni" : "Xonadon raqami"}
+                </p>
+              </div>
+
+              <ToggleGroup
+                type="single"
+                value={showRoomCount ? "room" : "house"}
+                onValueChange={(value) => {
+                  if (!value) return;
+                  onShowRoomCountChange(value === "room");
+                }}
+                className={segmentedTrackClass}
+              >
+                <ToggleGroupItem
+                  value="house"
+                  className={toggleItemClass}
                 >
-                  <span className="flex items-center gap-2 font-medium">
-                    <span className={cn("size-2 rounded-full", stat.dot)} />
-                    <span className="truncate">{stat.label}</span>
-                  </span>
-                  <span className="font-mono text-sm font-semibold">
-                    {formatNumber(stat.value ?? 0)}
-                  </span>
-                </div>
-              ))}
+                  Xonadon
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="room"
+                  className={toggleItemClass}
+                >
+                  Xonalar
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
-          )}
+
+            <div className={cn(segmentedShellClass, "px-1")}>
+              <Tabs
+                value={viewMode}
+                onValueChange={onViewModeChange}
+                className="flex"
+              >
+                <TabsList className={segmentedTrackClass}>
+                  {viewOptions.map((option) => (
+                    <TabsTrigger
+                      key={option.value}
+                      value={option.value}
+                      className={tabsItemClass}
+                    >
+                      {option.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          </div>
         </div>
 
         {/* Slayder filtrlash paneli (accordion) */}
@@ -302,9 +402,7 @@ export default function TjmFilterBar({
                             priceRange: value,
                           }))
                         }
-                        disabled={
-                          rangeBounds.price[0] === rangeBounds.price[1]
-                        }
+                        disabled={rangeBounds.price[0] === rangeBounds.price[1]}
                         className="mt-3"
                       />
                     </div>
@@ -333,9 +431,7 @@ export default function TjmFilterBar({
                           floorRange: value.map((val) => Math.round(val)),
                         }))
                       }
-                      disabled={
-                        rangeBounds.floor[0] === rangeBounds.floor[1]
-                      }
+                      disabled={rangeBounds.floor[0] === rangeBounds.floor[1]}
                       className="mt-3"
                     />
                   </div>

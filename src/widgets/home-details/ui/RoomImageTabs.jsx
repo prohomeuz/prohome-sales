@@ -55,51 +55,85 @@ export default function RoomImageTabs({ home, activeImageTab, onTabChange }) {
           </TabsList>
 
           <TabsContent value="2D" forceMount>
-            <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
-              <picture>
-                <source
-                  srcSet={`/gallery/avif/${home.image[0]}.avif`}
-                  type="image/avif"
-                />
+            {home.img2d ? (
+              <PhotoView src={home.img2d}>
                 <img
-                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                  src={`/gallery/png/${home.image[0]}.png`}
-                  alt={home.size}
+                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none rounded-lg shadow-sm border"
+                  src={home.img2d}
+                  alt="2D View"
                 />
-              </picture>
-            </PhotoView>
+              </PhotoView>
+            ) : home.image?.[0] ? (
+              <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
+                <picture>
+                  <source
+                    srcSet={`/gallery/avif/${home.image[0]}.avif`}
+                    type="image/avif"
+                  />
+                  <img
+                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                    src={`/gallery/png/${home.image[0]}.png`}
+                    alt={home.size}
+                  />
+                </picture>
+              </PhotoView>
+            ) : (
+              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
+                <span className="text-xs text-muted-foreground italic">2D rasm mavjud emas</span>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="3D" forceMount>
-            <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
-              <picture>
-                <source
-                  srcSet={`/gallery/avif/${home.image[1]}.avif`}
-                  type="image/avif"
-                />
+            {home.img3d ? (
+              <PhotoView src={home.img3d}>
                 <img
-                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                  src={`/gallery/png/${home.image[1]}.png`}
-                  alt={home.size}
+                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none rounded-lg shadow-sm border"
+                  src={home.img3d}
+                  alt="3D View"
                 />
-              </picture>
-            </PhotoView>
+              </PhotoView>
+            ) : home.image?.[1] ? (
+              <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
+                <picture>
+                  <source
+                    srcSet={`/gallery/avif/${home.image[1]}.avif`}
+                    type="image/avif"
+                  />
+                  <img
+                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                    src={`/gallery/png/${home.image[1]}.png`}
+                    alt={home.size}
+                  />
+                </picture>
+              </PhotoView>
+            ) : (
+              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
+                <span className="text-xs text-muted-foreground italic">3D rasm mavjud emas</span>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="PLAN" forceMount>
-            <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
-              <picture>
-                <source
-                  srcSet={`/gallery/avif/${home.image[2]}.avif`}
-                  type="image/avif"
-                />
-                <img
-                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                  src={`/gallery/png/${home.image[2]}.png`}
-                  alt={home.size}
-                />
-              </picture>
-            </PhotoView>
+            {home.image?.[2] ? (
+              <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
+                <picture>
+                  <source
+                    srcSet={`/gallery/avif/${home.image[2]}.avif`}
+                    type="image/avif"
+                  />
+                  <img
+                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
+                    src={`/gallery/png/${home.image[2]}.png`}
+                    alt={home.size}
+                  />
+                </picture>
+              </PhotoView>
+            ) : (
+              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
+                <span className="text-xs text-muted-foreground italic">Plan mavjud emas</span>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </PhotoProvider>
