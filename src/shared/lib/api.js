@@ -31,6 +31,11 @@ export async function apiRequest(path, options = {}) {
   
   try {
     const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
     return res;
   } catch (err) {
     console.error(`API Request failed [${path}]:`, err);
