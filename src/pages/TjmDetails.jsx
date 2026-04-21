@@ -591,11 +591,11 @@ export default function TjmDetails() {
 
     if (result?.ok) {
       toast.success(`"${blockName}" muvaffaqiyatli o'chirildi`);
-      handleBlockChange("all");
+      handleBlocksChange([]);
     } else {
       toast.error(`O'chirishda xatolik: server javob bermadi`);
     }
-  }, [deleteConfirm, home, deleteBlock, handleBlockChange]);
+  }, [deleteConfirm, home, deleteBlock, handleBlocksChange]);
 
   // --- Render ---
 
