@@ -59,18 +59,23 @@ export function MicVoiceButton() {
   useThemeSpeech(enabled);
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      title={enabled ? "Mikrofon yoqiq — \"dark\" yoki \"light\" deng" : "Mikrofon o'chiq — yoqish uchun bosing"}
-      className={cn(
-        "inline-flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5!",
-        enabled
-          ? "text-green-500 bg-green-500/10"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-      )}
-    >
-      {enabled ? <Mic /> : <MicOff />}
-    </button>
+    <div className="relative inline-flex">
+      <button
+        type="button"
+        onClick={toggle}
+        title={enabled ? "Mikrofon yoqiq — \"dark\" yoki \"light\" deng" : "Mikrofon o'chiq — yoqish uchun bosing"}
+        className={cn(
+          "inline-flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5!",
+          enabled
+            ? "text-green-500 bg-green-500/10"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+        )}
+      >
+        {enabled ? <Mic /> : <MicOff />}
+      </button>
+      <span className="pointer-events-none absolute -top-0.5 -right-0.5 rounded-full bg-amber-500 px-1 py-px text-[8px] font-bold leading-none text-white">
+        BETA
+      </span>
+    </div>
   );
 }
