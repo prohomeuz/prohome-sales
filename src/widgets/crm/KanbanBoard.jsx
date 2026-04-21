@@ -285,29 +285,29 @@ export function KanbanBoard() {
   };
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col bg-[#f8fafc]">
+    <div className="flex h-full min-h-0 w-full flex-col bg-background">
       <LeadDetailsDrawer
         lead={activeEditLead}
         isOpen={!!activeEditLead}
         onClose={() => setActiveEditLead(null)}
       />
       {!error && (
-        <div className="border-b border-gray-100 bg-white">
+        <div className="border-b border-border/40 bg-card">
           <div className="flex flex-col gap-3 px-3 py-3.5 sm:px-6 sm:py-5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
             <div className="min-w-0 flex-1 text-center sm:text-left">
-              <h1 className="text-xl leading-tight font-semibold tracking-tight text-gray-900 sm:text-2xl lg:text-[28px]">
+              <h1 className="text-xl leading-tight font-semibold tracking-tight text-foreground sm:text-2xl lg:text-[28px]">
                 CRM Boshqaruvi
               </h1>
-              <p className="mt-1 text-[10px] leading-relaxed font-medium text-gray-400 sm:text-[11px]">
+              <p className="mt-1 text-[10px] leading-relaxed font-medium text-muted-foreground sm:text-[11px]">
                 Sotuv kanban
               </p>
             </div>
 
             <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center lg:w-auto lg:flex-nowrap lg:justify-end">
-              <InputGroup className="h-11 w-full rounded-xl border-gray-200 bg-gray-50 shadow-none transition-all has-[[data-slot=input-group-control]:focus-visible]:border-[#65a30d] has-[[data-slot=input-group-control]:focus-visible]:ring-[#65a30d]/15 sm:flex-1 lg:w-[420px] lg:flex-none">
+              <InputGroup className="h-11 w-full rounded-xl border-border bg-muted/20 shadow-none transition-all has-[[data-slot=input-group-control]:focus-visible]:border-primary has-[[data-slot=input-group-control]:focus-visible]:ring-primary/15 sm:flex-1 lg:w-[420px] lg:flex-none">
                 <InputGroupAddon
                   align="inline-start"
-                  className="pl-3 text-gray-400"
+                  className="pl-3 text-muted-foreground"
                 >
                   <Search className="size-4" />
                 </InputGroupAddon>
@@ -315,12 +315,12 @@ export function KanbanBoard() {
                   placeholder="Qidiruv..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-full text-sm placeholder:text-gray-400"
+                  className="h-full text-sm placeholder:text-muted-foreground"
                 />
                 <InputGroupAddon align="inline-end" className="gap-2 pr-1.5">
                   <span
                     aria-hidden="true"
-                    className="h-5 w-px rounded-full bg-gray-200"
+                    className="h-5 w-px rounded-full bg-border"
                   />
                   <Popover>
                     <PopoverTrigger asChild>
@@ -330,14 +330,14 @@ export function KanbanBoard() {
                         size="sm"
                         className={`relative mr-2 h-8 rounded-lg px-3 text-xs font-bold ${
                           activeFilterCount
-                            ? "bg-[#ecfccb]/40 text-[#65a30d] hover:bg-[#ecfccb]/60 hover:text-[#4d7c0f]"
-                            : "text-gray-500 hover:bg-white hover:text-gray-900"
+                            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                            : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                         }`}
                       >
                         <Filter className="size-4" />
                         <span>Filtr</span>
                         {activeFilterCount > 0 && (
-                          <Badge className="absolute -top-1 -right-1 min-w-5 border-white bg-[#65a30d] px-1.5 py-0 text-[10px] font-black text-white shadow-sm">
+                          <Badge className="absolute -top-1 -right-1 min-w-5 border-background bg-primary px-1.5 py-0 text-[10px] font-black text-primary-foreground shadow-sm">
                             {activeFilterCount}
                           </Badge>
                         )}
@@ -348,7 +348,7 @@ export function KanbanBoard() {
                       align="end"
                     >
                       <div className="space-y-4">
-                        <h4 className="leading-none font-bold text-gray-900">
+                        <h4 className="leading-none font-bold text-foreground">
                           Filterlar
                         </h4>
                         <p className="text-muted-foreground text-xs">
@@ -359,7 +359,7 @@ export function KanbanBoard() {
                           <div className="grid gap-1">
                             <Label
                               htmlFor="phoneQ"
-                              className="text-xs font-bold text-gray-500"
+                              className="text-xs font-bold text-muted-foreground"
                             >
                               Telefon raqam
                             </Label>
@@ -378,7 +378,7 @@ export function KanbanBoard() {
                             <div className="grid gap-1">
                               <Label
                                 htmlFor="pMin"
-                                className="text-xs font-bold text-gray-500"
+                                className="text-xs font-bold text-muted-foreground"
                               >
                                 Min. Summa
                               </Label>
@@ -396,7 +396,7 @@ export function KanbanBoard() {
                             <div className="grid gap-1">
                               <Label
                                 htmlFor="pMax"
-                                className="text-xs font-bold text-gray-500"
+                                className="text-xs font-bold text-muted-foreground"
                               >
                                 Max. Summa
                               </Label>
@@ -440,17 +440,17 @@ export function KanbanBoard() {
                 onOpenChange={setIsColumnDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Button className="group h-10 w-full shrink-0 justify-center rounded-xl bg-[#65a30d] px-3.5 text-[13px] font-bold whitespace-nowrap text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-[#4d7c0f] active:scale-[0.98] sm:w-auto">
+                  <Button className="group h-10 w-full shrink-0 justify-center rounded-xl bg-primary px-3.5 text-[13px] font-bold whitespace-nowrap text-primary-foreground shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-primary/90 active:scale-[0.98] sm:w-auto">
                     <PlusCircle className="size-4 transition-transform group-hover:rotate-90" />
                     <span>Yangi bosqich</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="w-[calc(100vw-1rem)] max-w-[425px] rounded-[24px]">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-gray-900">
+                    <DialogTitle className="text-xl font-bold text-foreground">
                       Yangi bosqich qo'shish
                     </DialogTitle>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       Sotuv voronkasi uchun yangi bosqich (kalonka) nomini
                       kiriting.
                     </p>
@@ -459,7 +459,7 @@ export function KanbanBoard() {
                     <div className="grid gap-2">
                       <Label
                         htmlFor="title"
-                        className="ml-1 text-sm font-bold text-gray-900"
+                        className="ml-1 text-sm font-bold text-foreground"
                       >
                         Kalonka nomi
                       </Label>
@@ -468,7 +468,7 @@ export function KanbanBoard() {
                         placeholder="Masalan: Muzokara"
                         value={newColumnTitle}
                         onChange={(e) => setNewColumnTitle(e.target.value)}
-                        className="h-12 rounded-xl border-gray-100 bg-gray-50 px-4 transition-all focus:bg-white focus:ring-1 focus:ring-[#65a30d]"
+                        className="h-12 rounded-xl border-border bg-muted/20 px-4 transition-all focus:bg-background focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
@@ -476,13 +476,13 @@ export function KanbanBoard() {
                     <Button
                       variant="ghost"
                       onClick={() => setIsColumnDialogOpen(false)}
-                      className="rounded-xl font-bold text-gray-400"
+                      className="rounded-xl font-bold text-muted-foreground"
                     >
                       Bekor qilish
                     </Button>
                     <Button
                       onClick={handleCreateColumn}
-                      className="rounded-xl bg-[#65a30d] px-8 font-bold text-white hover:bg-[#4d7c0f]"
+                      className="rounded-xl bg-primary px-8 font-bold text-primary-foreground hover:bg-primary/90"
                     >
                       Saqlash
                     </Button>
@@ -496,14 +496,14 @@ export function KanbanBoard() {
 
       <div
         ref={boardScrollRef}
-        className="custom-scrollbar relative min-h-0 w-full flex-1 touch-pan-x overflow-x-auto overflow-y-hidden scroll-smooth bg-white transition-[box-shadow] duration-200 [scrollbar-gutter:auto]"
+        className="custom-scrollbar relative min-h-0 w-full flex-1 touch-pan-x overflow-x-auto overflow-y-hidden scroll-smooth bg-background transition-shadow duration-200 [scrollbar-gutter:auto]"
         style={boardEdgeShadowStyle}
       >
         {error ? (
           <div className="animate-in fade-in flex h-full flex-col items-center justify-center px-6 text-center duration-500">
             <ShieldAlert className="mb-4 size-20 rounded-full bg-red-500/10 px-3 py-3 text-red-500 opacity-80" />
 
-            <h3 className="text-xl font-bold tracking-tight text-gray-900">
+            <h3 className="text-xl font-bold tracking-tight text-foreground">
               {error.includes("permissions")
                 ? "Ruxsat etilmadi"
                 : "Xatolik yuz berdi"}
@@ -540,12 +540,12 @@ export function KanbanBoard() {
             onDragOver={onDragOver}
             collisionDetection={closestCorners}
           >
-            <div className="flex h-full w-max snap-x snap-mandatory items-stretch gap-2.5 px-2.5 pt-3 pb-6 sm:gap-4 sm:px-6 sm:pt-4 sm:pb-10 lg:min-w-full lg:gap-0 lg:border-t lg:border-gray-200 lg:bg-white lg:px-0 lg:pt-0 lg:pb-0">
+            <div className="flex h-full w-max snap-x snap-mandatory items-stretch gap-2.5 px-2.5 pt-3 pb-6 sm:gap-4 sm:px-6 sm:pt-4 sm:pb-10 lg:min-w-full lg:gap-0 lg:border-t lg:border-border/40 lg:bg-background lg:px-0 lg:pt-0 lg:pb-0">
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex h-full w-[calc(100vw-1rem)] max-w-[380px] flex-col gap-3 sm:w-[320px] lg:max-w-none lg:gap-4 lg:border-r lg:border-gray-200 lg:px-4 lg:pt-4 lg:first:border-l"
+                    className="flex h-full w-[calc(100vw-1rem)] max-w-[380px] flex-col gap-3 sm:w-[320px] lg:max-w-none lg:gap-4 lg:border-r lg:border-border/40 lg:px-4 lg:pt-4 lg:first:border-l"
                   >
                     <Skeleton className="h-28 w-full rounded-2xl" />
                     <Skeleton className="h-28 w-full rounded-2xl" />
@@ -570,20 +570,20 @@ export function KanbanBoard() {
                   ))}
 
                   {columns.length === 0 && (
-                    <div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-gray-100 bg-gray-50/50 px-10 py-20">
-                      <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
-                        <PlusCircle className="size-8 text-gray-200" />
+                    <div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border/40 bg-muted/10 px-10 py-20">
+                      <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-card shadow-sm">
+                        <PlusCircle className="size-8 text-muted-foreground/30" />
                       </div>
-                      <h3 className="mb-2 text-xl font-bold text-gray-400">
+                      <h3 className="mb-2 text-xl font-bold text-muted-foreground">
                         Hozircha bosqichlar yo'q
                       </h3>
-                      <p className="mb-8 max-w-[240px] text-center text-xs text-gray-400">
+                      <p className="mb-8 max-w-[240px] text-center text-xs text-muted-foreground">
                         Sotuv jarayonini boshlash uchun birinchi kalonkani
                         qo'shing.
                       </p>
                       <Button
                         onClick={() => setIsColumnDialogOpen(true)}
-                        className="rounded-xl bg-[#65a30d] px-8 text-white hover:bg-[#4d7c0f]"
+                        className="rounded-xl bg-primary px-8 text-primary-foreground hover:bg-primary/90"
                       >
                         Bosqich qo'shish
                       </Button>

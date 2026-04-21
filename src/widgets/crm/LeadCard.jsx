@@ -74,7 +74,7 @@ export const LeadCard = React.memo(
         <div
           ref={setNodeRef}
           style={style}
-          className="h-[108px] shrink-0 rounded-xl border-2 border-dashed bg-white opacity-50 shadow-sm ring-2 ring-[#65a30d]"
+          className="h-[108px] shrink-0 rounded-xl border-2 border-dashed bg-card opacity-50 shadow-sm ring-2 ring-primary"
         />
       );
     }
@@ -85,19 +85,19 @@ export const LeadCard = React.memo(
         style={style}
         {...attributes}
         {...listeners}
-        className="relative w-full shrink-0 cursor-grab gap-0 overflow-hidden rounded-xl border border-gray-200 bg-white px-2.5 py-2 shadow-[0px_0px_2px_0.1px_#0001] transition-colors hover:border-gray-300 active:cursor-grabbing"
+        className="relative w-full shrink-0 cursor-grab gap-0 overflow-hidden rounded-xl border border-border bg-card px-2.5 py-2 shadow-sm transition-colors hover:border-border/80 active:cursor-grabbing"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h4
-              className="line-clamp-1 text-[13px] leading-tight font-bold text-gray-900"
+              className="line-clamp-1 text-[13px] leading-tight font-bold text-foreground"
               title={lead.title}
             >
               {lead.title}
             </h4>
 
-            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-gray-400">
-              <Building2 className="size-3.5 shrink-0 text-gray-300" />
+            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+              <Building2 className="size-3.5 shrink-0 text-muted-foreground/50" />
               <span className="truncate">{lead.companyName}</span>
             </div>
           </div>
@@ -107,7 +107,7 @@ export const LeadCard = React.memo(
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-[#65a30d] sm:h-8 sm:w-8"
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-primary sm:h-8 sm:w-8"
               onPointerDown={(e) => {
                 e.stopPropagation();
               }}
@@ -130,7 +130,7 @@ export const LeadCard = React.memo(
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 sm:h-8 sm:w-8"
+                    className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:h-8 sm:w-8"
                     onPointerDown={(e) => {
                       e.stopPropagation();
                     }}
@@ -142,7 +142,7 @@ export const LeadCard = React.memo(
                     <Trash2 className="size-3.5" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-2xl border-gray-100 shadow-xl">
+                <AlertDialogContent className="rounded-2xl border-border/40 shadow-xl">
                   <AlertDialogHeader>
                     <AlertDialogMedia className="bg-red-50 text-red-500">
                       <Trash2 className="size-7" />
@@ -180,8 +180,8 @@ export const LeadCard = React.memo(
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-gray-50/80 pt-1.5">
-          <div className="min-w-0 text-[12px] font-black text-[#65a30d] sm:text-[13px]">
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/20 pt-1.5">
+          <div className="min-w-0 text-[12px] font-black text-primary sm:text-[13px]">
             {(Number(lead.price) || 0).toLocaleString()} so'm
           </div>
 
@@ -191,7 +191,7 @@ export const LeadCard = React.memo(
               variant="ghost"
               size="icon"
               disabled={!canMoveUp}
-              className="h-7 w-7 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-35 sm:h-8 sm:w-8"
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 sm:h-8 sm:w-8"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={handleMove(onMoveUp)}
               aria-label="Leadni yuqoriga ko'tarish"
@@ -204,7 +204,7 @@ export const LeadCard = React.memo(
               variant="ghost"
               size="icon"
               disabled={!canMoveDown}
-              className="h-7 w-7 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-35 sm:h-8 sm:w-8"
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-muted/30 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 sm:h-8 sm:w-8"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={handleMove(onMoveDown)}
               aria-label="Leadni pastga tushirish"

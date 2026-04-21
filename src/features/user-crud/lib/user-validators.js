@@ -61,3 +61,28 @@ export function validateUserForm(form, result, setErrors) {
 
   return Object.values(next).every((v) => v === null);
 }
+
+/**
+ * ROP/foydalanuvchi yangilash formasini validatsiya qiladi.
+ * Parol ixtiyoriy — bo'sh bo'lsa tekshirilmaydi.
+ *
+ * @param {HTMLFormElement} form
+ * @param {{ fullName?: string, password?: string, permissions?: unknown[] }} result
+ * @param {(errors: typeof USER_FORM_ERRORS) => void} setErrors
+ * @returns {boolean}
+ */
+export function validateUpdateForm(form, result, setErrors) {
+  const next = { ...USER_FORM_ERRORS };
+  const fullName = (result.fullName ?? "").trim();
+  const password = (result.password ?? "").trim();
+
+  if (!fullName) next.fullName = "FISHni kiriting!";
+  if (password && password.length < 6) next.password = "Parol eng kamida 6 ta belgi bo'lishi kerak!";
+  if (!result.permissions?.length) next.permissions = "Ruxsatlarni belgilang!";
+
+  setErrors(next);
+  if (next.fullName) form.fullName?.focus();
+  else if (next.password) form.password?.focus();
+
+  return Object.values(next).every((v) => v === null);
+}

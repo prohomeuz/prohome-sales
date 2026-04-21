@@ -19,7 +19,7 @@ const STATUSES = {
   SOLD: "bg-red-700",
   RESERVED: "bg-yellow-400",
   EMPTY: "bg-green-500",
-  NOT: "bg-slate-400",
+  NOT: "bg-muted-foreground/60",
 };
 
 const UZBEK_TRANSLATE = {
@@ -130,6 +130,13 @@ export default function RoomHeader({
             </Popover>
           </div>
         )}
+
+        {/* Uy haqida sarlavha */}
+        <div className="mb-2">
+          <h2 className="text-lg font-bold tracking-tight text-foreground uppercase">
+            Uy haqida
+          </h2>
+        </div>
 
         {/* Uy raqami + narx */}
         <div className="flex flex-wrap items-center justify-between gap-3">

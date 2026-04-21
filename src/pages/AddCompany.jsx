@@ -26,6 +26,8 @@ const EMPTY_ERRORS = {
   name: null,
   phoneNumber: null,
   managerName: null,
+  email: null,
+  password: null,
   description: null,
   permissions: null,
 };
@@ -75,8 +77,10 @@ export default function AddCompany() {
       const { errors: next, isValid } = validateCompanyFormData(data);
       dispatch({ type: "SET_ERRORS", payload: next });
       if (next.name) form.name?.focus();
-      else if (next.phoneNumber) form.phoneNumber?.focus();
       else if (next.managerName) form.managerName?.focus();
+      else if (next.phoneNumber) form.phoneNumber?.focus();
+      else if (next.email) form.email?.focus();
+      else if (next.password) form.password?.focus();
       else if (next.description) form.description?.focus();
       return isValid;
     },
@@ -122,6 +126,10 @@ export default function AddCompany() {
         phoneNumber: formattedPhone,
       }).forEach(([k, v]) => {
         if (k === "logo") return;
+        if (k === "permissions") {
+          (Array.isArray(v) ? v : [v]).forEach((perm) => formData.append("permissions", perm));
+          return;
+        }
         if (v !== null && v !== undefined) formData.append(k, v);
       });
       if (logo.file) formData.append("logo", logo.file);
@@ -137,6 +145,8 @@ export default function AddCompany() {
           navigate("/company");
           return;
         }
+        const errBody = await res.json().catch(() => null);
+        console.error("Company POST error:", res.status, errBody);
         if (res.status === 409) {
           dispatch({
             type: "PATCH_ERRORS",
@@ -270,6 +280,30 @@ export default function AddCompany() {
               {errors.phoneNumber && (
                 <p className="text-destructive text-xs">{errors.phoneNumber}</p>
               )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email*</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="example@email.com"
+                disabled={addLoading}
+                onChange={() => clearFieldError("email")}
+              />
+              {errors.email && <p className="text-destructive text-xs">{errors.email}</p>}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Parol*</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Parolni kiriting"
+                disabled={addLoading}
+                onChange={() => clearFieldError("password")}
+              />
+              {errors.password && <p className="text-destructive text-xs">{errors.password}</p>}
             </div>
             <div className="col-span-2 grid w-full gap-3">
               <Label htmlFor="description">Izoh*</Label>

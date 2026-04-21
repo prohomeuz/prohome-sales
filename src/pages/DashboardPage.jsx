@@ -21,6 +21,7 @@ import GeneralError from "@/widgets/error/GeneralError";
 import LoadTransition from "@/widgets/loading/LoadTransition";
 import {
   Building2,
+  ChevronRight,
   CircleDollarSign,
   Layers3,
   RefreshCcw,
@@ -174,19 +175,19 @@ const STAT_CARD_TONES = {
     iconClass: "text-primary",
   },
   emerald: {
-    cardClass: "border-emerald-200/45 bg-emerald-50/35",
-    iconWrapClass: "border-emerald-200/50 bg-background text-emerald-600",
-    iconClass: "text-emerald-600",
+    cardClass: "border-emerald-200/45 bg-emerald-50/35 dark:border-emerald-800/30 dark:bg-emerald-950/20",
+    iconWrapClass: "border-emerald-200/50 bg-background text-emerald-600 dark:border-emerald-700/40 dark:text-emerald-400",
+    iconClass: "text-emerald-600 dark:text-emerald-400",
   },
   amber: {
-    cardClass: "border-amber-200/45 bg-amber-50/35",
-    iconWrapClass: "border-amber-200/50 bg-background text-amber-600",
-    iconClass: "text-amber-600",
+    cardClass: "border-amber-200/45 bg-amber-50/35 dark:border-amber-800/30 dark:bg-amber-950/20",
+    iconWrapClass: "border-amber-200/50 bg-background text-amber-500 dark:border-amber-700/40 dark:text-amber-400",
+    iconClass: "text-amber-500 dark:text-amber-400",
   },
   sky: {
-    cardClass: "border-sky-200/45 bg-sky-50/35",
-    iconWrapClass: "border-sky-200/50 bg-background text-sky-600",
-    iconClass: "text-sky-600",
+    cardClass: "border-sky-200/45 bg-sky-50/35 dark:border-sky-800/30 dark:bg-sky-950/20",
+    iconWrapClass: "border-sky-200/50 bg-background text-sky-600 dark:border-sky-700/40 dark:text-sky-400",
+    iconClass: "text-sky-600 dark:text-sky-400",
   },
 };
 
@@ -658,7 +659,7 @@ function SectionCard({
     >
       <div className="border-border/30 flex items-start justify-between gap-3 border-b px-4 py-3 sm:px-5">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-[17px] font-semibold tracking-tight">{title}</h2>
           {description ? (
             <p className="text-muted-foreground mt-1 text-sm leading-5">
               {description}
@@ -667,7 +668,7 @@ function SectionCard({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {meta ? (
-            <p className="text-muted-foreground text-[11px]">{meta}</p>
+            <p className="text-muted-foreground text-[13px]">{meta}</p>
           ) : null}
           {action}
         </div>
@@ -701,7 +702,7 @@ function StatCard({
                 <Icon className={`size-4 ${styles.iconClass}`} />
               </div>
             ) : null}
-            <p className="text-muted-foreground text-[12px] font-medium">
+            <p className="text-muted-foreground text-sm font-medium">
               {title}
             </p>
           </div>
@@ -710,7 +711,7 @@ function StatCard({
             <AnimatedNumber
               value={value}
               formatter={formatter}
-              className="text-foreground text-2xl font-semibold tracking-[-0.03em] sm:text-[1.75rem]"
+              className="text-foreground text-3xl font-semibold tracking-[-0.03em] sm:text-[2rem]"
             />
             {hint ? (
               <p className="text-muted-foreground mt-1.5 text-sm">{hint}</p>
@@ -728,8 +729,8 @@ function EmptyState({
 }) {
   return (
     <div className="border-border/40 bg-muted/[0.08] flex min-h-[200px] flex-col items-center justify-center rounded-[18px] border border-dashed px-5 text-center">
-      <p className="text-sm font-medium">{title}</p>
-      <p className="text-muted-foreground mt-2 max-w-sm text-xs leading-relaxed">
+      <p className="text-[15px] font-medium">{title}</p>
+      <p className="text-muted-foreground mt-2 max-w-sm text-sm leading-relaxed">
         {description}
       </p>
     </div>
@@ -752,13 +753,13 @@ function MetricGrid({ metrics, columns = 2 }) {
           key={metric.label}
           className="bg-muted/[0.08] rounded-[16px] px-3 py-2.5"
         >
-          <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase">
+          <p className="text-muted-foreground text-[13px] tracking-[0.08em] uppercase">
             {metric.label}
           </p>
           <AnimatedNumber
             value={metric.value}
             formatter={formatCompact}
-            className="mt-1.5 text-lg font-semibold tracking-tight"
+            className="mt-1.5 text-xl font-semibold tracking-tight"
           />
         </div>
       ))}
@@ -775,7 +776,7 @@ function InsightCard({
 }) {
   return (
     <div className="border-border/40 bg-background rounded-[16px] border px-3 py-3">
-      <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase">
+      <p className="text-muted-foreground text-[13px] tracking-[0.08em] uppercase">
         {label}
       </p>
       {children ? (
@@ -784,11 +785,11 @@ function InsightCard({
         <AnimatedNumber
           value={value}
           formatter={formatter}
-          className="mt-1.5 text-lg font-semibold tracking-tight"
+          className="mt-1.5 text-xl font-semibold tracking-tight"
         />
       )}
       {caption ? (
-        <p className="text-muted-foreground mt-1 text-xs">{caption}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{caption}</p>
       ) : null}
     </div>
   );
@@ -804,11 +805,11 @@ function ChartTooltipCard({
 
   return (
     <div className="border-border/40 bg-background rounded-[16px] border px-3 py-2 shadow-none">
-      {label ? <p className="text-xs font-medium">{label}</p> : null}
+      {label ? <p className="text-sm font-medium">{label}</p> : null}
       {payload.map((entry) => (
         <p
           key={entry.dataKey ?? entry.name}
-          className="text-muted-foreground mt-1 text-xs"
+          className="text-muted-foreground mt-1 text-sm"
         >
           {humanize(entry.name ?? entry.dataKey)}:{" "}
           <span className="text-foreground font-medium">
@@ -1182,13 +1183,13 @@ export default function DashboardPage() {
       {error && !hasAnyData ? (
         <GeneralError />
       ) : (
-        <section className="bg-background flex h-full min-h-0 flex-col overflow-y-auto p-3 sm:p-5">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+        <section className="bg-background flex h-full min-h-0 flex-col overflow-y-auto p-3 sm:p-5 lg:p-6">
+          <div className="flex w-full flex-col gap-4">
             <Card className="border-border/40 gap-0 rounded-[24px] py-0 shadow-none">
               <CardContent className="space-y-4 p-4 sm:p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                   <div className="min-w-0 space-y-2">
-                    <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-y-1 text-xs">
                       <span className="text-foreground/80 font-medium">
                         {selectedProject
                           ? (selectedProject.name ??
@@ -1197,15 +1198,15 @@ export default function DashboardPage() {
                             ? "Loyihalar yuklanmoqda..."
                             : "Loyiha tanlanmagan"}
                       </span>
-                      <span className="hidden sm:inline">/</span>
+                      <ChevronRight className="mx-1 hidden size-3 opacity-40 sm:inline-block" />
                       <span>{DASHBOARD_PERIODS[period] ?? "Oy"}</span>
-                      <span className="hidden sm:inline">/</span>
+                      <ChevronRight className="mx-1 hidden size-3 opacity-40 sm:inline-block" />
                       <span>{refreshing ? "Yangilanmoqda" : "Tayyor"}</span>
                     </div>
 
                     <div>
-                      <h1 className="text-foreground text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">
-                        Boshqaruv paneli
+                      <h1 className="text-foreground text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                        Bosh sahifa
                       </h1>
                       <p className="text-muted-foreground mt-1 text-sm sm:text-[15px]">
                         Asosiy ko'rsatkichlar va joriy holat.
@@ -1216,8 +1217,8 @@ export default function DashboardPage() {
                   <div className="flex w-full max-w-2xl flex-col gap-2.5 xl:items-end">
                     <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
                       <Select
-                        value={projectId ?? undefined}
-                        onValueChange={setProjectId}
+                        value={projectId ?? ""}
+                        onValueChange={(val) => val && setProjectId(val)}
                         disabled={projectsLoading || projects.length === 0}
                       >
                         <SelectTrigger className="border-border/40 bg-background h-10 rounded-[12px] px-4">
@@ -1303,7 +1304,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                <div className="grid gap-3 xl:grid-cols-2">
+                {executiveRole && <div className="grid gap-3 xl:grid-cols-2">
                   <SectionCard
                     title="O'sish dinamikasi"
                     description="Davr bo'yicha o'sish"
@@ -1345,18 +1346,18 @@ export default function DashboardPage() {
                               </defs>
                               <CartesianGrid
                                 vertical={false}
-                                stroke="#e5e7eb"
+                                stroke="rgba(128,128,128,0.15)"
                               />
                               <XAxis
                                 dataKey="label"
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <YAxis
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <Tooltip
                                 content={(props) => (
@@ -1410,18 +1411,18 @@ export default function DashboardPage() {
                             >
                               <CartesianGrid
                                 vertical={false}
-                                stroke="#e5e7eb"
+                                stroke="rgba(128,128,128,0.15)"
                               />
                               <XAxis
                                 dataKey="label"
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <YAxis
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <Tooltip
                                 content={(props) => (
@@ -1452,9 +1453,9 @@ export default function DashboardPage() {
                       <EmptyState description="Pul oqimi bo'limi uchun mos ko'rsatkich topilmadi." />
                     )}
                   </SectionCard>
-                </div>
+                </div>}
 
-                <div className="grid gap-3 xl:grid-cols-2">
+                {executiveRole && <div className="grid gap-3 xl:grid-cols-2">
                   <SectionCard
                     title="Qavatlar kesimi"
                     description="Sotuv va qoldiq"
@@ -1475,18 +1476,18 @@ export default function DashboardPage() {
                             >
                               <CartesianGrid
                                 vertical={false}
-                                stroke="#e5e7eb"
+                                stroke="rgba(128,128,128,0.15)"
                               />
                               <XAxis
                                 dataKey="label"
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <YAxis
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                                tick={{ fontSize: 13, fill: "rgba(128,128,128,0.85)" }}
                               />
                               <Tooltip
                                 content={(props) => (
@@ -1614,7 +1615,7 @@ export default function DashboardPage() {
                                   formatter={formatCompact}
                                   className="text-sm font-semibold"
                                 />
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-[13px]">
                                   ta
                                 </p>
                               </div>
@@ -1626,84 +1627,76 @@ export default function DashboardPage() {
                       <EmptyState description="CRM statistikasi hali shakllanmagan." />
                     )}
                   </SectionCard>
-                </div>
+                </div>}
 
                 <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-                  <SectionCard
-                    title="Menejerlar kesimi"
-                    description="Jamoa natijalari"
-                    meta={sectionErrors.manager ?? null}
-                    action={
-                      refreshing ? (
-                        <div className="text-muted-foreground flex items-center gap-1 text-[11px]">
-                          <RefreshCcw className="size-3 animate-spin" />
-                          Yangilanmoqda
-                        </div>
-                      ) : null
-                    }
-                  >
-                    {managerModel.items.length > 0 ? (
-                      <div className="border-border/40 overflow-hidden rounded-[18px] border">
-                        <div className="border-border/30 bg-muted/[0.05] text-muted-foreground hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b px-3.5 py-3 text-[11px] tracking-[0.12em] uppercase sm:grid">
-                          <p>Menejer</p>
-                          <p>Sotuv</p>
-                          <p>Murojaat</p>
-                          <p>Summa</p>
-                        </div>
-
-                        {managerModel.items.map((item, index) => (
-                          <div
-                            key={`${item.label}-${index}`}
-                            className="[&+&]:border-border/30 grid gap-3 px-3.5 py-3 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center [&+&]:border-t"
-                          >
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">
-                                {item.label}
-                              </p>
-                              <p className="text-muted-foreground mt-0.5 text-xs sm:hidden">
-                                Menejer
-                              </p>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 sm:block">
-                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
-                                Sotuv
-                              </p>
-                              <AnimatedNumber
-                                value={item.primary}
-                                formatter={formatCompact}
-                                className="text-sm font-medium"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 sm:block">
-                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
-                                Murojaat
-                              </p>
-                              <AnimatedNumber
-                                value={item.secondary}
-                                formatter={formatCompact}
-                                className="text-sm font-medium"
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 sm:block">
-                              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase sm:hidden">
-                                Summa
-                              </p>
-                              <AnimatedNumber
-                                value={item.tertiary}
-                                formatter={formatMoney}
-                                className="text-sm font-medium"
-                              />
-                            </div>
+                  {executiveRole ? (
+                    <SectionCard
+                      title="Menejerlar kesimi"
+                      description="Jamoa natijalari"
+                      meta={sectionErrors.manager ?? null}
+                      action={
+                        refreshing ? (
+                          <div className="text-muted-foreground flex items-center gap-1 text-[13px]">
+                            <RefreshCcw className="size-3 animate-spin" />
+                            Yangilanmoqda
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <MetricGrid metrics={managerModel.metrics} columns={3} />
-                    )}
-                  </SectionCard>
+                        ) : null
+                      }
+                    >
+                      {managerModel.items.length > 0 ? (
+                        <div className="border-border/40 overflow-hidden rounded-[18px] border">
+                          <div className="border-border/30 bg-muted/[0.05] text-muted-foreground hidden grid-cols-[minmax(0,1.4fr)_120px_120px_170px] items-center gap-3 border-b px-3.5 py-3 text-[13px] tracking-[0.08em] uppercase sm:grid">
+                            <p>Menejer</p>
+                            <p>Sotuv</p>
+                            <p>Murojaat</p>
+                            <p>Summa</p>
+                          </div>
+
+                          {managerModel.items.map((item, index) => (
+                            <div
+                              key={`${item.label}-${index}`}
+                              className="[&+&]:border-border/30 grid gap-3 px-3.5 py-3 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_170px] sm:items-center [&+&]:border-t"
+                            >
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{item.label}</p>
+                                <p className="text-muted-foreground mt-0.5 text-xs sm:hidden">Menejer</p>
+                              </div>
+                              <div className="flex items-center justify-between gap-3 sm:block">
+                                <p className="text-muted-foreground text-[13px] tracking-[0.08em] uppercase sm:hidden">Sotuv</p>
+                                <AnimatedNumber value={item.primary} formatter={formatCompact} className="text-sm font-medium" />
+                              </div>
+                              <div className="flex items-center justify-between gap-3 sm:block">
+                                <p className="text-muted-foreground text-[13px] tracking-[0.08em] uppercase sm:hidden">Murojaat</p>
+                                <AnimatedNumber value={item.secondary} formatter={formatCompact} className="text-sm font-medium" />
+                              </div>
+                              <div className="flex items-center justify-between gap-3 sm:block">
+                                <p className="text-muted-foreground text-[13px] tracking-[0.08em] uppercase sm:hidden">Summa</p>
+                                <AnimatedNumber value={item.tertiary} formatter={formatMoney} className="text-sm font-medium" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <MetricGrid metrics={managerModel.metrics} columns={3} />
+                      )}
+                    </SectionCard>
+                  ) : (
+                    <SectionCard
+                      title="Mening natijam"
+                      description="Shaxsiy ko'rsatkichlar"
+                      meta={sectionErrors.manager ?? null}
+                    >
+                      {managerModel.metrics.length > 0 ? (
+                        <MetricGrid metrics={managerModel.metrics} columns={3} />
+                      ) : (
+                        <EmptyState
+                          title="Ma'lumot yo'q"
+                          description="Tanlangan davr uchun shaxsiy natijalar topilmadi."
+                        />
+                      )}
+                    </SectionCard>
+                  )}
 
                   <SectionCard
                     title="Qisqa holat"
