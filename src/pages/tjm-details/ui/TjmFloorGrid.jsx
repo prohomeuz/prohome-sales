@@ -124,8 +124,8 @@ export default function TjmFloorGrid({
             const rowHasActive = blockLayouts.some(({ block }) =>
               (block?.appartment?.[index] ?? []).some(
                 (h) => String(h.id) === activeDetailsId,
-              );
-            });
+              )
+            );
 
             return (
               <div
