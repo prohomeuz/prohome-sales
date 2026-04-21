@@ -20,6 +20,13 @@ import {
 } from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 import { Slider } from "@/shared/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 import { buttonVariants } from "@/shared/ui/button";
@@ -154,7 +161,7 @@ export default function TjmFilterBar({
             </Button>
 
             <div className="w-[130px] sm:w-[160px] shrink-0">
-              <Select value={selectedBlock} onValueChange={onBlockChange}>
+              <Select value={selectedBlocks[0] ?? "all"} onValueChange={(v) => onBlocksChange(v === "all" ? [] : [v])}>
                 <SelectTrigger className="w-full h-9 sm:h-10 rounded-[10px] bg-background border-border focus:ring-primary/20 text-sm">
                   <SelectValue placeholder="Barchasi" />
                 </SelectTrigger>
