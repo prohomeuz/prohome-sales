@@ -3,7 +3,7 @@
  * All fetch calls go through this for consistent base URL and auth.
  */
 
-const BASE = import.meta.env.VITE_BASE_URL || "";
+const BASE = import.meta.env.DEV ? "" : (import.meta.env.VITE_BASE_URL || "");
 
 /** @returns {string|null} */
 function getToken() {
@@ -16,7 +16,6 @@ function handleUnauthorized() {
   localStorage.removeItem("user");
   localStorage.setItem("theme", "light");
   document.documentElement.classList.remove("dark");
-  // Zustand store ni to'g'ridan import qilish mumkin emas (FSD), shuning uchun reload
   window.location.replace("/login");
 }
 
@@ -43,7 +42,6 @@ export async function apiRequest(path, options = {}) {
 
   try {
     const res = await fetch(url, { ...options, headers });
-    // Login sahifasiga so'rov emas va 401 bo'lsa — avtomatik logout
     if (res.status === 401 && !path.includes("/auth/")) {
       handleUnauthorized();
     }

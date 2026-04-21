@@ -39,7 +39,7 @@ const routes = {
     { url: "/rop", text: "Roplar", icon: <User /> },
     { url: "/salesmanager", text: "Sotuv menejerlari", icon: <User /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
-    { url: "/contracts", text: "Shartnomalar", icon: <FileText /> },
+    { url: "/contract", text: "Shartnomalar", icon: <FileText /> },
     { url: "/crm", text: "CRM", icon: <UsersRound /> },
   ],
   ADMIN: [
@@ -49,7 +49,7 @@ const routes = {
     { url: "/rop", text: "Roplar", icon: <User /> },
     { url: "/salesmanager", text: "Sotuv menejerlari", icon: <User /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
-    { url: "/contracts", text: "Shartnomalar", icon: <FileText /> },
+    { url: "/contract", text: "Shartnomalar", icon: <FileText /> },
     { url: "/crm", text: "CRM", icon: <UsersRound /> },
   ],
   ROP: [
@@ -57,7 +57,7 @@ const routes = {
     { url: "/", text: "Boshqaruv paneli", icon: <Gauge /> },
     { url: "/salesmanager", text: "Sotuv menejerlari", icon: <User /> },
     { url: "/tjm", text: "TJM", icon: <BrickWall /> },
-    { url: "/contracts", text: "Shartnomalar", icon: <FileText /> },
+    { url: "/contract", text: "Shartnomalar", icon: <FileText /> },
     { url: "/crm", text: "CRM", icon: <UsersRound /> },
   ],
   SALESMANAGER: [

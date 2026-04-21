@@ -46,7 +46,7 @@ function getRoleRoutes(role) {
         pageRoute("add/company", () => import("@/pages/AddCompany")),
         pageRoute("company/:id", () => import("@/pages/CompanyDetails")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("contract", () => import("@/pages/Contracts")),
         pageRoute("dashboard", () => import("@/pages/DashboardPage")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
@@ -60,7 +60,7 @@ function getRoleRoutes(role) {
         pageRoute("add/company", () => import("@/pages/AddCompany")),
         pageRoute("company/:id", () => import("@/pages/CompanyDetails")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("contract", () => import("@/pages/Contracts")),
         pageRoute("dashboard", () => import("@/pages/DashboardPage")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
@@ -70,7 +70,7 @@ function getRoleRoutes(role) {
         pageRoute("salesmanager", () => import("@/pages/SalesManager")),
         pageRoute("settings", () => import("@/pages/Settings")),
         pageRoute("tjm", () => import("@/pages/Tjm")),
-        pageRoute("contracts", () => import("@/pages/Contracts")),
+        pageRoute("contract", () => import("@/pages/Contracts")),
         pageRoute("dashboard", () => import("@/pages/DashboardPage")),
         pageRoute("crm", () => import("@/pages/Crm")),
       ];
