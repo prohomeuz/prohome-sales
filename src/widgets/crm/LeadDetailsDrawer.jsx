@@ -80,12 +80,12 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="flex h-full w-full max-w-full flex-col gap-0 border-l-0 bg-gray-50 p-0 shadow-2xl sm:max-w-md sm:rounded-l-2xl">
-        <SheetHeader className="border-b border-gray-100 bg-white p-4 pb-4 sm:rounded-tl-2xl sm:p-6">
-          <SheetTitle className="text-xl font-black text-gray-900">
+      <SheetContent className="flex h-full w-full max-w-full flex-col gap-0 border-l-0 bg-muted/10 p-0 shadow-2xl sm:max-w-md sm:rounded-l-2xl">
+        <SheetHeader className="border-b border-border/40 bg-card p-4 pb-4 sm:rounded-tl-2xl sm:p-6">
+          <SheetTitle className="text-xl font-black text-foreground">
             Sdelkani Tahrirlash
           </SheetTitle>
-          <SheetDescription className="text-gray-400 font-medium">
+          <SheetDescription className="text-muted-foreground font-medium">
             Mijoz ma'lumotlarini yoki uning holatini o'zgartiring.
           </SheetDescription>
         </SheetHeader>
@@ -96,7 +96,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
           className="custom-scrollbar flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6"
         >
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
               Holati (Kalonka)
             </Label>
             <Controller
@@ -107,7 +107,7 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
                   value={field.value ? String(field.value) : ""}
                   onValueChange={field.onChange}
                 >
-                  <SelectTrigger className="h-12 w-full rounded-xl border-gray-200 bg-white">
+                  <SelectTrigger className="h-12 w-full rounded-xl border-border bg-background">
                     <SelectValue placeholder="Bosqichni tanlang" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -127,53 +127,53 @@ export function LeadDetailsDrawer({ lead, isOpen, onClose }) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
               Shaxs / Qo'shimcha ma'lumot
             </Label>
             <Input
               {...register("title")}
-              className="h-12 bg-white rounded-xl border-gray-200 focus:border-[#65a30d] focus:ring-1 focus:ring-[#65a30d] transition-all"
+              className="h-12 bg-background rounded-xl border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all"
             />
             {errors.title && <p className="text-[11px] text-red-500 font-bold ml-1">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
               Telefon raqami / Kompaniya
             </Label>
             <Input
               {...register("companyName")}
-              className="h-12 bg-white rounded-xl border-gray-200 focus:border-[#65a30d] focus:ring-1 focus:ring-[#65a30d] transition-all"
+              className="h-12 bg-background rounded-xl border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all"
             />
             {errors.companyName && <p className="text-[11px] text-red-500 font-bold ml-1">{errors.companyName.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
               Summa kutilmasi (so'm)
             </Label>
             <Input
               type="number"
               {...register("price")}
-              className="h-12 bg-white rounded-xl border-gray-200 focus:border-[#65a30d] focus:ring-1 focus:ring-[#65a30d] transition-all"
+              className="h-12 bg-background rounded-xl border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all"
             />
             {errors.price && <p className="text-[11px] text-red-500 font-bold ml-1">{errors.price.message}</p>}
           </div>
         </form>
 
-        <SheetFooter className="border-t border-gray-100 bg-white p-4 sm:rounded-bl-2xl sm:p-6">
-          <Button 
-            variant="ghost" 
+        <SheetFooter className="border-t border-border/40 bg-card p-4 sm:rounded-bl-2xl sm:p-6">
+          <Button
+            variant="ghost"
             onClick={onClose}
-            className="h-11 w-full rounded-xl px-6 font-bold text-gray-500 hover:bg-gray-100 sm:w-auto"
+            className="h-11 w-full rounded-xl px-6 font-bold text-muted-foreground hover:bg-muted/30 sm:w-auto"
           >
             Bekor qilish
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             form="lead-edit-form"
             disabled={isSubmitting}
-            className="h-11 w-full rounded-xl bg-[#65a30d] px-8 font-bold text-white hover:bg-[#4d7c0f] sm:w-auto"
+            className="h-11 w-full rounded-xl bg-primary px-8 font-bold text-primary-foreground hover:bg-primary/90 sm:w-auto"
           >
             {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saqlanmoqda...</> : "Saqlash"}
           </Button>

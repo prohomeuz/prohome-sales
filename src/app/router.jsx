@@ -100,6 +100,11 @@ export default function App() {
           errorElement: <Bug />,
         },
         {
+          path: "/tjm/:id/add-block",
+          errorElement: <Bug />,
+          lazy: lazyRoute(() => import("@/pages/TjmAddBlock")),
+        },
+        {
           path: "/tjm/:id",
           errorElement: <Bug />,
           lazy: lazyRoute(() => import("@/pages/TjmDetails")),

@@ -76,12 +76,14 @@ export function useDashboardOverview({ projectId, period = "last30", role }) {
       const scopedQuery = buildQuery({ filter: period });
       const requests = [];
 
-      requests.push(
-        { key: "stats", path: `/api/v1/dashboard/stats?${sharedQuery}` },
-        { key: "floors", path: `/api/v1/dashboard/floors?${sharedQuery}` },
-        { key: "growth", path: `/api/v1/dashboard/growth?${sharedQuery}` },
-        { key: "cashflow", path: `/api/v1/dashboard/cashflow?${sharedQuery}` },
-      );
+      if (role !== "SALESMANAGER") {
+        requests.push(
+          { key: "stats", path: `/api/v1/dashboard/stats?${sharedQuery}` },
+          { key: "floors", path: `/api/v1/dashboard/floors?${sharedQuery}` },
+          { key: "growth", path: `/api/v1/dashboard/growth?${sharedQuery}` },
+          { key: "cashflow", path: `/api/v1/dashboard/cashflow?${sharedQuery}` },
+        );
+      }
 
       requests.push(
         {
