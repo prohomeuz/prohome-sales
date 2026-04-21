@@ -20,13 +20,6 @@ import {
 } from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 import { Slider } from "@/shared/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 import { buttonVariants } from "@/shared/ui/button";
@@ -160,21 +153,61 @@ export default function TjmFilterBar({
               )}
             </Button>
 
-            <div className="w-[130px] sm:w-[160px] shrink-0">
-              <Select value={selectedBlocks[0] ?? "all"} onValueChange={(v) => onBlocksChange(v === "all" ? [] : [v])}>
-                <SelectTrigger className="w-full h-9 sm:h-10 rounded-[10px] bg-background border-border focus:ring-primary/20 text-sm">
-                  <SelectValue placeholder="Barchasi" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                  <SelectItem value="all" className="rounded-lg">Barchasi</SelectItem>
-                  {blockOptions.map((blockName) => (
-                    <SelectItem key={blockName} value={blockName} className="rounded-lg">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-[130px] sm:w-[160px] shrink-0 justify-between font-normal rounded-[10px] h-9 sm:h-10"
+                >
+                  <span className="truncate">
+                    {selectedBlocks.length === 0
+                      ? "Barchasi"
+                      : selectedBlocks.length === 1
+                        ? selectedBlocks[0]
+                        : `${selectedBlocks.length} ta blok`}
+                  </span>
+                  <ChevronDown className="text-muted-foreground ml-2 size-4 shrink-0" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-48 p-2">
+                <button
+                  type="button"
+                  onClick={() => onBlocksChange([])}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                    selectedBlocks.length === 0
+                      ? "bg-accent font-medium"
+                      : "hover:bg-accent",
+                  )}
+                >
+                  <span className="size-4 shrink-0" />
+                  Barchasi
+                </button>
+                {blockOptions.map((blockName) => {
+                  const checked = selectedBlocks.includes(blockName);
+                  return (
+                    <button
+                      key={blockName}
+                      type="button"
+                      onClick={() => {
+                        const next = checked
+                          ? selectedBlocks.filter((b) => b !== blockName)
+                          : [...selectedBlocks, blockName];
+                        onBlocksChange(next);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        className="pointer-events-none"
+                      />
                       {blockName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    </button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
 
             {onOpenAddBlock && (
               <Button
