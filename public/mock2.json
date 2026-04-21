@@ -1,0 +1,2378 @@
+{
+  "config": {
+    "maxFloor": 16
+  },
+  "blocks": {
+    "7-BLOK": {
+      "floor": 12,
+      "appartment": [
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 75,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 76,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 77,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 78,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 79,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 80,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 81,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 68,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 69,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 70,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 71,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 72,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 73,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 74,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 61,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 62,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 63,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 64,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 65,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 66,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 67,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 54,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 55,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 56,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 57,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 58,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 59,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 60,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 47,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 48,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 49,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 50,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 51,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 52,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 53,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 40,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 41,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 42,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 43,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 44,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 45,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 46,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 33,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 34,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 35,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "SOLD",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 36,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 37,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "NOT",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 38,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 39,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 26,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 27,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 28,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 29,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 30,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 31,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 32,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 19,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 20,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 21,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "SOLD",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 22,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 23,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 24,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 25,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 12,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 13,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 14,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 15,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 16,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "NOT",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 17,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 18,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": 5,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 87.17,
+            "status": "EMPTY",
+            "image": ["87.17-2D", "87.17-3D", "87.17-plan"],
+            "houseNumber": 6,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": 7,
+            "price": 620
+          },
+          {
+            "room": 1,
+            "size": 48.43,
+            "status": "EMPTY",
+            "image": ["48.43-2D", "48.43-3D", "48.43-plan"],
+            "houseNumber": 8,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "EMPTY",
+            "image": ["54.89-left-2D", "54.89-left-3D", "54.89-left-plan"],
+            "houseNumber": 9,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "NOT",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 10,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.23,
+            "status": "EMPTY",
+            "image": ["57.23-right-2D", "57.23-right-3D", "57.23-right-plan"],
+            "houseNumber": 11,
+            "price": 620
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 48.43,
+            "status": "EMPTY",
+            "image": ["48.43-left-2D", "48.43-left-3D", "48.43-left-plan"],
+            "houseNumber": 1,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "EMPTY",
+            "image": ["54.89-2D", "54.89-3D", "54.89-plan"],
+            "houseNumber": 2,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.79,
+            "status": "EMPTY",
+            "image": ["57.79-2D", "57.79-3D", "57.79-plan"],
+            "houseNumber": 3,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.23,
+            "status": "EMPTY",
+            "image": ["57.23-right-2D", "57.23-right-3D", "57.23-right-plan"],
+            "houseNumber": 4,
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": "D7-1",
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": "D7-2",
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 87.17,
+            "status": "EMPTY",
+            "image": ["87.17-2D", "87.17-3D", "87.17-plan"],
+            "houseNumber": "D7-3",
+            "price": 620
+          }
+        ],
+        [
+          {
+            "room": 3,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": "D7-1",
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": "D7-2",
+            "price": 620
+          }
+        ]
+      ]
+    },
+    "9-BLOK": {
+      "floor": 12,
+      "appartment": [
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 75,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 76,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 77,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 78,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 79,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 80,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 81,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 68,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 69,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 70,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 71,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 72,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 73,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 74,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 61,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 62,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 63,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 64,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 65,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 66,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 67,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 54,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 55,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 56,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 57,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 58,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 59,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 60,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 47,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 48,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 49,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 50,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 51,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 52,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 53,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 40,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 41,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 42,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 43,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 44,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 45,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 46,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 33,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 34,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 35,
+            "price": 590
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 36,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 37,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 38,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 39,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 26,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 27,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 28,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 29,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 30,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 31,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 32,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 19,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 20,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 21,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "SOLD",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 22,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 23,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 24,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 25,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "SOLD",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 12,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 13,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "SOLD",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 14,
+            "price": 600
+          },
+          {
+            "room": 1,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 15,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 16,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "NOT",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 17,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 18,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": 5,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 87.17,
+            "status": "SOLD",
+            "image": ["87.17-2D", "87.17-3D", "87.17-plan"],
+            "houseNumber": 6,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": 7,
+            "price": 620
+          },
+          {
+            "room": 1,
+            "size": 48.43,
+            "status": "EMPTY",
+            "image": ["48.43-2D", "48.43-3D", "48.43-plan"],
+            "houseNumber": 8,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "SOLD",
+            "image": ["54.89-left-2D", "54.89-left-3D", "54.89-left-plan"],
+            "houseNumber": 9,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "SOLD",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 10,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.23,
+            "status": "SOLD",
+            "image": ["57.23-right-2D", "57.23-right-3D", "57.23-right-plan"],
+            "houseNumber": 11,
+            "price": 620
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 48.43,
+            "status": "EMPTY",
+            "image": ["48.43-left-2D", "48.43-left-3D", "48.43-left-plan"],
+            "houseNumber": 1,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "SOLD",
+            "image": ["54.89-2D", "54.89-3D", "54.89-plan"],
+            "houseNumber": 2,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.79,
+            "status": "SOLD",
+            "image": ["57.79-2D", "57.79-3D", "57.79-plan"],
+            "houseNumber": 3,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.23,
+            "status": "EMPTY",
+            "image": ["57.23-right-2D", "57.23-right-3D", "57.23-right-plan"],
+            "houseNumber": 4,
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": "D9-1",
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": "D9-2",
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 87.17,
+            "status": "EMPTY",
+            "image": ["87.17-2D", "87.17-3D", "87.17-plan"],
+            "houseNumber": "D9-3",
+            "price": 620
+          }
+        ],
+        [
+          {
+            "room": 3,
+            "size": 130.95,
+            "status": "EMPTY",
+            "image": ["130.95-left-2D", "130.95-left-3D", "130.95-left-plan"],
+            "houseNumber": "D9-1",
+            "price": 620
+          },
+          {
+            "room": 3,
+            "size": 131.57,
+            "status": "EMPTY",
+            "image": ["131.57-right-2D", "131.57-right-3D", "131.57-right-plan"],
+            "houseNumber": "D9-2",
+            "price": 620
+          }
+        ]
+      ]
+    },
+    "12-BLOK": {
+      "floor": 16,
+      "appartment": [
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 106,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 107,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 108,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-2D", "52.91-3D", "52.91-plan"],
+            "houseNumber": 109,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 110,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 111,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 112,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 99,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 100,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 101,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-2D", "52.91-3D", "52.91-plan"],
+            "houseNumber": 102,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 103,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 104,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 105,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 92,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 93,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 94,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-2D", "52.91-3D", "52.91-plan"],
+            "houseNumber": 95,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 96,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 97,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 98,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 85,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 86,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 87,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-2D", "52.91-3D", "52.91-plan"],
+            "houseNumber": 88,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 89,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 90,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 91,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 78,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 79,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 80,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 81,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 82,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 83,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 84,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 71,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 72,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 73,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 74,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 75,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 76,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 77,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 64,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 65,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 66,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 67,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 68,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 69,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 70,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 57,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 58,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 59,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 60,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 61,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 62,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 63,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 50,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 51,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 52,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 53,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 54,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 55,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 56,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 43,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 44,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 45,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 46,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 47,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 48,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 49,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 36,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 37,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 38,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 39,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 40,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 41,
+            "price": 590
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 42,
+            "price": 590
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 29,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 30,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 31,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 32,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 33,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 34,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 35,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 22,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 23,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 24,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 25,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 26,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 27,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 28,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 15,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 16,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 17,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 18,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 19,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 20,
+            "price": 600
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 21,
+            "price": 600
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-left-2D", "52.91-left-3D", "52.91-left-plan"],
+            "houseNumber": 8,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-left-2D", "54.19-left-3D", "54.19-left-plan"],
+            "houseNumber": 9,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-right-2D", "51.29-right-3D", "51.29-right-plan"],
+            "houseNumber": 10,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 44.35,
+            "status": "EMPTY",
+            "image": ["44.35-2D", "44.35-3D", "44.35-plan"],
+            "houseNumber": 11,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 51.29,
+            "status": "EMPTY",
+            "image": ["51.29-left-2D", "51.29-left-3D", "51.29-left-plan"],
+            "houseNumber": 12,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.19,
+            "status": "EMPTY",
+            "image": ["54.19-right-2D", "54.19-right-3D", "54.19-right-plan"],
+            "houseNumber": 13,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 52.91,
+            "status": "EMPTY",
+            "image": ["52.91-right-2D", "52.91-right-3D", "52.91-right-plan"],
+            "houseNumber": 14,
+            "price": 620
+          }
+        ],
+        [
+          {
+            "room": 1,
+            "size": 57.23,
+            "status": "EMPTY",
+            "image": ["57.23-left-2D", "57.23-left-3D", "57.23-left-plan"],
+            "houseNumber": 1,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.79,
+            "status": "EMPTY",
+            "image": ["57.79-left-2D", "57.79-left-3D", "57.79-left-plan"],
+            "houseNumber": 2,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "EMPTY",
+            "image": ["54.89-right-2D", "54.89-right-3D", "54.89-right-plan"],
+            "houseNumber": 3,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 48.43,
+            "status": "EMPTY",
+            "image": ["48.43-2D", "48.43-3D", "48.43-plan"],
+            "houseNumber": 4,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 54.89,
+            "status": "EMPTY",
+            "image": ["54.89-left-2D", "54.89-left-3D", "54.89-left-plan"],
+            "houseNumber": 5,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.79,
+            "status": "EMPTY",
+            "image": ["57.79-right-2D", "57.79-right-3D", "57.79-right-plan"],
+            "houseNumber": 6,
+            "price": 620
+          },
+          {
+            "room": 2,
+            "size": 57.23,
+            "status": "EMPTY",
+            "image": ["57.23-right-2D", "57.23-right-3D", "57.23-right-plan"],
+            "houseNumber": 7,
+            "price": 620
+          }
+        ]
+      ]
+    }
+  }
+}

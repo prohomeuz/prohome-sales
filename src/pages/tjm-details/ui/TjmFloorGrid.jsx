@@ -28,6 +28,7 @@ import { STATUS_CLASS } from "../lib/constants";
 export default function TjmFloorGrid({
   blockLayouts,
   maxFloor,
+  basementFloors = 0,
   activeDetailsId,
   hasActiveFilters,
   isFiltering,
@@ -123,8 +124,8 @@ export default function TjmFloorGrid({
             const rowHasActive = blockLayouts.some(({ block }) =>
               (block?.appartment?.[index] ?? []).some(
                 (h) => String(h.id) === activeDetailsId,
-              ),
-            );
+              );
+            });
 
             return (
               <div
@@ -158,14 +159,20 @@ export default function TjmFloorGrid({
 
                 {/* Bloklar qatori */}
                 <div className="flex gap-8 px-2 sm:gap-12 sm:px-3 lg:gap-16 xl:gap-20">
-                  {blockLayouts.map(({ blockName, block, widthStyle }) =>
-                    floorNum <= (block?.floor ?? 0) ? (
+                  {blockLayouts.map(({ blockName, block, widthStyle }) => {
+                    const blockOffset = maxFloor - (block?.floor ?? 0);
+                    const blockIndex = index - blockOffset;
+                    const floorRooms = blockIndex < 0
+                      ? []
+                      : block?.appartment?.[blockIndex] ?? [];
+
+                    return (
                       <div
                         key={blockName}
                         style={widthStyle}
                         className="flex gap-2"
                       >
-                        {(block?.appartment?.[index] ?? []).map((h) => {
+                        {floorRooms.map((h) => {
                           const isActive = String(h.id) === activeDetailsId;
                           const isFilteredOut =
                             hasActiveFilters &&
@@ -229,8 +236,8 @@ export default function TjmFloorGrid({
                           );
                         })}
                       </div>
-                    ) : null,
-                  )}
+                    );
+                  })}
                 </div>
 
                 {/* O'ng qavat raqami */}
@@ -258,6 +265,7 @@ export default function TjmFloorGrid({
             );
           },
         )}
+
       </div>
     </div>
   );
