@@ -78,7 +78,7 @@ export default function TjmVisualGrid({
 
                       <Badge
                         className={cn(
-                          "text-primary-foreground",
+                          "text-white border-none shadow-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-tight uppercase",
                           STATUS_CLASS[room.status],
                         )}
                       >

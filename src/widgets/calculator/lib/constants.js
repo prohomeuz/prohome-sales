@@ -71,7 +71,7 @@ export const statusBadgeClass = {
   SOLD: "bg-red-500",
   RESERVED: "bg-orange-500",
   EMPTY: "bg-green-500",
-  NOT: "bg-slate-400",
+  NOT: "bg-muted-foreground/60",
 };
 
 /** Holat uchun o'qiladigan matnlar */
@@ -118,10 +118,10 @@ export const actionButtons = [
     successText: "Uy sotilmaydigan holatga o'tkazildi.",
     icon: Ban,
     cardTone:
-      "border-slate-400/30 hover:border-slate-500/45 hover:bg-slate-500/4",
-    accentTone: "bg-slate-500/75",
+      "border-border hover:border-muted-foreground/40 hover:bg-muted/10",
+    accentTone: "bg-muted-foreground/60",
     iconTone:
-      "border-slate-400/30 bg-slate-500/15 text-slate-600 dark:text-slate-300",
+      "border-border bg-muted/20 text-muted-foreground",
   },
   {
     code: "EMPTY",

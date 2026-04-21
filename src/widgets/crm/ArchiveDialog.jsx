@@ -62,11 +62,11 @@ export function ArchiveDialog({ open, onOpenChange, leads, visibleColumns = [], 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-gray-100">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/40">
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
-            <Archive className="size-4 text-gray-400" />
+            <Archive className="size-4 text-muted-foreground" />
             Arxiv
-            <span className="ml-1 text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            <span className="ml-1 text-xs font-semibold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full">
               {leads.length} ta
             </span>
           </DialogTitle>
@@ -74,19 +74,19 @@ export function ArchiveDialog({ open, onOpenChange, leads, visibleColumns = [], 
 
         <div className="px-5 pt-3 pb-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-300 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50 pointer-events-none" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ism yoki telefon bo'yicha qidirish..."
-              className="h-9 rounded-xl bg-gray-50 pl-9 text-sm"
+              className="h-9 rounded-xl bg-muted/20 pl-9 text-sm"
             />
           </div>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto px-5 pb-5 custom-scrollbar">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-gray-300">
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/40">
               <Archive className="size-10 mb-2" />
               <p className="text-sm font-medium">Arxiv bo'sh</p>
             </div>
@@ -141,22 +141,22 @@ function ArchiveRow({ lead, visibleColumns, onRestore, onDelete }) {
   };
 
   return (
-    <div className="group flex items-center justify-between gap-3 bg-white border border-gray-100 hover:border-gray-200 rounded-xl px-3 py-2.5">
+    <div className="group flex items-center justify-between gap-3 bg-background border border-border/40 hover:border-border rounded-xl px-3 py-2.5">
       {/* Ism + telefon + vaqt */}
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold text-gray-900 truncate">{getInfo(lead)}</p>
+        <p className="text-[13px] font-bold text-foreground truncate">{getInfo(lead)}</p>
         <div className="flex items-center gap-3 mt-0.5">
           {getPhone(lead) !== "-" && (
-            <span className="text-[12px] text-blue-500 font-medium">{getPhone(lead)}</span>
+            <span className="text-[12px] text-sky-500 font-medium">{getPhone(lead)}</span>
           )}
-          <span className="text-[11px] text-gray-300">{formatDate(lead.createdAt)}</span>
+          <span className="text-[11px] text-muted-foreground/50">{formatDate(lead.createdAt)}</span>
         </div>
       </div>
 
       {/* Bosqich tanlash + qaytarish tugmasi */}
       <div className="flex items-center gap-1.5 shrink-0">
         <Select value={selectedColId} onValueChange={setSelectedColId}>
-          <SelectTrigger className="h-8 w-36 rounded-lg text-xs border-gray-200 bg-gray-50">
+          <SelectTrigger className="h-8 w-36 rounded-lg text-xs border-border bg-muted/20">
             <SelectValue placeholder="Bosqich" />
           </SelectTrigger>
           <SelectContent>
@@ -173,7 +173,7 @@ function ArchiveRow({ lead, visibleColumns, onRestore, onDelete }) {
           variant="ghost"
           disabled={restoring || !selectedColId}
           onClick={handleRestore}
-          className="h-8 w-8 rounded-lg text-gray-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+          className="h-8 w-8 rounded-lg text-muted-foreground/40 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-950/30 transition-colors"
           title="Qaytarish"
         >
           {restoring ? (
@@ -188,7 +188,7 @@ function ArchiveRow({ lead, visibleColumns, onRestore, onDelete }) {
           variant="ghost"
           disabled={deleting}
           onClick={handleDelete}
-          className="h-8 w-8 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+          className="h-8 w-8 rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="O'chirish"
         >
           {deleting ? (

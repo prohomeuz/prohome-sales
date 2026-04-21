@@ -433,16 +433,23 @@ export function useProjectStructure(id) {
     if (!id) return { ok: false };
     setSubmitting(true);
     try {
-      const res = await apiRequest(`/api/v1/projects/${id}/structure`, {
+      // Optimistik update
+      setStructure(newStructure);
+
+      const res = await apiRequest(`/api/v1/projects/${id}/add`, {
         method: "POST",
-        body: JSON.stringify(newStructure),
+        body: JSON.stringify({
+          maxFloor: newStructure.maxFloor ?? 0,
+          blocks: newStructure.blocks ?? {},
+        }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setStructure(data);
+
+      if (res.status === 200 || res.status === 201) {
         // Clear drafts after successful save
         writeDraftBlocks(id, []);
         localStorage.removeItem(`tjm_draft_${id}`);
+        // Yangi strukturani serverdan qayta yuklab olamiz
+        await get();
         return { ok: true };
       }
       return { ok: false, status: res.status };
@@ -451,7 +458,93 @@ export function useProjectStructure(id) {
     } finally {
       setSubmitting(false);
     }
-  }, [id]);
+  }, [id, get]);
+
+  const deleteBlock = useCallback(async (blockName) => {
+    if (!id || !structure?.blocks?.[blockName]) return { ok: false };
+    
+    const block = structure.blocks[blockName];
+    let bId = block.id || block.projectId;
+
+    setSubmitting(true);
+    try {
+      // 1. Agar ID bo'lmasa, loyihalar ro'yxatidan nom bo'yicha qidiramiz
+      if (!bId) {
+        const pRes = await apiRequest("/api/v1/projects");
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          const items = pData?.data || pData?.items || pData?.results || pData?.payload || (Array.isArray(pData) ? pData : []);
+          const found = items.find(p => String(p.name).trim().toLowerCase() === String(blockName).trim().toLowerCase());
+          if (found) bId = found.id;
+        }
+      }
+
+      // ID baribir topilmasa, o'chirish imkonsiz
+      if (!bId) {
+        console.error(`Blok uchun ID topilmadi: ${blockName}`);
+        return { ok: false, reason: "id_not_found" };
+      }
+
+      // 2. HAQIQIY DELETE REQUEST yuboramiz
+      console.log(`Backenddan o'chirish so'rovi yuborilmoqda: /api/v1/projects/${bId}`);
+      const delRes = await apiRequest(`/api/v1/projects/${bId}`, {
+        method: "DELETE",
+      });
+
+      if (!delRes.ok) {
+        console.error("Backenddan o'chirishda xatolik:", delRes.status);
+        return { ok: false, status: delRes.status };
+      }
+
+      // 3. Faqat server o'chirgandan keyin lokal holatni va TJM strukturasini yangilaymiz
+      const { [blockName]: _, ...remainingBlocks } = structure.blocks ?? {};
+      
+      // TJM strukturadan ham o'chirib qo'yamiz (JSON field update)
+      await apiRequest(`/api/v1/projects/${id}/add`, {
+        method: "POST",
+        body: JSON.stringify({
+          maxFloor: structure.maxFloor,
+          blocks: { ...remainingBlocks, [blockName]: null }
+        }),
+      });
+
+      setStructure(prev => {
+        if (!prev) return prev;
+        const allBlocks = Object.values(remainingBlocks);
+        const newMaxFloor = allBlocks.length > 0
+          ? Math.max(...allBlocks.map((b) => b.floor ?? 0))
+          : 0;
+        const newTotalStats = allBlocks.reduce(
+          (acc, b) => {
+            acc.total += b.statistics?.total ?? 0;
+            acc.totalEmpty += b.statistics?.totalEmpty ?? 0;
+            acc.totalReserved += b.statistics?.totalReserved ?? 0;
+            acc.totalSold += b.statistics?.totalSold ?? 0;
+            acc.totalNot += b.statistics?.totalNot ?? 0;
+            return acc;
+          },
+          { total: 0, totalEmpty: 0, totalReserved: 0, totalSold: 0, totalNot: 0 },
+        );
+
+        return {
+          ...prev,
+          blocks: remainingBlocks,
+          maxFloor: newMaxFloor,
+          blockCount: allBlocks.length,
+          totalStatistics: newTotalStats,
+        };
+      });
+
+      localStorage.removeItem(`tjm_draft_${id}`);
+      await get();
+      return { ok: true };
+    } catch (err) {
+      console.error("O'chirishda xatolik:", err);
+      return { ok: false };
+    } finally {
+      setSubmitting(false);
+    }
+  }, [id, structure, get]);
 
   return { 
     structure, 
@@ -462,6 +555,7 @@ export function useProjectStructure(id) {
     get, 
     updateRoomStatus, 
     addBlock, 
-    save 
+    save,
+    deleteBlock
   };
 }

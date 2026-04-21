@@ -50,10 +50,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
-  PanelRightOpen,Plus
+  PanelRightOpen,
+  Plus
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const INITIAL_FORM = {
@@ -178,13 +179,17 @@ const FloatingTooltip = ({ tooltipRef }) => (
     className="fixed pointer-events-none z-[9999]"
     style={{ display: 'none' }}
   >
-    <div className="bg-[#020617] text-white border border-white/10 p-4 rounded-[14px] shadow-2xl min-w-[170px] space-y-2.5 text-[11px] relative" />
+    <div className="bg-popover text-popover-foreground border border-border/50 p-3 rounded-xl shadow-xl min-w-[150px] space-y-1.5 text-[11px] relative" />
   </div>
 );
 
 export default function TjmAddBlock() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const editBlockName = searchParams.get('edit') || null;
+  const isManageMode = searchParams.get('manage') === '1';
   const {
     structure: home,
     notFound,
@@ -220,10 +225,12 @@ export default function TjmAddBlock() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const selectionStartRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const contentRef = useRef(null);
 
   const [scale, setScale] = useState(1);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const tooltipRef = useRef(null);
   const hoverDataRef = useRef(null);
@@ -330,6 +337,9 @@ export default function TjmAddBlock() {
       if (e.key === 'Control' || e.key === 'Meta') {
         setIsCtrlPressed(true);
       }
+      if (e.key === 'Shift') {
+        setIsShiftPressed(true);
+      }
     };
     const handleKeyUp = (e) => {
       if (e.code === 'Space') {
@@ -337,6 +347,9 @@ export default function TjmAddBlock() {
       }
       if (e.key === 'Control' || e.key === 'Meta') {
         setIsCtrlPressed(false);
+      }
+      if (e.key === 'Shift') {
+        setIsShiftPressed(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -346,6 +359,13 @@ export default function TjmAddBlock() {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  // Shift bosilganda tooltipni yashirish
+  useEffect(() => {
+    if ((isShiftPressed || isSpacePressed || isCtrlPressed || isPanning) && tooltipRef.current) {
+      tooltipRef.current.style.display = 'none';
+    }
+  }, [isShiftPressed, isSpacePressed, isCtrlPressed, isPanning]);
 
   // Figma Ctrl+Scroll qilib zoom qilish
   useEffect(() => {
@@ -364,6 +384,50 @@ export default function TjmAddBlock() {
     if (loading) start();
     else complete();
   }, [complete, loading, start]);
+
+  // Edit mode: mavjud blok ma'lumotlarini forma va floorsConfig ga yuklash
+  const editInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!home || !editBlockName || editInitializedRef.current) return;
+    const block = home.blocks?.[editBlockName];
+    if (!block) return;
+    editInitializedRef.current = true;
+
+    const blockFloor = block.floor ?? block.appartment?.length ?? 16;
+    const blockHomesPerFloor = Math.max(
+      1,
+      ...(block.appartment ?? []).map((row) => row?.length ?? 0),
+    );
+
+    setForm({
+      name: editBlockName,
+      floor: String(blockFloor),
+      homesPerFloor: String(blockHomesPerFloor),
+      startNumber: '1',
+    });
+    setSelectedFloor(String(blockFloor));
+
+    // floorsConfig ni blokdagi appartment dan to'ldirish
+    if (Array.isArray(block.appartment)) {
+      const config = block.appartment.map((floorRow) =>
+        (floorRow ?? []).map((apt) => ({
+          room: apt?.room ?? 1,
+          size: apt?.size ?? '',
+          price: apt?.price ?? '',
+          customNumber: apt?.houseNumber ? String(apt.houseNumber) : '',
+          img2d: apt?.img2d ?? '',
+          img3d: apt?.img3d ?? '',
+          status: apt?.status === 'EMPTY' ? 'available'
+            : apt?.status === 'RESERVED' ? 'reserved'
+            : apt?.status === 'SOLD' ? 'sold'
+            : apt?.status === 'NOT' ? 'not_for_sale'
+            : 'available',
+        }))
+      );
+      setFloorsConfig(config);
+      prevHomesPerFloorRef.current = blockHomesPerFloor;
+    }
+  }, [home, editBlockName]);
 
   const blockOptions = useMemo(
     () => Object.keys(home?.blocks ?? {}),
@@ -574,7 +638,7 @@ export default function TjmAddBlock() {
   const handleCellMouseMove = useCallback((e, fIdx, rIdx) => {
     const tip = tooltipRef.current;
     if (!tip) return;
-    if (isPanning || isSpacePressed || isCtrlPressed) {
+    if (isPanning || isSpacePressed || isCtrlPressed || isShiftPressed || e.shiftKey) {
       tip.style.display = 'none';
       return;
     }
@@ -592,24 +656,24 @@ export default function TjmAddBlock() {
     const details = previewRows[fIdx]?.homes[rIdx];
     const inner = tip.querySelector('div');
     if (!inner || !cell) return;
+
     inner.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:8px;margin-bottom:4px">
-        <span style="color:#94a3b8;font-weight:500;white-space:nowrap">Uy raqami:</span>
-        <span style="color:#fff;font-weight:700;font-size:13px">#${details?.houseNumber ?? '—'}</span>
+      <div style="display:flex;justify-content:space-between;gap:20px;margin-bottom:4px;border-bottom:1px solid rgba(128,128,128,0.15);padding-bottom:4px">
+        <span style="color:rgba(128,128,128,0.85)">Uy raqami:</span>
+        <span style="font-weight:700">#${details?.houseNumber ?? '—'}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:6px;border-radius:8px;padding-right:10px">
-        <span style="color:#94a3b8;padding:0 4px">Xonalar soni:</span>
-        <span style="color:#fff;font-weight:700">${cell.room || 1}X</span>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:rgba(128,128,128,0.85)">Xonalar:</span>
+        <span style="font-weight:700">${cell.room || 1}x</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 6px">
-        <span style="color:#94a3b8">Narxi:</span>
-        <span style="color:#fff;font-weight:700">${cell.price || '—'}</span>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:rgba(128,128,128,0.85)">Narxi:</span>
+        <span style="font-weight:700">${cell.price || '—'}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 6px">
-        <span style="color:#94a3b8">Maydon:</span>
-        <span style="color:#fff;font-weight:700">${cell.size || '—'} m²</span>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:rgba(128,128,128,0.85)">m²:</span>
+        <span style="font-weight:700">${cell.size || '—'}</span>
       </div>
-      <svg style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:-2px;width:16px;height:8px;fill:#020617" viewBox="0 0 30 10" preserveAspectRatio="none"><path d="M0 0 L15 10 L30 0 Z"/></svg>
     `;
   }, [isPanning, isSpacePressed, isCtrlPressed, floorsConfig, previewRows]);
 
@@ -665,12 +729,12 @@ export default function TjmAddBlock() {
        setSelectedCells([]);
     }
 
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    const content = contentRef.current;
+    if (!content) return;
     
-    const rect = container.getBoundingClientRect();
-    const startX = (e.clientX - rect.left + container.scrollLeft) / scale;
-    const startY = (e.clientY - rect.top + container.scrollTop) / scale;
+    const contentRect = content.getBoundingClientRect();
+    const startX = (e.clientX - contentRect.left) / scale;
+    const startY = (e.clientY - contentRect.top) / scale;
 
     selectionStartRef.current = { x: startX, y: startY };
     setSelectionBox({
@@ -721,8 +785,12 @@ export default function TjmAddBlock() {
       }
       
       // Absolyut kordinatalar va mashtab
-      const currentAbsX = latestClientX > 0 ? ((latestClientX - rect.left + container.scrollLeft) / scale) : selectionBox.startX;
-      const currentAbsY = latestClientY > 0 ? ((latestClientY - rect.top + container.scrollTop) / scale) : selectionBox.startY;
+      const content = contentRef.current;
+      const contentRect = content ? content.getBoundingClientRect() : rect;
+      
+      const currentAbsX = latestClientX > 0 ? ((latestClientX - contentRect.left) / scale) : selectionBox.startX;
+      const currentAbsY = latestClientY > 0 ? ((latestClientY - contentRect.top) / scale) : selectionBox.startY;
+      
       const startAbsX = selectionStartRef.current.x;
       const startAbsY = selectionStartRef.current.y;
       
@@ -730,11 +798,11 @@ export default function TjmAddBlock() {
          ...prev, currentX: currentAbsX, currentY: currentAbsY
       }));
       
-      // Haqiqiy vizual kordinataga tiklash
-      const boxVPLeft = (Math.min(startAbsX, currentAbsX) * scale) - container.scrollLeft + rect.left;
-      const boxVPRight = (Math.max(startAbsX, currentAbsX) * scale) - container.scrollLeft + rect.left;
-      const boxVPTop = (Math.min(startAbsY, currentAbsY) * scale) - container.scrollTop + rect.top;
-      const boxVPBottom = (Math.max(startAbsY, currentAbsY) * scale) - container.scrollTop + rect.top;
+      // Haqiqiy vizual kordinataga tiklash (Visual viewport coordinates for intersection check)
+      const boxVPLeft = (Math.min(startAbsX, currentAbsX) * scale) + contentRect.left;
+      const boxVPRight = (Math.max(startAbsX, currentAbsX) * scale) + contentRect.left;
+      const boxVPTop = (Math.min(startAbsY, currentAbsY) * scale) + contentRect.top;
+      const boxVPBottom = (Math.max(startAbsY, currentAbsY) * scale) + contentRect.top;
       
       const cells = document.querySelectorAll('.group\\/cell\\/input');
       const newSelectedMap = new Map();
@@ -903,7 +971,7 @@ export default function TjmAddBlock() {
 
       if (!normalizedName) {
         nextErrors.name = "Blok nomini kiriting.";
-      } else if (normalizedBlockNames.includes(normalizedName.toLowerCase())) {
+      } else if (!editBlockName && normalizedBlockNames.includes(normalizedName.toLowerCase())) {
         nextErrors.name = "Bu nomdagi blok allaqachon mavjud.";
       }
 
@@ -1014,16 +1082,17 @@ export default function TjmAddBlock() {
           totalStatistics
         };
 
-        // 4. Save to Local Storage (Temporary bypass for Backend)
-        const storageKey = `tjm_draft_${id}`;
-        localStorage.setItem(storageKey, JSON.stringify(finalStructure));
-        
-        toast.success(`${normalizedName} brauzer xotirasiga (LocalStorage) muvaffaqiyatli saqlandi!`);
-        
-        // Simulating redirect for UX consistency
-        setTimeout(() => {
-           navigate(`/tjm/${id}?block=${encodeURIComponent(normalizedName)}`);
-        }, 1500);
+        // 4. Backend ga saqlash
+        const result = await save(finalStructure);
+
+        if (result?.ok) {
+          toast.success(`"${normalizedName}" muvaffaqiyatli saqlandi!`);
+          const manageQuery = isManageMode ? '&manage=1' : '';
+          navigate(`/tjm/${id}?block=${encodeURIComponent(normalizedName)}${manageQuery}`);
+        } else {
+          toast.error('Saqlashda xatolik yuz berdi. Server javob bermadi.');
+          setErrors(prev => ({ ...prev, submit: 'Server xatoligi. Qaytadan urinib ko\'ring.' }));
+        }
       } catch (err) {
         console.error("Submit Error:", err);
         setErrors(prev => ({ ...prev, submit: "Tizimda kutilmagan nosozlik." }));
@@ -1031,7 +1100,7 @@ export default function TjmAddBlock() {
         setSubmitting(false);
       }
     },
-    [baseHomesPerFloor, blockOptions, floor, floorsConfig, home, id, navigate, normalizedName, previewRows, save, totalHomes]
+    [baseHomesPerFloor, blockOptions, editBlockName, floor, floorsConfig, home, id, navigate, normalizedName, previewRows, save, totalHomes]
   );
 
 
@@ -1069,51 +1138,52 @@ export default function TjmAddBlock() {
       ) : !home ? null : (
         <>
         <section className="flex h-full min-h-0 flex-col overflow-hidden bg-background select-none">
-            <header className="bg-white px-8 py-5 flex items-center justify-between z-30 border-b border-slate-100">
+            <header className="bg-card px-8 py-5 flex items-center justify-between z-30 border-b border-border/40">
               <div className="flex items-center gap-6">
-                <Link
-                  className="flex items-center justify-center size-10 rounded-full bg-transparent text-slate-400 hover:text-primary transition-all group"
-                  to={`/tjm/${id}`}
+                <button
+                  type="button"
+                  className="flex items-center justify-center size-10 rounded-full bg-transparent text-muted-foreground hover:text-primary transition-all group"
+                  onClick={() => navigate(-1)}
                 >
                   <ArrowLeft className="size-5 transition-transform" />
-                </Link>
+                </button>
                 <div className="space-y-0.5">
-                  <h1 className="text-[14px] font-bold tracking-tight text-slate-900">Blok qo'shish</h1>
+                  <h1 className="text-[14px] font-bold tracking-tight text-foreground">Blok qo'shish</h1>
                 </div>
               </div>
 
               <div className="flex-1 flex items-center justify-center gap-6 px-10">
-               
 
-               
+
+
                 {/* View Toggle */}
                 <div className="flex items-center gap-1.5 select-none">
-                  <span 
+                  <span
                     className={cn(
-                      "text-[11px] font-bold transition-all duration-200 cursor-pointer px-1", 
-                      !showRoomCount ? "text-[#00C347]" : "text-slate-400 hover:text-slate-500"
-                    )} 
+                      "text-[11px] font-bold transition-all duration-200 cursor-pointer px-1",
+                      !showRoomCount ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setShowRoomCount(false)}
                   >
                     Xonadon
                   </span>
-                  <Switch 
-                    checked={showRoomCount} 
+                  <Switch
+                    checked={showRoomCount}
                     onCheckedChange={setShowRoomCount}
-                    className="h-5 w-9 data-[state=checked]:bg-[#00C347] data-[state=unchecked]:bg-slate-200"
+                    className="h-5 w-9 data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
                   />
-                  <span 
+                  <span
                     className={cn(
-                      "text-[11px] font-bold transition-all duration-200 cursor-pointer px-1", 
-                      showRoomCount ? "text-[#00C347]" : "text-slate-400 hover:text-slate-500"
-                    )} 
+                      "text-[11px] font-bold transition-all duration-200 cursor-pointer px-1",
+                      showRoomCount ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setShowRoomCount(true)}
                   >
                     Xonalar
                   </span>
                 </div>
 
-                <div className="h-6 w-px bg-slate-100" />
+                <div className="h-6 w-px bg-border/50" />
 
                 {/* Function Tools */}
                 <div className="flex items-center gap-1">
@@ -1121,9 +1191,9 @@ export default function TjmAddBlock() {
                     variant="ghost"
                     size="sm"
                     onClick={mirrorBlock}
-                    className="h-10 px-4 rounded-xl hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 text-[10px]"
+                    className="h-10 px-4 rounded-xl hover:bg-muted text-muted-foreground transition-all font-bold gap-2 text-[10px]"
                   >
-                    <FlipHorizontal className="size-4 text-slate-300" />
+                    <FlipHorizontal className="size-4 text-muted-foreground/50" />
                     X-akslantirish
                   </Button>
 
@@ -1131,14 +1201,14 @@ export default function TjmAddBlock() {
                     variant="ghost"
                     size="sm"
                     onClick={fillEmptySpaces}
-                    className="h-10 px-4 rounded-xl hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 text-[10px]"
+                    className="h-10 px-4 rounded-xl hover:bg-muted text-muted-foreground transition-all font-bold gap-2 text-[10px]"
                   >
-                    <Maximize className="size-4 text-slate-300" />
+                    <Maximize className="size-4 text-muted-foreground/50" />
                     Avto-to'ldirish
                   </Button>
                 </div>
 
-                <div className="h-6 w-px bg-slate-100" />
+                <div className="h-6 w-px bg-border/50" />
 
                 {/* History Stack */}
                 <div className="flex items-center gap-1">
@@ -1147,7 +1217,7 @@ export default function TjmAddBlock() {
                     size="icon"
                     onClick={undo}
                     disabled={undoStack.length === 0}
-                    className="h-9 w-9 rounded-xl hover:bg-slate-50 text-slate-400 transition-all"
+                    className="h-9 w-9 rounded-xl hover:bg-muted text-muted-foreground transition-all"
                   >
                     <Undo2 className="size-4" />
                   </Button>
@@ -1156,32 +1226,32 @@ export default function TjmAddBlock() {
                     size="icon"
                     onClick={redo}
                     disabled={redoStack.length === 0}
-                    className="h-9 w-9 rounded-xl hover:bg-slate-50 text-slate-400 transition-all"
+                    className="h-9 w-9 rounded-xl hover:bg-muted text-muted-foreground transition-all"
                   >
                     <Redo2 className="size-4" />
                   </Button>
                 </div>
 
-                <div className="h-6 w-px bg-slate-100" />
+                <div className="h-6 w-px bg-border/50" />
 
                 {/* Stats */}
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full">
-                     <Building2 className="size-3.5 text-slate-400" />
-                     <span className="text-[10px] font-bold text-slate-500">{floor} qavat</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border border-border/40 rounded-full">
+                     <Building2 className="size-3.5 text-muted-foreground" />
+                     <span className="text-[10px] font-bold text-muted-foreground">{floor} qavat</span>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full">
-                     <Ruler className="size-3.5 text-slate-400" />
-                     <span className="text-[10px] font-bold text-slate-500">{totalHomes} xonadon</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border border-border/40 rounded-full">
+                     <Ruler className="size-3.5 text-muted-foreground" />
+                     <span className="text-[10px] font-bold text-muted-foreground">{totalHomes} xonadon</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={submitting} 
-                  className="h-11 px-8 rounded-2xl bg-[#00C347] hover:bg-[#00C347]/90 text-white font-bold text-xs shadow-none border border-[#00C347] transition-all active:scale-95 flex items-center gap-2 group"
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="h-11 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-none transition-all active:scale-95 flex items-center gap-2 group"
                 >
                   {submitting ? (
                     <Loader2 className="animate-spin size-4" />
@@ -1197,7 +1267,7 @@ export default function TjmAddBlock() {
               {/* LEFT SIDEBAR: Controls & Inputs */}
               <aside 
                 className={cn(
-                  "shrink-0 bg-white border-r border-slate-100 flex flex-col transition-all duration-300 relative z-30",
+                  "shrink-0 bg-card border-r border-border/40 flex flex-col transition-all duration-300 relative z-30",
                   !leftSidebarOpen && "w-0 opacity-0 -translate-x-full overflow-hidden"
                 )}
                 style={{ width: leftSidebarOpen ? leftWidth : 0 }}
@@ -1207,11 +1277,11 @@ export default function TjmAddBlock() {
                   onMouseDown={(e) => { e.preventDefault(); setIsResizingLeft(true); }}
                   className="absolute top-0 -right-1.5 w-3 h-full cursor-col-resize z-50 group hover:bg-primary/20 transition-all flex items-center justify-center"
                 >
-                   <div className="h-8 w-1 bg-slate-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                   <div className="h-8 w-1 bg-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="flex items-center justify-between p-6 border-b border-slate-50">
-                  <h3 className="text-[11px] font-bold text-slate-400">Blok sozlamalari</h3>
-                  <Button variant="ghost" size="icon" className="size-8 rounded-xl text-slate-400 hover:text-slate-900 transition-colors" onClick={() => setLeftSidebarOpen(false)}>
+                <div className="flex items-center justify-between p-6 border-b border-border/30">
+                  <h3 className="text-[11px] font-bold text-muted-foreground">Blok sozlamalari</h3>
+                  <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-foreground transition-colors" onClick={() => setLeftSidebarOpen(false)}>
                     <PanelLeftClose className="size-4" />
                   </Button>
                 </div>
@@ -1220,13 +1290,13 @@ export default function TjmAddBlock() {
                   {/* Form Inputs with ultra-modern design */}
                   <div className="space-y-7">
                     <div className="space-y-2.5">
-                      <Label className="text-[11px] font-bold text-slate-400 ml-1">Blok nomi</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground ml-1">Blok nomi</Label>
                       <Input
                         placeholder="Masalan: B-BLOK"
                       value={form.name}
                       onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                       className={cn(
-                        "h-11 rounded-xl bg-slate-50/50 border-slate-100 transition-all focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary",
+                        "h-11 rounded-xl bg-muted/30 border-border/30 transition-all focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary",
                         errors.name && "border-red-400 focus:ring-red-50"
                       )}
                     />
@@ -1234,74 +1304,74 @@ export default function TjmAddBlock() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-400 ml-1">Qavatlar*</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground ml-1">Qavatlar*</Label>
                       <Input
                         type="number"
                         min="1"
                         max="100"
                         value={form.floor}
                         onChange={(e) => setForm(f => ({ ...f, floor: e.target.value }))}
-                        className="h-11 rounded-xl bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5"
+                        className="h-11 rounded-xl bg-muted/30 border-border/30 focus:bg-background focus:ring-4 focus:ring-primary/5"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-400 ml-1">Uylar/qavat*</Label>
+                      <Label className="text-[11px] font-bold text-muted-foreground ml-1">Uylar/qavat*</Label>
                       <Input
                         type="number"
                         min="1"
                         max="30"
                         value={form.homesPerFloor}
                         onChange={(e) => setForm(f => ({ ...f, homesPerFloor: e.target.value }))}
-                        className="h-11 rounded-xl bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5"
+                        className="h-11 rounded-xl bg-muted/30 border-border/30 focus:bg-background focus:ring-4 focus:ring-primary/5"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-slate-400 ml-1">Boshlang'ich №*</Label>
+                    <Label className="text-[11px] font-bold text-muted-foreground ml-1">Boshlang'ich №*</Label>
                     <Input
                       type="number"
                       min="1"
                       value={form.startNumber}
                       onChange={(e) => setForm(f => ({ ...f, startNumber: e.target.value }))}
-                      className="h-11 rounded-xl bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5"
+                      className="h-11 rounded-xl bg-muted/30 border-border/30 focus:bg-background focus:ring-4 focus:ring-primary/5"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-slate-50">
-                   <Label className="text-[11px] font-bold text-slate-400 ml-1">Tezkor shablonlar</Label>
+                <div className="space-y-4 pt-4 border-t border-border/30">
+                   <Label className="text-[11px] font-bold text-muted-foreground ml-1">Tezkor shablonlar</Label>
                    <div className="space-y-2">
                       {PRESETS.map((p) => (
                         <button
                           key={p.label}
                           onClick={() => applyPreset(p)}
-                          className="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group"
+                          className="w-full flex items-center justify-between p-3.5 rounded-xl border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all group"
                         >
-                          <span className="text-sm font-semibold text-slate-700 group-hover:text-primary">{p.label}</span>
-                          <span className="text-[10px] font-medium text-slate-400 group-hover:text-primary/70">{p.floor} q. • {p.homesPerFloor} x.</span>
+                          <span className="text-sm font-semibold text-foreground group-hover:text-primary">{p.label}</span>
+                          <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary/70">{p.floor} q. • {p.homesPerFloor} x.</span>
                         </button>
                       ))}
                    </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-slate-50">
-                  <Label className="text-[11px] font-bold text-slate-400 ml-1">Ko'rinish boshqaruvi</Label>
-                   <div className="grid grid-cols-2 gap-2 bg-slate-50/80 p-1 rounded-xl border border-slate-100">
-                      <button 
+                <div className="space-y-4 pt-4 border-t border-border/30">
+                  <Label className="text-[11px] font-bold text-muted-foreground ml-1">Ko'rinish boshqaruvi</Label>
+                   <div className="grid grid-cols-2 gap-2 bg-muted/30 p-1 rounded-xl border border-border/30">
+                      <button
                         onClick={() => setPreviewVariant("default")}
                         className={cn(
                           "py-2 text-[11px] font-bold rounded-lg transition-all",
-                          previewVariant === "default" ? "bg-white shadow-sm text-primary ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-800"
+                          previewVariant === "default" ? "bg-background shadow-sm text-primary ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
                         )}
                       >
                         Shaxmatka
                       </button>
-                      <button 
+                      <button
                         onClick={() => setPreviewVariant("expanded")}
                         className={cn(
                           "py-2 text-[11px] font-bold rounded-lg transition-all",
-                          previewVariant === "expanded" ? "bg-white shadow-sm text-primary ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-800"
+                          previewVariant === "expanded" ? "bg-background shadow-sm text-primary ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
                         )}
                       >
                         Keng
@@ -1309,25 +1379,25 @@ export default function TjmAddBlock() {
                    </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-slate-50">
-                  <Label className="text-[11px] font-bold text-slate-400 ml-1">Ko'rsatkichlar</Label>
+                <div className="space-y-4 pt-4 border-t border-border/30">
+                  <Label className="text-[11px] font-bold text-muted-foreground ml-1">Ko'rsatkichlar</Label>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl">
-                      <p className="text-[10px] text-slate-400 font-bold">Jami qavat</p>
+                    <div className="bg-muted/30 border border-border/30 p-3 rounded-xl">
+                      <p className="text-[10px] text-muted-foreground font-bold">Jami qavat</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="size-6 rounded-lg bg-emerald-50 flex items-center justify-center">
-                          <Layers3 className="size-3.5 text-emerald-600" />
+                        <div className="size-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Layers3 className="size-3.5 text-primary" />
                         </div>
-                        <span className="text-sm font-bold text-slate-800">{floor}</span>
+                        <span className="text-sm font-bold text-foreground">{floor}</span>
                       </div>
                     </div>
-                    <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl">
-                      <p className="text-[10px] text-slate-400 font-bold">Jami xonadon</p>
+                    <div className="bg-muted/30 border border-border/30 p-3 rounded-xl">
+                      <p className="text-[10px] text-muted-foreground font-bold">Jami xonadon</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="size-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                          <LayoutPanelLeft className="size-3.5 text-blue-600" />
+                        <div className="size-6 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                          <LayoutPanelLeft className="size-3.5 text-sky-500" />
                         </div>
-                        <span className="text-sm font-bold text-slate-800">{totalHomes}</span>
+                        <span className="text-sm font-bold text-foreground">{totalHomes}</span>
                       </div>
                     </div>
                   </div>
@@ -1342,7 +1412,7 @@ export default function TjmAddBlock() {
             </aside>
 
             {/* CENTER CANVAS: Builder Grid Preview */}
-            <main className="flex-1 flex flex-col min-w-0 bg-[#f9fbff] dark:bg-[#09090b] relative">
+            <main className="flex-1 flex flex-col min-w-0 bg-background relative">
               {/* Pro Studio Grid Background */}
               <div 
                 className="absolute inset-0 z-0 opacity-[0.4] dark:opacity-[0.1]" 
@@ -1355,7 +1425,7 @@ export default function TjmAddBlock() {
                   backgroundSize: '24px 24px, 120px 120px, 120px 120px'
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-white/40 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/40 pointer-events-none" />
               
               {/* Floating Sidebar Toggles */}
               {!leftSidebarOpen && (
@@ -1364,13 +1434,13 @@ export default function TjmAddBlock() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="absolute left-6 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white border border-slate-100 text-slate-300 hover:text-primary size-11 transition-all group"
+                      className="absolute left-6 top-1/2 -translate-y-1/2 z-50 rounded-full bg-card border border-border/40 text-muted-foreground hover:text-primary size-11 transition-all group"
                       onClick={() => setLeftSidebarOpen(true)}
                     >
                       <PanelLeftOpen className="size-5 transition-transform" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-slate-900 text-white rounded-xl px-4 py-2 text-xs font-bold border-none shadow-2xl">Sozlamalar panelini ochish</TooltipContent>
+                  <TooltipContent side="right" className="bg-popover text-popover-foreground rounded-xl px-4 py-2 text-xs font-bold border border-border/50 shadow-2xl">Sozlamalar panelini ochish</TooltipContent>
                 </Tooltip>
               )}
               
@@ -1380,45 +1450,45 @@ export default function TjmAddBlock() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="absolute right-6 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white border border-slate-100 text-slate-300 hover:text-primary size-11 transition-all group"
+                      className="absolute right-6 top-1/2 -translate-y-1/2 z-50 rounded-full bg-card border border-border/40 text-muted-foreground hover:text-primary size-11 transition-all group"
                       onClick={() => setRightSidebarOpen(true)}
                     >
                       <PanelRightOpen className="size-5 transition-transform" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="left" className="bg-slate-900 text-white rounded-xl px-4 py-2 text-xs font-bold border-none shadow-2xl">Uy xususiyatlari panelini ochish</TooltipContent>
+                  <TooltipContent side="left" className="bg-popover text-popover-foreground rounded-xl px-4 py-2 text-xs font-bold border border-border/50 shadow-2xl">Uy xususiyatlari panelini ochish</TooltipContent>
                 </Tooltip>
               )}
 
 
-              <div className="px-8 py-3 border-b border-slate-100 bg-white flex items-center justify-between relative z-10 w-full">
+              <div className="px-8 py-3 border-b border-border/40 bg-card flex items-center justify-between relative z-10 w-full">
                 <div className="flex gap-6 sm:gap-10 overflow-x-auto no-scrollbar">
                   <div className="flex items-center gap-2.5 whitespace-nowrap group cursor-default">
                      <div className="size-2.5 rounded-full bg-[#00C347]" />
-                     <span className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors">Bo'sh</span>
+                     <span className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors">Bo'sh</span>
                   </div>
                   <div className="flex items-center gap-2.5 whitespace-nowrap group cursor-default">
                      <div className="size-2.5 rounded-full bg-[#FFBA01]" />
-                     <span className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors">Bron</span>
+                     <span className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors">Bron</span>
                   </div>
                   <div className="flex items-center gap-2.5 whitespace-nowrap group cursor-default">
                      <div className="size-2.5 rounded-full bg-[#B70000]" />
-                     <span className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors">Sotilgan</span>
+                     <span className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors">Sotilgan</span>
                   </div>
                   <div className="flex items-center gap-2.5 whitespace-nowrap group cursor-default">
                      <div className="size-2.5 rounded-full bg-[#90A0B7]" />
-                     <span className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors">Sotilmaydi</span>
+                     <span className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors">Sotilmaydi</span>
                   </div>
                 </div>
 
-                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-1 ml-4 select-none shrink-0" title="Mashtabni o'zgartirish (Zoom)">
-                  <button onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="size-6 flex items-center justify-center hover:bg-white hover:shadow-sm rounded transition-all text-slate-500 hover:text-slate-900 focus:outline-none">
+                <div className="flex items-center bg-muted border border-border rounded-lg p-1 ml-4 select-none shrink-0" title="Mashtabni o'zgartirish (Zoom)">
+                  <button onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="size-6 flex items-center justify-center hover:bg-background hover:shadow-sm rounded transition-all text-muted-foreground hover:text-foreground focus:outline-none">
                      <Minus className="size-3" />
                   </button>
-                  <div className="w-12 text-center text-[10px] font-bold text-slate-600 font-mono cursor-pointer hover:text-slate-900" title="100% ga qaytarish" onClick={() => setScale(1)}>
+                  <div className="w-12 text-center text-[10px] font-bold text-muted-foreground font-mono cursor-pointer hover:text-foreground" title="100% ga qaytarish" onClick={() => setScale(1)}>
                      {Math.round(scale * 100)}%
                   </div>
-                  <button onClick={() => setScale(s => Math.min(4, s + 0.1))} className="size-6 flex items-center justify-center hover:bg-white hover:shadow-sm rounded transition-all text-slate-500 hover:text-slate-900 focus:outline-none">
+                  <button onClick={() => setScale(s => Math.min(4, s + 0.1))} className="size-6 flex items-center justify-center hover:bg-background hover:shadow-sm rounded transition-all text-muted-foreground hover:text-foreground focus:outline-none">
                      <Plus className="size-3" />
                   </button>
                 </div>
@@ -1432,7 +1502,14 @@ export default function TjmAddBlock() {
                 )}
                 onPointerDown={handleFigmaCanvasPointer}
               >
-                <div style={{ zoom: scale }} className={cn("relative min-w-max m-auto", (isSpacePressed || isCtrlPressed || isPanning) && "pointer-events-none")}>
+                <div 
+                  ref={contentRef} 
+                  style={{ 
+                    transform: `scale(${scale})`, 
+                    transformOrigin: 'top center' 
+                  }} 
+                  className={cn("relative min-w-max m-auto transition-transform duration-75", (isSpacePressed || isCtrlPressed || isPanning) && "pointer-events-none")}
+                >
                 {/* Visual Intersect Box */}
                 {selectionBox && (
                   <div 
@@ -1454,37 +1531,37 @@ export default function TjmAddBlock() {
                       <div key={`floor-${floorNumber}`} className="flex items-center gap-3 min-w-max group/row">
                          {/* Floor Label with Bulk Actions */}
                          <div className="relative group/label flex items-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white text-xs font-bold tracking-tighter transition-all hover:border-primary group-hover/label:bg-primary group-hover/label:text-white group-hover/label:border-primary cursor-pointer select-none">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-border/30 bg-card text-xs font-bold tracking-tighter transition-all hover:border-primary group-hover/label:bg-primary group-hover/label:text-primary-foreground group-hover/label:border-primary cursor-pointer select-none">
                               {floorNumber}
                             </div>
-                            
+
                             {/* Hover Actions Panel (Manual Floating Popover) */}
-                            <div className="absolute left-1/2 -top-12 -translate-x-1/2 flex items-center gap-1 px-1.5 py-1 bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-xl opacity-0 pointer-events-none group-hover/label:opacity-100 group-hover/label:translate-y-[-4px] group-hover/label:pointer-events-auto transition-all duration-200 z-50 before:absolute before:inset-x-0 before:-bottom-4 before:h-6 before:content-['']">
+                            <div className="absolute left-1/2 -top-12 -translate-x-1/2 flex items-center gap-1 px-1.5 py-1 bg-card border border-border/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-xl opacity-0 pointer-events-none group-hover/label:opacity-100 group-hover/label:translate-y-[-4px] group-hover/label:pointer-events-auto transition-all duration-200 z-50 before:absolute before:inset-x-0 before:-bottom-4 before:h-6 before:content-['']">
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <button
                                       onClick={() => copyFloorBelow(floorIndex)}
-                                      className="flex items-center justify-center size-8 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors"
+                                      className="flex items-center justify-center size-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                                       type="button"
                                     >
                                       <ArrowDownToLine className="size-4" />
                                     </button>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="bg-[#020617] text-white border-none shadow-xl fill-[#020617] px-3 py-1.5 rounded-lg overflow-visible">Pastdagi barcha qavatlarga nusxalash</TooltipContent>
+                                  <TooltipContent side="top" className="bg-popover text-popover-foreground border border-border/40 shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Pastdagi barcha qavatlarga nusxalash</TooltipContent>
                                 </Tooltip>
                                 
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <button
                                       onClick={() => handleCopyFloor(floorIndex)}
-                                      className="flex items-center justify-center size-8 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors"
+                                      className="flex items-center justify-center size-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                                       type="button"
                                     >
                                       <ClipboardCopy className="size-4" />
                                     </button>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="bg-[#020617] text-white border-none shadow-xl fill-[#020617] px-3 py-1.5 rounded-lg overflow-visible">Qavat nusxasini olish</TooltipContent>
+                                  <TooltipContent side="top" className="bg-popover text-popover-foreground border border-border/40 shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Qavat nusxasini olish</TooltipContent>
                                 </Tooltip>
                                 
                                 {clipboardRow && (
@@ -1498,11 +1575,11 @@ export default function TjmAddBlock() {
                                         <ClipboardPaste className="size-4" />
                                       </button>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="bg-[#020617] text-white border-none shadow-xl fill-[#020617] px-3 py-1.5 rounded-lg overflow-visible">Xotiradagi qavatni joylash</TooltipContent>
+                                    <TooltipContent side="top" className="bg-popover text-popover-foreground border border-border/40 shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Xotiradagi qavatni joylash</TooltipContent>
                                   </Tooltip>
                                 )}
                                 
-                                <div className="w-px h-5 bg-slate-100 mx-1" />
+                                <div className="w-px h-5 bg-border mx-1" />
                                 
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1514,13 +1591,13 @@ export default function TjmAddBlock() {
                                       <Eraser className="size-4" />
                                     </button>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="bg-[#020617] text-white border border-white/10 px-3 py-1.5 rounded-lg overflow-visible">Qavatni tozalash</TooltipContent>
+                                  <TooltipContent side="top" className="bg-popover text-popover-foreground border border-border/40 px-3 py-1.5 rounded-lg overflow-visible">Qavatni tozalash</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
 
                               {/* Real SVG Arrow Pointer Bottom (Dumcha) */}
                               <svg 
-                                className="absolute top-full left-1/2 -translate-x-1/2 -mt-[0.5px] w-4 h-2 text-white fill-current border-none" 
+                                className="absolute top-full left-1/2 -translate-x-1/2 -mt-[0.5px] w-4 h-2 text-card fill-current border-none"
                                 viewBox="0 0 30 10" 
                                 preserveAspectRatio="none"
                               >
@@ -1565,10 +1642,17 @@ export default function TjmAddBlock() {
                                     onDrop={(e) => handleDrop(e, floorIndex, roomIndex)}
                                   >
                                          <div 
-                                           onMouseEnter={() => setDragEnabledId(dragId)}
-                                           onMouseLeave={() => setDragEnabledId(null)}
+                                           onMouseEnter={() => {
+                                             setDragEnabledId(dragId);
+                                             suppressDetailsRef.current = dragId;
+                                             if (tooltipRef.current) tooltipRef.current.style.display = 'none';
+                                           }}
+                                           onMouseLeave={() => {
+                                             setDragEnabledId(null);
+                                             suppressDetailsRef.current = null;
+                                           }}
                                            className={cn(
-                                             "absolute -left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/cell:opacity-100 cursor-grab text-slate-300 z-30 p-1 bg-white rounded border border-slate-100 transition-all",
+                                             "absolute -left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/cell:opacity-100 cursor-grab text-muted-foreground z-30 p-1 bg-card rounded border border-border/30 transition-all",
                                              isDragging && "cursor-grabbing scale-110 border-primary text-primary opacity-100"
                                            )}
                                          >
@@ -1584,7 +1668,7 @@ export default function TjmAddBlock() {
                                           onPointerDown={(e) => handleCellPointerDown(e, floorIndex, roomIndex)}
                                           onKeyDown={(e) => handleKeyDown(e, floorIndex, roomIndex)}
                                           className={cn(
-                                            "group/cell/input w-16 h-12 text-center text-xs font-bold p-0 transition-all no-spinners border bg-white rounded-xl ring-inset ring-black/5",
+                                            "group/cell/input w-16 h-12 text-center text-xs font-bold p-0 transition-all no-spinners border bg-background rounded-xl ring-inset ring-black/5",
                                             statusClass,
                                             isSelected ? "ring-2 ring-primary ring-offset-2 z-20 scale-105" : "",
                                             previewVariant === "expanded" ? "w-24 h-16 text-base" : ""
@@ -1611,7 +1695,7 @@ export default function TjmAddBlock() {
                                           <TooltipContent side="top" className="text-white border-none shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Xonadonni o'chirish</TooltipContent>
                                         </Tooltip>
 
-                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground whitespace-nowrap opacity-0 group-hover/cell:opacity-100 font-mono transition-opacity pointer-events-none z-20 bg-background/95 border border-slate-100 px-1.5 py-0.5 rounded-md">
+                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground whitespace-nowrap opacity-0 group-hover/cell:opacity-100 font-mono transition-opacity pointer-events-none z-20 bg-background/95 border border-border/30 px-1.5 py-0.5 rounded-md">
                                           #{homeDetails?.houseNumber}
                                         </div>
                                   </div>
@@ -1622,14 +1706,14 @@ export default function TjmAddBlock() {
                                 <button 
                                   onClick={() => addRoomBox(floorIndex)}
                                   className={cn(
-                                    "border-2 border-dashed border-slate-200 hover:border-primary/50 text-slate-300 hover:text-primary rounded-xl flex items-center justify-center transition-all shrink-0 bg-white/50 backdrop-blur-sm group/add-room",
+                                    "border-2 border-dashed border-border hover:border-primary/50 text-muted-foreground hover:text-primary rounded-xl flex items-center justify-center transition-all shrink-0 bg-background/50 backdrop-blur-sm group/add-room",
                                     previewVariant === "expanded" ? "w-24 h-16" : "w-16 h-12"
                                   )}
                                 >
                                   <PlusCircle className="size-5 group-hover/add-room:scale-110 transition-transform" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="right" className="bg-slate-900 text-white rounded-xl px-3 py-1.5 text-[10px] font-bold border-none shadow-2xl">Xonadon qo'shish</TooltipContent>
+                              <TooltipContent side="right" className="bg-popover text-popover-foreground rounded-xl px-3 py-1.5 text-[10px] font-bold border border-border/50 shadow-2xl">Xonadon qo'shish</TooltipContent>
                             </Tooltip>
                          </div>
                       </div>
@@ -1646,7 +1730,7 @@ export default function TjmAddBlock() {
             {/* RIGHT SIDEBAR: Inspector Panel */}
             <aside 
               className={cn(
-                "shrink-0 bg-white border-l border-slate-100 flex flex-col transition-all duration-300 relative z-30",
+                "shrink-0 bg-card border-l border-border/40 flex flex-col transition-all duration-300 relative z-30",
                 !rightSidebarOpen && "w-0 opacity-0 translate-x-full overflow-hidden"
               )}
               style={{ width: rightSidebarOpen ? rightWidth : 0 }}
@@ -1656,24 +1740,24 @@ export default function TjmAddBlock() {
                 onMouseDown={(e) => { e.preventDefault(); setIsResizingRight(true); }}
                 className="absolute top-0 -left-1.5 w-3 h-full cursor-col-resize z-50 group hover:bg-primary/20 transition-all flex items-center justify-center"
               >
-                 <div className="h-8 w-1 bg-slate-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                 <div className="h-8 w-1 bg-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <div className="flex items-center justify-between p-5 border-b border-slate-50">
+              <div className="flex items-center justify-between p-5 border-b border-border/30">
                 <div className="flex items-center gap-2">
-                   <Ruler className="size-4 text-slate-400" />
-                   <h3 className="text-[11px] font-bold text-slate-400">Inspektor</h3>
+                   <Ruler className="size-4 text-muted-foreground" />
+                   <h3 className="text-[11px] font-bold text-muted-foreground">Inspektor</h3>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedCells.length > 0 && (
-                    <button 
-                      onClick={() => setSelectedCells([])} 
+                    <button
+                      onClick={() => setSelectedCells([])}
                       className="text-[10px] font-bold text-primary hover:text-primary/70 transition-colors mr-2"
                       type="button"
                     >
                       Tozalash
                     </button>
                   )}
-                  <Button variant="ghost" size="icon" className="size-8 rounded-xl text-slate-400 hover:text-slate-900 transition-colors" onClick={() => setRightSidebarOpen(false)}>
+                  <Button variant="ghost" size="icon" className="size-8 rounded-xl text-muted-foreground hover:text-foreground transition-colors" onClick={() => setRightSidebarOpen(false)}>
                     <PanelRightClose className="size-4" />
                   </Button>
                 </div>
@@ -1702,15 +1786,15 @@ export default function TjmAddBlock() {
 
                     return (
                       <>
-                        <div className="relative group p-6 rounded-[24px] border-2 border-slate-100 bg-white text-center space-y-2">
-                           <div className="text-[11px] font-bold text-slate-400">
+                        <div className="relative group p-6 rounded-[24px] border-2 border-border/30 bg-card text-center space-y-2">
+                           <div className="text-[11px] font-bold text-muted-foreground">
                               {isMulti ? `${selectedCells.length} ta xonadon` : `Xonadon №${homeDetails?.houseNumber ?? "?"}`}
                            </div>
-                           <div className="text-3xl font-bold text-slate-900">
+                           <div className="text-3xl font-bold text-foreground">
                               {isSameRoom ? `${displayRoom} xona` : "Turlicha"}
                            </div>
                            {!isMulti && (
-                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500">
+                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/30 border border-border/30 text-[10px] font-bold text-muted-foreground">
                                 <Layers3 className="size-3" />
                                 {floor - fIdx}-qavat • {rIdx + 1}-o'rin
                              </div>
@@ -1719,10 +1803,10 @@ export default function TjmAddBlock() {
 
                         <div className="space-y-6">
                           <div className="space-y-2">
-                            <Label className="text-[11px] font-bold text-slate-400 ml-1">Xonadon raqami</Label>
+                            <Label className="text-[11px] font-bold text-muted-foreground ml-1">Xonadon raqami</Label>
                             <Input
                               type="text"
-                              className="h-11 rounded-xl bg-slate-50/50 border-slate-100 font-bold transition-all focus:bg-white focus:ring-4 focus:ring-primary/5"
+                              className="h-11 rounded-xl bg-muted/30 border-border/30 font-bold transition-all focus:bg-background focus:ring-4 focus:ring-primary/5"
                               placeholder={isMulti && !isSameCustomNumber ? "Turlicha" : "Masalan: 12A"}
                               value={displayCustomNumber}
                               onChange={(e) => applyToSelected("customNumber", e.target.value)}
@@ -1731,23 +1815,23 @@ export default function TjmAddBlock() {
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label className="text-[11px] font-bold text-slate-400 ml-1">Xonalar</Label>
+                              <Label className="text-[11px] font-bold text-muted-foreground ml-1">Xonalar</Label>
                               <Input
                                 type="number"
                                 min="1"
                                 max="8"
-                                className="h-11 rounded-xl bg-slate-50/50 border-slate-100 font-bold transition-all focus:bg-white focus:ring-4 focus:ring-primary/5"
+                                className="h-11 rounded-xl bg-muted/30 border-border/30 font-bold transition-all focus:bg-background focus:ring-4 focus:ring-primary/5"
                                 placeholder={isMulti && !isSameRoom ? "0" : ""}
                                 value={displayRoom}
                                 onChange={(e) => applyToSelected("room", e.target.value)}
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[11px] font-bold text-slate-400 ml-1">Maydon (m²)</Label>
+                              <Label className="text-[11px] font-bold text-muted-foreground ml-1">Maydon (m²)</Label>
                               <Input
                                 type="number"
                                 min="0"
-                                className="h-11 rounded-xl bg-slate-50/50 border-slate-100 font-bold transition-all focus:bg-white focus:ring-4 focus:ring-primary/5"
+                                className="h-11 rounded-xl bg-muted/30 border-border/30 font-bold transition-all focus:bg-background focus:ring-4 focus:ring-primary/5"
                                 placeholder={isMulti && !isSameSize ? "0" : "0.00"}
                                 value={displaySize}
                                 onChange={(e) => applyToSelected("size", e.target.value)}
@@ -1756,19 +1840,19 @@ export default function TjmAddBlock() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-[11px] font-bold text-slate-400 ml-1">1 m² narxi ($/so'm)</Label>
+                            <Label className="text-[11px] font-bold text-muted-foreground ml-1">1 m² narxi ($/so'm)</Label>
                             <Input
                               type="number"
                               min="0"
-                              className="h-11 rounded-xl bg-slate-50/50 border-slate-100 font-bold transition-all focus:bg-white focus:ring-4 focus:ring-primary/5"
+                              className="h-11 rounded-xl bg-muted/30 border-border/30 font-bold transition-all focus:bg-background focus:ring-4 focus:ring-primary/5"
                               placeholder={isMulti && !isSamePrice ? "Turlicha" : "0.00"}
                               value={displayPrice}
                               onChange={(e) => applyToSelected("price", e.target.value)}
                             />
                           </div>
 
-                          <div className="space-y-3 pt-4 border-t border-slate-50">
-                             <Label className="text-[11px] font-bold text-slate-400 ml-1">Xonadon holati (Status)</Label>
+                          <div className="space-y-3 pt-4 border-t border-border/30">
+                             <Label className="text-[11px] font-bold text-muted-foreground ml-1">Xonadon holati (Status)</Label>
                              <div className="grid grid-cols-2 gap-2">
                                {[
                                  { id: "available", label: "Bo'sh", color: "bg-[#00C347]" },
@@ -1776,7 +1860,7 @@ export default function TjmAddBlock() {
                                  { id: "sold", label: "Sotilgan", color: "bg-[#B70000]" },
                                  { id: "not_for_sale", label: "Yopiq", color: "bg-[#90A0B7]" },
                                ].map((st) => {
-                                 const currentStatus = isMulti 
+                                 const currentStatus = isMulti
                                    ? (selectedCells.every(p => (floorsConfig[p.fIdx]?.[p.rIdx]?.status || "available") === st.id) ? st.id : null)
                                    : (firstCellData.status || "available") === st.id ? st.id : null;
 
@@ -1789,9 +1873,9 @@ export default function TjmAddBlock() {
                                      onClick={() => applyToSelected("status", st.id)}
                                      className={cn(
                                        "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px] font-bold border transition-all",
-                                       isSelected 
-                                         ? "bg-slate-50 border-primary/40 text-primary" 
-                                         : "bg-slate-50/50 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100/80"
+                                       isSelected
+                                         ? "bg-muted/30 border-primary/40 text-primary"
+                                         : "bg-muted/10 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                      )}
                                    >
                                      <div className={cn("size-2 rounded-full shrink-0", st.color)} />
@@ -1809,16 +1893,16 @@ export default function TjmAddBlock() {
                   })()}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/30">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-muted/5">
                   <div className="relative mb-8">
-                    <div className="relative size-24 rounded-[32px] bg-white border border-slate-100 flex items-center justify-center group">
+                    <div className="relative size-24 rounded-[32px] bg-card border border-border/30 flex items-center justify-center group">
                       <MousePointer2 className="size-10 text-primary/40 rotate-12 group-hover:rotate-0 transition-transform duration-500" />
                     </div>
                   </div>
-                  
+
                   <div className="max-w-[240px] space-y-3 mb-12">
-                    <h3 className="text-sm font-bold text-slate-800">Inspektor tayyor</h3>
-                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed px-2">
+                    <h3 className="text-sm font-bold text-foreground">Inspektor tayyor</h3>
+                    <p className="text-[11px] text-muted-foreground font-medium leading-relaxed px-2">
                        Chizmadagi istalgan katakchani tanlang va uning xususiyatlarini boshqaring.
                     </p>
                   </div>
@@ -1827,12 +1911,12 @@ export default function TjmAddBlock() {
                 </div>
               )}
 
-              <div className="p-6 border-t border-slate-50 mt-auto">
+              <div className="p-6 border-t border-border/30 mt-auto">
                 {selectedCells.length === 0 && (
-                  <Button 
+                  <Button
                      variant="outline"
                      onClick={() => setIsShortcutsOpen(true)}
-                     className="w-full h-11 rounded-2xl text-slate-400 hover:text-slate-900 border-slate-100 hover:bg-slate-50 transition-all gap-2 text-[11px] font-bold"
+                     className="w-full h-11 rounded-2xl text-muted-foreground hover:text-foreground border-border/30 hover:bg-muted/30 transition-all gap-2 text-[11px] font-bold"
                   >
                      <MousePointer2 className="size-4" />
                      Shortcuts
@@ -1846,26 +1930,26 @@ export default function TjmAddBlock() {
         {/* Shortcuts Modal (Figma-style Premium) */}
         {isShortcutsOpen && (
            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-              <div 
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-[8px] animate-in fade-in duration-500" 
-                onClick={() => setIsShortcutsOpen(false)} 
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-[8px] animate-in fade-in duration-500"
+                onClick={() => setIsShortcutsOpen(false)}
               />
-              <div className="relative bg-white rounded-[32px] w-full max-w-xl shadow-[0_32px_128px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+              <div className="relative bg-card rounded-[32px] w-full max-w-xl shadow-[0_32px_128px_rgba(0,0,0,0.15)] border border-border/30 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
                   {/* Header */}
-                  <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-gradient-to-b from-slate-50/50 to-transparent">
+                  <div className="p-8 border-b border-border/30 flex items-center justify-between bg-gradient-to-b from-muted/30 to-transparent">
                      <div className="flex items-center gap-5">
                         <div className="size-14 rounded-[22px] bg-primary/10 flex items-center justify-center ring-8 ring-primary/[0.03]">
                            <MousePointer2 className="size-7 text-primary" />
                         </div>
                         <div>
-                           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Shortcutlar</h2>
-                           <p className="text-sm text-slate-400 font-semibold mt-0.5">Tezkor tugmalar va navigatsiya</p>
+                           <h2 className="text-2xl font-bold text-foreground tracking-tight">Shortcutlar</h2>
+                           <p className="text-sm text-muted-foreground font-semibold mt-0.5">Tezkor tugmalar va navigatsiya</p>
                         </div>
                      </div>
-                     <Button 
-                       variant="ghost" 
-                       size="icon" 
-                       className="size-10 rounded-full hover:bg-slate-100/80 text-slate-300 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100" 
+                     <Button
+                       variant="ghost"
+                       size="icon"
+                       className="size-10 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all border border-transparent hover:border-border/30"
                        onClick={() => setIsShortcutsOpen(false)}
                      >
                         <Plus className="size-5 rotate-45" />
@@ -1878,28 +1962,28 @@ export default function TjmAddBlock() {
                      <div className="space-y-5">
                         <div className="flex items-center gap-2 mb-2">
                            <div className="size-1.5 rounded-full bg-primary" />
-                           <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Navigatsiya</h3>
+                           <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Navigatsiya</h3>
                         </div>
                         <div className="space-y-4">
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Surgich (Pan)</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Surgich (Pan)</span>
                               <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm min-w-[42px] text-center">SPACE</kbd>
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">DRAG</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">SPACE</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">DRAG</kbd>
                               </div>
                            </div>
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Mashtab (Zoom)</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Mashtab (Zoom)</span>
                               <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm min-w-[42px] text-center">CTRL</kbd>
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">WHEEL</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">CTRL</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">WHEEL</kbd>
                               </div>
                            </div>
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Tezkor Pan</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Tezkor Pan</span>
                               <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm min-w-[42px] text-center">CTRL</kbd>
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">DRAG</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">CTRL</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">DRAG</kbd>
                               </div>
                            </div>
                         </div>
@@ -1909,52 +1993,52 @@ export default function TjmAddBlock() {
                      <div className="space-y-5">
                         <div className="flex items-center gap-2 mb-2">
                            <div className="size-1.5 rounded-full bg-orange-400" />
-                           <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Tahrirlash</h3>
+                           <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Tahrirlash</h3>
                         </div>
                         <div className="space-y-4">
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Ko'p tanlash</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Ko'p tanlash</span>
                               <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm min-w-[36px] text-center">ALT</kbd>
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">CLICK</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[36px] text-center">ALT</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CLICK</kbd>
                               </div>
                            </div>
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Orqaga (Undo)</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Orqaga (Undo)</span>
                               <div className="flex gap-1">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">CTRL + Z</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CTRL + Z</kbd>
                               </div>
                            </div>
                            <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Oldinga (Redo)</span>
+                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Oldinga (Redo)</span>
                               <div className="flex gap-1">
-                                 <kbd className="px-2 py-1 bg-white border-b-2 border-slate-200 border-x border-t border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm">CTRL + Y</kbd>
+                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CTRL + Y</kbd>
                               </div>
                            </div>
                         </div>
                      </div>
                      
                      {/* Tip Box */}
-                     <div className="col-span-2 p-6 rounded-[24px] bg-slate-50 border border-slate-100 mt-2 relative overflow-hidden group">
+                     <div className="col-span-2 p-6 rounded-[24px] bg-muted/30 border border-border/30 mt-2 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-                           <Layers3 className="size-16 text-slate-900" />
+                           <Layers3 className="size-16 text-foreground" />
                         </div>
                         <div className="flex items-start gap-4 h-full">
-                           <div className="size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm shrink-0">
+                           <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center shadow-sm shrink-0">
                               <Layers3 className="size-5 text-primary" />
                            </div>
-                           <p className="text-[12px] text-slate-500 font-bold leading-relaxed pr-8">
-                             Sichqonchaning chap tugmasini bo'sh joydan bosib tortish orqali xonadonlarni <span className="text-slate-900 underline decoration-primary/30 decoration-2 underline-offset-2">Lasso Selection</span> (ommaviy belgilash) qilishingiz mumkin.
+                           <p className="text-[12px] text-muted-foreground font-bold leading-relaxed pr-8">
+                             Sichqonchaning chap tugmasini bo'sh joydan bosib tortish orqali xonadonlarni <span className="text-foreground underline decoration-primary/30 decoration-2 underline-offset-2">Lasso Selection</span> (ommaviy belgilash) qilishingiz mumkin.
                            </p>
                         </div>
                      </div>
                   </div>
                   
                   {/* Actions */}
-                  <div className="p-8 px-10 bg-slate-50/50 border-t border-slate-50 flex justify-end">
-                     <Button 
-                       onClick={() => setIsShortcutsOpen(false)} 
-                       className="rounded-[20px] px-12 h-14 font-extrabold bg-[#00C347] hover:bg-[#00C347]/90 text-white shadow-[0_12px_24px_rgba(0,195,71,0.25)] transition-all active:scale-[0.97] text-sm"
+                  <div className="p-8 px-10 bg-muted/20 border-t border-border/30 flex justify-end">
+                     <Button
+                       onClick={() => setIsShortcutsOpen(false)}
+                       className="rounded-[20px] px-12 h-14 font-extrabold bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_12px_24px_rgba(0,195,71,0.25)] transition-all active:scale-[0.97] text-sm"
                      >
                        Tushunarli
                      </Button>

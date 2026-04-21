@@ -57,6 +57,8 @@ export default function TjmDetails() {
     error,
     loading,
     updateRoomStatus,
+    save,
+    deleteBlock,
   } = useProjectStructure(id);
 
   const searchParams = useMemo(
@@ -81,6 +83,7 @@ export default function TjmDetails() {
   const [showRoomCount, setShowRoomCount] = useState(false);
 
   const [scale, setScale] = useState(1);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // blockName | null
   const workerRef = useRef(null);
   const filterRequestIdRef = useRef(0);
   const pendingToastRequestIdRef = useRef(null);
@@ -89,6 +92,9 @@ export default function TjmDetails() {
   const prevBoundsRef = useRef(null);
 
   const fetchCurrencyUsd = useAppStore((state) => state.fetchCurrencyUsd);
+  const userRole = useAppStore((state) => state.user?.role);
+  const isAdminRole = userRole === "SUPERADMIN" || userRole === "ADMIN";
+  const canManageBlocks = isAdminRole && searchParams.get("manage") === "1";
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
     height: 3,
@@ -223,8 +229,8 @@ export default function TjmDetails() {
         key: "total",
         label: "Jami",
         value: resolvedStatistics.total,
-        tone: "border-slate-200/70 bg-slate-50/70 text-slate-700",
-        dot: "bg-slate-500",
+        tone: "border-border/50 bg-muted/30 text-muted-foreground",
+        dot: "bg-muted-foreground",
       },
       {
         key: "totalEmpty",
@@ -529,6 +535,34 @@ export default function TjmDetails() {
     setFilterOpen(false);
   }, [draftFilters, rangeBounds, updateSearch]);
 
+  const handleEditBlock = useCallback(
+    (blockName) => {
+      navigate(`/tjm/${id}/add-block?manage=1&edit=${encodeURIComponent(blockName)}`);
+    },
+    [id, navigate],
+  );
+
+  const handleDeleteBlock = useCallback((blockName) => {
+    setDeleteConfirm(blockName);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm || !home) return;
+    const blockName = deleteConfirm;
+    setDeleteConfirm(null);
+
+    const loadingToast = toast.loading(`"${blockName}" o'chirilmoqda...`);
+    const result = await deleteBlock(blockName);
+    toast.dismiss(loadingToast);
+
+    if (result?.ok) {
+      toast.success(`"${blockName}" muvaffaqiyatli o'chirildi`);
+      handleBlockChange("all");
+    } else {
+      toast.error(`O'chirishda xatolik: server javob bermadi`);
+    }
+  }, [deleteConfirm, home, deleteBlock, handleBlockChange]);
+
   // --- Render ---
 
   return (
@@ -589,7 +623,8 @@ export default function TjmDetails() {
               viewMode={viewMode}
               viewOptions={VIEW_OPTIONS}
               onViewModeChange={handleViewModeChange}
-              onOpenAddBlock={() => navigate(`/tjm/${id}/add-block`)}
+              onBack={() => navigate(-1)}
+              onOpenAddBlock={canManageBlocks ? () => navigate(`/tjm/${id}/add-block?manage=1`) : null}
             />
 
             {/* Asosiy kontent: shaxmatka + xona tafsiloti */}
@@ -608,7 +643,7 @@ export default function TjmDetails() {
                   onRoomClick={handleActiveHome}
                 />
               ) : (
-                <div className="relative flex flex-1 flex-col overflow-hidden bg-white/50">
+                <div className="relative flex flex-1 flex-col overflow-hidden bg-background/50">
                   <TjmFloorGrid
                     blockLayouts={blockLayouts}
                     maxFloor={home.maxFloor ?? 0}
@@ -619,6 +654,8 @@ export default function TjmDetails() {
                     onRoomClick={handleActiveHome}
                     showRoomCount={showRoomCount}
                     scale={scale}
+                    onEditBlock={canManageBlocks ? handleEditBlock : null}
+                    onDeleteBlock={canManageBlocks ? handleDeleteBlock : null}
                     variant={
                       viewMode === "shaxmatka-plus" ? "expanded" : "default"
                     }
@@ -630,6 +667,42 @@ export default function TjmDetails() {
             </div>
           </section>
         </section>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl border border-border/40 animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-4 flex items-center justify-center size-12 mx-auto rounded-full bg-destructive/10 border border-destructive/20">
+              <svg className="size-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h3 className="text-center text-base font-bold text-foreground mb-1">Blokni o'chirish</h3>
+            <p className="text-center text-sm text-muted-foreground mb-5">
+              <span className="font-semibold text-foreground">"{deleteConfirm}"</span> bloki va undagi barcha xonadonlar o'chiriladi. Bu amalni qaytarib bo'lmaydi.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => setDeleteConfirm(null)}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white border-none"
+                onClick={confirmDelete}
+              >
+                O'chirish
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </LoadTransition>
   );

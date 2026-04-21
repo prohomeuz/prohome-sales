@@ -9,6 +9,7 @@
 
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Pencil, Trash2 } from "lucide-react";
 import { STATUS_CLASS } from "../lib/constants";
 
 /**
@@ -35,6 +36,8 @@ export default function TjmFloorGrid({
   showRoomCount,
   scale = 1,
   variant = "default",
+  onEditBlock,
+  onDeleteBlock,
 }) {
   if (!blockLayouts.length) {
     return (
@@ -80,9 +83,32 @@ export default function TjmFloorGrid({
             <div
               key={blockName}
               style={widthStyle}
-              className="text-muted-foreground min-w-0 text-xs"
+              className="text-muted-foreground min-w-0 text-xs group/block relative"
             >
               <h3 className="truncate font-medium">{blockName}</h3>
+              {/* Edit / Delete — hover paytida ko'rinadi */}
+              <div className="absolute -top-1 right-0 flex items-center gap-1 opacity-0 group-hover/block:opacity-100 transition-all duration-200 pointer-events-none group-hover/block:pointer-events-auto">
+                {onEditBlock && (
+                  <button
+                    onClick={() => onEditBlock(blockName)}
+                    className="flex items-center justify-center size-6 rounded-md bg-background border border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+                    title="Blokni tahrirlash"
+                    type="button"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                )}
+                {onDeleteBlock && (
+                  <button
+                    onClick={() => onDeleteBlock(blockName)}
+                    className="flex items-center justify-center size-6 rounded-md bg-background border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/5 transition-all shadow-sm"
+                    title="Blokni o'chirish"
+                    type="button"
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -105,7 +131,7 @@ export default function TjmFloorGrid({
                 key={index}
                 className={cn(
                   "group relative flex h-[var(--room-tile-size)] w-full cursor-pointer transition-all duration-300",
-                  rowHasActive ? "bg-primary/5" : "hover:bg-slate-50/80",
+                  rowHasActive ? "bg-primary/5" : "hover:bg-muted/30",
                 )}
               >
                 {/* Chap qavat raqami */}
@@ -163,15 +189,12 @@ export default function TjmFloorGrid({
                                     STATUS_CLASS[h.status] || "bg-muted/30 text-muted-foreground",
                                     "text-white shadow-sm ring-inset ring-black/5",
                                     isActive &&
-                                      "ring-[#B70000] ring-offset-background z-20 shadow-[0_0_20px_-5px_rgba(183,0,0,0.5)] ring-2 ring-offset-2 scale-110",
+                                      "z-20 ring-primary shadow-[0_0_25px_-2px_var(--color-primary)] ring-2 ring-offset-2 scale-110",
                                     isFilteredOut && "grayscale-[0.5] opacity-20 scale-90",
                                   )}
                                   style={{ fontSize: "var(--room-font-size)" }}
                                 >
                                   {tileLabel}
-                                  {isActive && (
-                                    <div className="absolute -top-1 -right-1 size-2.5 rounded-full bg-white border-2 border-[#B70000] animate-pulse" />
-                                  )}
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent className="pointer-events-none">

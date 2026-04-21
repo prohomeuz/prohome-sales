@@ -343,26 +343,26 @@ function DashboardPanel({
   className,
 }) {
   return (
-    <Card className={cn("gap-0 overflow-hidden rounded-[26px] border-[#e7edd7] py-0 shadow-sm", className)}>
+    <Card className={cn("gap-0 overflow-hidden rounded-[26px] border-border/40 py-0 shadow-none", className)}>
       <CardContent className="p-0">
-        <div className="flex items-start justify-between gap-4 border-b border-[#eef3e1] px-5 py-4 sm:px-6">
+        <div className="flex items-start justify-between gap-4 border-b border-border/30 px-5 py-4 sm:px-6">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               {Icon ? (
-                <div className="flex size-9 items-center justify-center rounded-2xl bg-[#f2f8e8] text-[#5a950a]">
+                <div className="flex size-9 items-center justify-center rounded-2xl bg-primary/[0.07] text-primary">
                   <Icon className="size-4.5" />
                 </div>
               ) : null}
               <div>
-                <h3 className="text-base font-bold tracking-tight text-gray-900">{title}</h3>
-                {subtitle ? <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p> : null}
+                <h3 className="text-base font-bold tracking-tight text-foreground">{title}</h3>
+                {subtitle ? <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p> : null}
               </div>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
             {badge ? (
-              <Badge variant="outline" className="border-[#dce8c0] bg-[#f8fee8] text-[#5a950a]">
+              <Badge variant="outline" className="border-primary/20 bg-primary/[0.05] text-primary">
                 {badge}
               </Badge>
             ) : null}
@@ -377,24 +377,24 @@ function DashboardPanel({
 
 function KpiCard({ title, value, hint, icon: Icon, tone = "green" }) {
   const toneClasses = {
-    green: "border-[#dbe9be] bg-[linear-gradient(135deg,#ffffff_0%,#f7fee7_100%)] text-[#5a950a]",
-    blue: "border-sky-200 bg-[linear-gradient(135deg,#ffffff_0%,#f0f9ff_100%)] text-sky-600",
-    amber: "border-amber-200 bg-[linear-gradient(135deg,#ffffff_0%,#fffbeb_100%)] text-amber-600",
-    rose: "border-rose-200 bg-[linear-gradient(135deg,#ffffff_0%,#fff1f2_100%)] text-rose-600",
-    slate: "border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] text-slate-600",
+    green: "border-primary/15 bg-primary/[0.03] text-primary",
+    blue: "border-sky-200/60 bg-sky-50/40 text-sky-600 dark:border-sky-800/30 dark:bg-sky-950/15 dark:text-sky-400",
+    amber: "border-amber-200/60 bg-amber-50/40 text-amber-600 dark:border-amber-800/30 dark:bg-amber-950/15 dark:text-amber-400",
+    rose: "border-rose-200/60 bg-rose-50/40 text-rose-600 dark:border-rose-800/30 dark:bg-rose-950/15 dark:text-rose-400",
+    slate: "border-border bg-muted/[0.06] text-muted-foreground",
   };
 
   return (
-    <Card className={cn("gap-0 rounded-[24px] py-0 shadow-sm", toneClasses[tone] ?? toneClasses.green)}>
+    <Card className={cn("gap-0 rounded-[24px] py-0 shadow-none", toneClasses[tone] ?? toneClasses.green)}>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold tracking-[0.18em] text-gray-400 uppercase">{title}</p>
-            <h4 className="mt-3 text-2xl font-black tracking-tight text-gray-900 sm:text-[1.75rem]">{value}</h4>
-            {hint ? <p className="mt-2 text-xs font-medium text-gray-500">{hint}</p> : null}
+            <p className="text-[11px] font-bold tracking-[0.18em] text-muted-foreground uppercase">{title}</p>
+            <h4 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-[1.75rem]">{value}</h4>
+            {hint ? <p className="mt-2 text-xs font-medium text-muted-foreground">{hint}</p> : null}
           </div>
           {Icon ? (
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-background/80 shadow-none border border-border/30">
               <Icon className="size-5" />
             </div>
           ) : null}
@@ -409,9 +409,9 @@ function EmptySection({
   description = "Hozircha bu bo'lim uchun ko'rsatkich kelmadi.",
 }) {
   return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[22px] border border-dashed border-[#dfe8cb] bg-[#fafcf7] px-6 text-center">
-      <p className="text-sm font-bold text-gray-600">{title}</p>
-      <p className="mt-2 max-w-sm text-xs leading-relaxed text-gray-400">{description}</p>
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[22px] border border-dashed border-border/40 bg-muted/[0.04] px-6 text-center">
+      <p className="text-sm font-bold text-foreground">{title}</p>
+      <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -422,9 +422,9 @@ function MetricGrid({ metrics, columns = 2 }) {
   return (
     <div className={cn("grid gap-3", columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
       {metrics.map((metric) => (
-        <div key={metric.label} className="rounded-2xl border border-[#eef3e1] bg-[#fafcf7] px-4 py-3">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">{metric.label}</p>
-          <p className="mt-2 text-lg font-black tracking-tight text-gray-900">{formatCompact(metric.value)}</p>
+        <div key={metric.label} className="rounded-2xl border border-border/30 bg-muted/5 px-4 py-3">
+          <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">{metric.label}</p>
+          <p className="mt-2 text-lg font-black tracking-tight text-foreground">{formatCompact(metric.value)}</p>
         </div>
       ))}
     </div>
@@ -623,35 +623,36 @@ export default function Dashboard() {
       {error && !hasAnySectionData ? (
         <GeneralError />
       ) : (
-        <section className="animate-fade-in flex h-full min-h-0 flex-col overflow-y-auto bg-[#f8fafc] p-4 sm:p-5 lg:p-6">
+        <section className="animate-fade-in flex h-full min-h-0 flex-col overflow-y-auto bg-background p-4 sm:p-5 lg:p-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-            <header className="relative overflow-hidden rounded-[30px] border border-[#dce8c0] bg-[radial-gradient(circle_at_top_left,_rgba(190,242,100,0.24),_transparent_32%),linear-gradient(135deg,#ffffff_0%,#f7fee7_48%,#f8fafc_100%)] p-5 shadow-sm sm:p-6 lg:p-7">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <header className="relative overflow-hidden rounded-[30px] border border-border/40 bg-card p-5 shadow-none sm:p-6 lg:p-7">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(100,200,80,0.06),_transparent_50%)] pointer-events-none" />
+              <div className="relative flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="max-w-2xl">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <Badge className="bg-[#65a30d] text-white">Dashboard</Badge>
-                    <Badge variant="outline" className="border-[#dce8c0] bg-white/80 text-[#5a950a]">
+                    <Badge className="bg-primary text-primary-foreground">Dashboard</Badge>
+                    <Badge variant="outline" className="border-primary/20 bg-primary/[0.05] text-primary">
                       {user?.role}
                     </Badge>
                     {selectedProject ? (
-                      <Badge variant="outline" className="border-[#dce8c0] bg-white/80 text-gray-700">
+                      <Badge variant="outline" className="border-border text-muted-foreground">
                         {selectedProject.name ?? `Loyiha #${selectedProject.id}`}
                       </Badge>
                     ) : null}
                   </div>
 
-                  <h1 className="text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
+                  <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                     Loyiha ko'rsatkichlari bir joyda
                   </h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-500 sm:text-base">
+                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
                     Sotuvlar, qavatlar, pul oqimi, CRM va menejerlar bo'yicha asosiy holatlarni tanlangan davr kesimida kuzating.
                   </p>
                 </div>
 
                 <div className="flex w-full flex-col gap-3 xl:max-w-[34rem] xl:items-end">
                   <div className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                    <Select value={projectId ?? undefined} onValueChange={setProjectId} disabled={projectsLoading || projects.length === 0}>
-                      <SelectTrigger className="h-11 w-full rounded-2xl border-[#dce8c0] bg-white/90 px-4 shadow-none">
+                    <Select value={projectId ?? ""} onValueChange={setProjectId} disabled={projectsLoading || projects.length === 0}>
+                      <SelectTrigger className="h-11 w-full rounded-2xl border-border/40 bg-background px-4 shadow-none">
                         <SelectValue placeholder={projectsLoading ? "Loyihalar yuklanmoqda..." : "Loyihani tanlang"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl">
@@ -665,7 +666,7 @@ export default function Dashboard() {
 
                     <Button
                       variant="outline"
-                      className="h-11 rounded-2xl border-[#dce8c0] bg-white/90 px-4"
+                      className="h-11 rounded-2xl border-border/40 px-4 shadow-none"
                       onClick={() => get({ silent: true })}
                       disabled={!projectId || refreshing}
                     >
@@ -675,9 +676,9 @@ export default function Dashboard() {
                   </div>
 
                   <Tabs value={period} onValueChange={setPeriod} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-white/80 p-1 shadow-sm sm:grid-cols-4">
+                    <TabsList className="border-border/40 bg-muted/[0.08] grid w-full grid-cols-2 rounded-2xl border p-1 sm:grid-cols-4">
                       {Object.entries(DASHBOARD_PERIODS).map(([key, label]) => (
-                        <TabsTrigger key={key} value={key} className="h-9 rounded-xl text-xs font-bold sm:text-sm">
+                        <TabsTrigger key={key} value={key} className="h-9 rounded-xl text-xs font-bold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-none">
                           {label}
                         </TabsTrigger>
                       ))}
@@ -727,18 +728,18 @@ export default function Dashboard() {
                                       <stop offset="95%" stopColor="#65a30d" stopOpacity={0.02} />
                                     </linearGradient>
                                   </defs>
-                                  <CartesianGrid vertical={false} stroke="#edf2df" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                                  <CartesianGrid vertical={false} stroke="rgba(128,128,128,0.15)" />
+                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
+                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
                                   <Tooltip
                                     cursor={{ stroke: "#dbe9be", strokeWidth: 1 }}
                                     content={({ active, payload, label }) =>
                                       active && payload?.length ? (
-                                        <div className="rounded-2xl border border-[#e2ebcd] bg-white px-3 py-2 shadow-lg">
-                                          <p className="text-xs font-bold text-gray-900">{label}</p>
+                                        <div className="rounded-2xl border border-border/40 bg-card px-3 py-2 shadow-none">
+                                          <p className="text-xs font-bold text-foreground">{label}</p>
                                           {payload.map((entry) => (
-                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-gray-500">
-                                              {humanize(entry.dataKey)}: <span className="text-gray-900">{formatCompact(entry.value)}</span>
+                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-muted-foreground">
+                                              {humanize(entry.dataKey)}: <span className="text-foreground">{formatCompact(entry.value)}</span>
                                             </p>
                                           ))}
                                         </div>
@@ -783,18 +784,18 @@ export default function Dashboard() {
                             <div className="h-[280px] w-full">
                               <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={cashflowModel.items} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
-                                  <CartesianGrid vertical={false} stroke="#edf2df" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                                  <CartesianGrid vertical={false} stroke="rgba(128,128,128,0.15)" />
+                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
+                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
                                   <Tooltip
                                     cursor={{ stroke: "#dbe9be", strokeWidth: 1 }}
                                     content={({ active, payload, label }) =>
                                       active && payload?.length ? (
-                                        <div className="rounded-2xl border border-[#e2ebcd] bg-white px-3 py-2 shadow-lg">
-                                          <p className="text-xs font-bold text-gray-900">{label}</p>
+                                        <div className="rounded-2xl border border-border/40 bg-card px-3 py-2 shadow-none">
+                                          <p className="text-xs font-bold text-foreground">{label}</p>
                                           {payload.map((entry) => (
-                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-gray-500">
-                                              {humanize(entry.dataKey)}: <span className="text-gray-900">{formatMoney(entry.value)}</span>
+                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-muted-foreground">
+                                              {humanize(entry.dataKey)}: <span className="text-foreground">{formatMoney(entry.value)}</span>
                                             </p>
                                           ))}
                                         </div>
@@ -835,18 +836,18 @@ export default function Dashboard() {
                             <div className="h-[280px] w-full">
                               <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={floorsModel.items} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                  <CartesianGrid vertical={false} stroke="#edf2df" />
-                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                                  <CartesianGrid vertical={false} stroke="rgba(128,128,128,0.15)" />
+                                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
+                                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "rgba(128,128,128,0.7)" }} />
                                   <Tooltip
                                     cursor={{ fill: "rgba(236, 252, 203, 0.24)" }}
                                     content={({ active, payload, label }) =>
                                       active && payload?.length ? (
-                                        <div className="rounded-2xl border border-[#e2ebcd] bg-white px-3 py-2 shadow-lg">
-                                          <p className="text-xs font-bold text-gray-900">{label}</p>
+                                        <div className="rounded-2xl border border-border/40 bg-card px-3 py-2 shadow-none">
+                                          <p className="text-xs font-bold text-foreground">{label}</p>
                                           {payload.map((entry) => (
-                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-gray-500">
-                                              {humanize(entry.dataKey)}: <span className="text-gray-900">{formatCompact(entry.value)}</span>
+                                            <p key={entry.dataKey} className="mt-1 text-xs font-medium text-muted-foreground">
+                                              {humanize(entry.dataKey)}: <span className="text-foreground">{formatCompact(entry.value)}</span>
                                             </p>
                                           ))}
                                         </div>
@@ -865,17 +866,17 @@ export default function Dashboard() {
                             </div>
 
                             <div className="grid gap-3 sm:grid-cols-3">
-                              <div className="rounded-2xl border border-[#eef3e1] bg-[#fafcf7] px-4 py-3">
-                                <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Asosiy</p>
-                                <p className="mt-2 text-lg font-black text-gray-900">{formatCompact(floorsModel.totals.primary)}</p>
+                              <div className="rounded-2xl border border-border/30 bg-muted/5 px-4 py-3">
+                                <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Asosiy</p>
+                                <p className="mt-2 text-lg font-black text-foreground">{formatCompact(floorsModel.totals.primary)}</p>
                               </div>
-                              <div className="rounded-2xl border border-[#eef3e1] bg-[#fafcf7] px-4 py-3">
-                                <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Ikkinchi</p>
-                                <p className="mt-2 text-lg font-black text-gray-900">{formatCompact(floorsModel.totals.secondary)}</p>
+                              <div className="rounded-2xl border border-border/30 bg-muted/5 px-4 py-3">
+                                <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Ikkinchi</p>
+                                <p className="mt-2 text-lg font-black text-foreground">{formatCompact(floorsModel.totals.secondary)}</p>
                               </div>
-                              <div className="rounded-2xl border border-[#eef3e1] bg-[#fafcf7] px-4 py-3">
-                                <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Uchinchi</p>
-                                <p className="mt-2 text-lg font-black text-gray-900">{formatCompact(floorsModel.totals.tertiary)}</p>
+                              <div className="rounded-2xl border border-border/30 bg-muted/5 px-4 py-3">
+                                <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Uchinchi</p>
+                                <p className="mt-2 text-lg font-black text-foreground">{formatCompact(floorsModel.totals.tertiary)}</p>
                               </div>
                             </div>
                           </div>
@@ -898,10 +899,10 @@ export default function Dashboard() {
                                   <Tooltip
                                     content={({ active, payload }) =>
                                       active && payload?.length ? (
-                                        <div className="rounded-2xl border border-[#e2ebcd] bg-white px-3 py-2 shadow-lg">
-                                          <p className="text-xs font-bold text-gray-900">{payload[0].name}</p>
-                                          <p className="mt-1 text-xs font-medium text-gray-500">
-                                            Leadlar: <span className="text-gray-900">{formatCompact(payload[0].value)}</span>
+                                        <div className="rounded-2xl border border-border/40 bg-card px-3 py-2 shadow-none">
+                                          <p className="text-xs font-bold text-foreground">{payload[0].name}</p>
+                                          <p className="mt-1 text-xs font-medium text-muted-foreground">
+                                            Leadlar: <span className="text-foreground">{formatCompact(payload[0].value)}</span>
                                           </p>
                                         </div>
                                       ) : null
@@ -925,20 +926,20 @@ export default function Dashboard() {
 
                             <div className="space-y-3">
                               {crmModel.items.map((item, index) => (
-                                <div key={item.label} className="flex items-center justify-between rounded-2xl border border-[#eef3e1] bg-[#fafcf7] px-4 py-3">
+                                <div key={item.label} className="flex items-center justify-between rounded-2xl border border-border/30 bg-muted/5 px-4 py-3">
                                   <div className="flex items-center gap-3">
                                     <span
                                       className="block size-3 rounded-full"
                                       style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                                     />
                                     <div>
-                                      <p className="text-sm font-bold text-gray-900">{item.label}</p>
-                                      <p className="text-xs text-gray-400">
+                                      <p className="text-sm font-bold text-foreground">{item.label}</p>
+                                      <p className="text-xs text-muted-foreground">
                                         {item.secondary !== null ? formatMoney(item.secondary) : "Summa yo'q"}
                                       </p>
                                     </div>
                                   </div>
-                                  <p className="text-sm font-black text-gray-900">{formatCompact(item.primary)}</p>
+                                  <p className="text-sm font-black text-foreground">{formatCompact(item.primary)}</p>
                                 </div>
                               ))}
                             </div>
@@ -963,32 +964,32 @@ export default function Dashboard() {
                         {managerModel.items.map((item, index) => (
                           <div
                             key={`${item.label}-${index}`}
-                            className="flex flex-col gap-3 rounded-[22px] border border-[#eef3e1] bg-[#fafcf7] px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-3 rounded-[22px] border border-border/30 bg-muted/5 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div className="min-w-0">
                               <div className="flex items-center gap-3">
-                                <div className="flex size-10 items-center justify-center rounded-2xl bg-white shadow-sm">
-                                  <UserRound className="size-4 text-[#5a950a]" />
+                                <div className="flex size-10 items-center justify-center rounded-2xl bg-background border border-border/30">
+                                  <UserRound className="size-4 text-primary" />
                                 </div>
                                 <div>
-                                  <p className="truncate text-sm font-bold text-gray-900">{item.label}</p>
-                                  <p className="text-xs text-gray-400">Menejer ko'rsatkichlari</p>
+                                  <p className="truncate text-sm font-bold text-foreground">{item.label}</p>
+                                  <p className="text-xs text-muted-foreground">Menejer ko'rsatkichlari</p>
                                 </div>
                               </div>
                             </div>
 
                             <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
-                              <div className="rounded-2xl bg-white px-3 py-2 text-center shadow-sm">
-                                <p className="text-[10px] font-bold tracking-[0.16em] text-gray-400 uppercase">Sotuv</p>
-                                <p className="mt-1 text-sm font-black text-gray-900">{formatCompact(item.primary)}</p>
+                              <div className="rounded-2xl bg-background border border-border/20 px-3 py-2 text-center">
+                                <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Sotuv</p>
+                                <p className="mt-1 text-sm font-black text-foreground">{formatCompact(item.primary)}</p>
                               </div>
-                              <div className="rounded-2xl bg-white px-3 py-2 text-center shadow-sm">
-                                <p className="text-[10px] font-bold tracking-[0.16em] text-gray-400 uppercase">Lead</p>
-                                <p className="mt-1 text-sm font-black text-gray-900">{formatCompact(item.secondary)}</p>
+                              <div className="rounded-2xl bg-background border border-border/20 px-3 py-2 text-center">
+                                <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Lead</p>
+                                <p className="mt-1 text-sm font-black text-foreground">{formatCompact(item.secondary)}</p>
                               </div>
-                              <div className="rounded-2xl bg-white px-3 py-2 text-center shadow-sm">
-                                <p className="text-[10px] font-bold tracking-[0.16em] text-gray-400 uppercase">Summa</p>
-                                <p className="mt-1 text-sm font-black text-gray-900">{formatMoney(item.tertiary)}</p>
+                              <div className="rounded-2xl bg-background border border-border/20 px-3 py-2 text-center">
+                                <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Summa</p>
+                                <p className="mt-1 text-sm font-black text-foreground">{formatMoney(item.tertiary)}</p>
                               </div>
                             </div>
                           </div>
@@ -1006,14 +1007,14 @@ export default function Dashboard() {
                     icon={Activity}
                   >
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-[22px] border border-[#eef3e1] bg-[#fafcf7] px-4 py-4">
-                        <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Davr</p>
-                        <p className="mt-2 text-lg font-black text-gray-900">{periodLabel}</p>
-                        <p className="mt-1 text-xs text-gray-500">Tanlangan filter bo'yicha hisoblangan kesim.</p>
+                      <div className="rounded-[22px] border border-border/30 bg-muted/5 px-4 py-4">
+                        <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Davr</p>
+                        <p className="mt-2 text-lg font-black text-foreground">{periodLabel}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Tanlangan filter bo'yicha hisoblangan kesim.</p>
                       </div>
-                      <div className="rounded-[22px] border border-[#eef3e1] bg-[#fafcf7] px-4 py-4">
-                        <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Sectionlar</p>
-                        <p className="mt-2 text-lg font-black text-gray-900">
+                      <div className="rounded-[22px] border border-border/30 bg-muted/5 px-4 py-4">
+                        <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Sectionlar</p>
+                        <p className="mt-2 text-lg font-black text-foreground">
                           {[
                             executiveRole && statsModel.hasData,
                             executiveRole && growthModel.items.length > 0,
@@ -1023,17 +1024,17 @@ export default function Dashboard() {
                             crmModel.items.length > 0,
                           ].filter(Boolean).length}
                         </p>
-                        <p className="mt-1 text-xs text-gray-500">Hozir sahifada ko'rinayotgan faol bloklar soni.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Hozir sahifada ko'rinayotgan faol bloklar soni.</p>
                       </div>
-                      <div className="rounded-[22px] border border-[#eef3e1] bg-[#fafcf7] px-4 py-4">
-                        <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Leadlar</p>
-                        <p className="mt-2 text-lg font-black text-gray-900">{formatCompact(crmModel.totals.primary)}</p>
-                        <p className="mt-1 text-xs text-gray-500">CRM bo'yicha umumiy lead oqimi.</p>
+                      <div className="rounded-[22px] border border-border/30 bg-muted/5 px-4 py-4">
+                        <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Leadlar</p>
+                        <p className="mt-2 text-lg font-black text-foreground">{formatCompact(crmModel.totals.primary)}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">CRM bo'yicha umumiy lead oqimi.</p>
                       </div>
-                      <div className="rounded-[22px] border border-[#eef3e1] bg-[#fafcf7] px-4 py-4">
-                        <p className="text-[11px] font-bold tracking-[0.16em] text-gray-400 uppercase">Yangilanish</p>
-                        <p className="mt-2 text-lg font-black text-gray-900">{refreshing ? "Jarayonda" : "Tayyor"}</p>
-                        <p className="mt-1 text-xs text-gray-500">Qo'lda yangilash tugmasi bilan darhol qayta olishingiz mumkin.</p>
+                      <div className="rounded-[22px] border border-border/30 bg-muted/5 px-4 py-4">
+                        <p className="text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Yangilanish</p>
+                        <p className="mt-2 text-lg font-black text-foreground">{refreshing ? "Jarayonda" : "Tayyor"}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Qo'lda yangilash tugmasi bilan darhol qayta olishingiz mumkin.</p>
                       </div>
                     </div>
                   </DashboardPanel>

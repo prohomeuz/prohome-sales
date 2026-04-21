@@ -19,7 +19,7 @@ const STATUSES = {
   SOLD: "bg-red-700",
   RESERVED: "bg-yellow-400",
   EMPTY: "bg-green-500",
-  NOT: "bg-slate-400",
+  NOT: "bg-muted-foreground/60",
 };
 
 const UZBEK_TRANSLATE = {

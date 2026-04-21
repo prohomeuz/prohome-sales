@@ -25,6 +25,7 @@ const CONFIG = {
     createPath: "/api/v1/user/rop",
     listPath: "/api/v1/user/all/rop",
     removePath: (id) => `/api/v1/user/remove-rop/${id}`,
+    updatePath: (id) => `/api/v1/user/update-rop/${id}`,
     conflictMsg: "Bu email bilan rop ro'yhatdan o'tgan!",
     removeSuccess: () => "Rop o'chirildi!",
     removeError: "Ropni o'chirishda xatolik yuz berdi qayta urunib ko'ring!",
@@ -33,6 +34,7 @@ const CONFIG = {
     createPath: "/api/v1/user/sales-manager",
     listPath: "/api/v1/user/all/sales-manager",
     removePath: (id) => `/api/v1/user/remove-sales-maneger/${id}`,
+    updatePath: (id) => `/api/v1/user/update-sales-manager/${id}`,
     conflictMsg: "Bu email bilan sotuv menejeri ro'yhatdan o'tgan!",
     removeSuccess: () => "Sotuvchi o'chirildi!",
     removeError: "Sotuvchini o'chirishda xatolik yuz berdi qayta urunib ko'ring!",
@@ -55,6 +57,7 @@ export function useUserCrud(type) {
   const [getLoading, setGetLoading] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const get = useCallback(async () => {
     setGetLoading(true);
@@ -135,14 +138,46 @@ export function useUserCrud(type) {
     [config.removePath, config.removeSuccess, config.removeError]
   );
 
+  const update = useCallback(
+    async (id, data) => {
+      if (!config.updatePath) return false;
+      setUpdateLoading(true);
+      try {
+        const res = await apiRequest(config.updatePath(id), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setList((prev) =>
+            prev.map((u) => (u.id === id ? { ...u, ...updated } : u)),
+          );
+          toast.success(`${updated.fullName ?? "Foydalanuvchi"} yangilandi!`, TOAST_OPTS);
+          return true;
+        }
+        toast.error(GENERIC_ERR, TOAST_OPTS);
+        return false;
+      } catch {
+        toast.error(NETWORK_ERR, TOAST_OPTS);
+        return false;
+      } finally {
+        setUpdateLoading(false);
+      }
+    },
+    [config.updatePath],
+  );
+
   return {
     list,
     error,
     getLoading,
     addLoading,
     removeLoading,
+    updateLoading,
     get,
     add,
     remove,
+    update,
   };
 }

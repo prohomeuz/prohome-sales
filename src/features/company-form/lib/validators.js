@@ -24,11 +24,15 @@ export function formatCompanyPhone(phone) {
  * @param {object} data - getFormData() natijasi + permissions massivi
  * @returns {{ errors: object, isValid: boolean }}
  */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function validateCompanyFormData(data) {
   const errors = {
     name: null,
     phoneNumber: null,
     managerName: null,
+    email: null,
+    password: null,
     description: null,
     permissions: null,
   };
@@ -37,6 +41,8 @@ export function validateCompanyFormData(data) {
   const phone = (data.phoneNumber ?? "").trim();
   const fullPhone = formatCompanyPhone(phone);
   const managerName = (data.managerName ?? "").trim();
+  const email = (data.email ?? "").trim();
+  const password = (data.password ?? "").trim();
   const description = (data.description ?? "").trim();
 
   if (!name) errors.name = "Kompaniya nomini kiriting!";
@@ -44,6 +50,10 @@ export function validateCompanyFormData(data) {
   else if (!UZ_PHONE_REGEX.test(fullPhone))
     errors.phoneNumber = "Telefon raqam +998xxxxxxxxx formatda bo'lishi kerak!";
   if (!managerName) errors.managerName = "Boshqaruvchi ismini kiriting!";
+  if (!email) errors.email = "Email kiriting!";
+  else if (!EMAIL_REGEX.test(email)) errors.email = "Email noto'g'ri formatda!";
+  if (!password) errors.password = "Parol kiriting!";
+  else if (password.length < 6) errors.password = "Parol kamida 6 ta belgi bo'lishi kerak!";
   if (!description) errors.description = "Kompaniya uchun izoh yozing!";
   if (!data.permissions?.length)
     errors.permissions = "Kompaniya uchun ruxsatlarni belgilang!";

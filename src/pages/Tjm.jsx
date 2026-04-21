@@ -35,6 +35,10 @@ export default function Tjm() {
         <GeneralError />
       ) : (
         <section className="animate-fade-in h-full overflow-y-auto p-4 sm:p-5 lg:p-6">
+          <header className="mb-6 flex items-center justify-between rounded-3xl border border-border/40 px-6 py-4 bg-card">
+            <h1 className="text-xl font-bold text-foreground">Turar joy majmualari</h1>
+          </header>
+
           {projects.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {projects.map(({ name, id }) => (

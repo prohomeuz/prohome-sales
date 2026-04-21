@@ -171,16 +171,16 @@ export function ColumnContainer({
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex h-full max-h-full min-h-[400px] w-[calc(100vw-1rem)] max-w-[380px] !pl-2 shrink-0 snap-center flex-col items-center self-stretch overflow-hidden rounded-2xl border bg-white py-2 shadow-sm transition-colors sm:w-[320px] sm:snap-start lg:max-w-none lg:rounded-none lg:border-0 lg:border-r lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:first:border-l ${
+      className={`relative flex h-full max-h-full min-h-[400px] w-[calc(100vw-1rem)] max-w-[380px] !pl-2 shrink-0 snap-center flex-col items-center self-stretch overflow-hidden rounded-2xl border bg-card py-2 shadow-sm transition-colors sm:w-[320px] sm:snap-start lg:max-w-none lg:rounded-none lg:border-0 lg:border-r lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none lg:first:border-l ${
         isOver
-          ? "border-[#65a30d] ring-1 ring-[#65a30d]/20 lg:border-r-[#65a30d]"
-          : "border-gray-100 lg:border-gray-200"
+          ? "border-primary ring-1 ring-primary/20 lg:border-r-primary"
+          : "border-border/40 lg:border-border/60"
       }`}
     >
-      <div className="flex h-11 w-full shrink-0 items-center justify-between border-b border-gray-50 bg-white px-3 sm:h-12 lg:h-auto lg:border-b-0 lg:bg-white lg:py-4 lg:pr-4 lg:pl-4">
+      <div className="flex h-11 w-full shrink-0 items-center justify-between border-b border-border/30 bg-card px-3 sm:h-12 lg:h-auto lg:border-b-0 lg:bg-card lg:py-4 lg:pr-4 lg:pl-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span
-            className="truncate text-[13px] font-bold tracking-tight text-gray-800"
+            className="truncate text-[13px] font-bold tracking-tight text-foreground"
             title={column.title}
           >
             {column.title}
@@ -188,7 +188,7 @@ export function ColumnContainer({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <div className="flex items-center justify-center rounded-full bg-[#ecfccb] px-2 py-0.5 text-[10px] font-bold text-[#4d7c0f]">
+          <div className="flex items-center justify-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
             {leads.length}
           </div>
           <Button
@@ -203,7 +203,7 @@ export function ColumnContainer({
               }
             }}
             disabled={!canDeleteColumn}
-            className="h-7 w-7 rounded-lg text-gray-200 hover:bg-red-50 hover:text-red-500"
+            className="h-7 w-7 rounded-lg text-muted-foreground/30 hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 size={16} />
           </Button>
@@ -211,7 +211,7 @@ export function ColumnContainer({
       </div>
 
       <div
-        className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-50/10 px-1.5 py-2 transition-[box-shadow] duration-200 lg:bg-transparent lg:py-0 lg:pr-1 lg:pl-4"
+        className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-muted/5 px-1.5 py-2 transition-shadow duration-200 lg:bg-transparent lg:py-0 lg:pr-1 lg:pl-4"
         style={columnScrollShadowStyle}
       >
         <div
@@ -236,7 +236,7 @@ export function ColumnContainer({
             ))}
             {leads.length === 0 && (
               <div className="flex flex-1 items-center justify-center py-10 opacity-30 select-none">
-                <span className="text-[14px] tracking-[0.1px] text-gray-400">
+                <span className="text-[14px] tracking-[0.1px] text-muted-foreground">
                   Hozircha bo'sh
                 </span>
               </div>
@@ -245,13 +245,13 @@ export function ColumnContainer({
         </div>
       </div>
 
-      <div className="mt-auto w-full shrink-0 border-t border-gray-100 bg-white lg:border-gray-200 lg:bg-white">
+      <div className="mt-auto w-full shrink-0 border-t border-border/30 bg-card">
         <div className="px-2 py-1.5 lg:px-3 lg:py-2.5">
           <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 w-full items-center gap-1 rounded-lg border border-transparent px-2 text-[11px] font-bold text-gray-400 hover:border-[#588f0b] hover:bg-[#ecfccb]/20 hover:text-[#65a30d]"
+                className="h-8 w-full items-center gap-1 rounded-lg border border-transparent px-2 text-[11px] font-bold text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
               >
                 <Plus size={13} />
                 Qo'shish
@@ -265,7 +265,7 @@ export function ColumnContainer({
                 <div className="space-y-2">
                   <Label
                     htmlFor="title"
-                    className="text-xs font-bold text-gray-400 uppercase"
+                    className="text-xs font-bold text-muted-foreground uppercase"
                   >
                     Ma'lumot
                   </Label>
@@ -288,7 +288,7 @@ export function ColumnContainer({
                 <div className="space-y-2">
                   <Label
                     htmlFor="companyName"
-                    className="text-xs font-bold text-gray-400 uppercase"
+                    className="text-xs font-bold text-muted-foreground uppercase"
                   >
                     Kontakt
                   </Label>
@@ -312,7 +312,7 @@ export function ColumnContainer({
                 <div className="space-y-2">
                   <Label
                     htmlFor="price"
-                    className="text-xs font-bold text-gray-400 uppercase"
+                    className="text-xs font-bold text-muted-foreground uppercase"
                   >
                     Summa (so'm)
                   </Label>

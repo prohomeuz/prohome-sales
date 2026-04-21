@@ -34,7 +34,6 @@ import {
   Tag,
   UsersRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { STATUS_CLASS, STATUS_LABEL } from "../lib/constants";
 
 /**
@@ -82,6 +81,7 @@ export default function TjmFilterBar({
   viewOptions,
   onViewModeChange,
   onOpenAddBlock,
+  onBack,
 }) {
   const draftSizeRange = draftFilters?.sizeRange ?? rangeBounds.size;
   const draftPriceRange = draftFilters?.priceRange ?? rangeBounds.price;
@@ -91,27 +91,34 @@ export default function TjmFilterBar({
   const segmentedTrackClass =
     "bg-muted/40 inline-flex items-center rounded-lg p-0.5";
   const toggleItemClass =
-    "data-[state=off]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-none transition-all hover:bg-background hover:text-slate-800 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:ring-1 data-[state=on]:ring-emerald-200/80";
+    "data-[state=off]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background hover:text-foreground data-[state=on]:bg-primary/8 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20";
   const tabsItemClass =
-    "data-[state=inactive]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-none transition-all hover:bg-background hover:text-slate-800 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:ring-1 data-[state=active]:ring-emerald-200/80";
+    "data-[state=inactive]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background hover:text-foreground data-[state=active]:bg-primary/8 data-[state=active]:text-primary data-[state=active]:ring-1 data-[state=active]:ring-primary/20";
 
   return (
     <div className="bg-background/95 flex w-full flex-col border-b backdrop-blur-sm">
       {/* Yuqori qator: Orqaga + CurrencyBadge + status legend */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-5 lg:px-6">
-        <Link
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
+        <button
+          type="button"
           className={buttonVariants({ size: "sm", variant: "secondary" })}
-          to="/tjm"
+          onClick={onBack}
         >
           <ArrowLeft />
-          Orqaga
-        </Link>
+          <span className="hidden sm:inline">Orqaga</span>
+        </button>
 
-        <div className="flex flex-wrap items-center justify-end gap-3 ml-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
           <CurrencyBadge />
-          <div className="flex flex-wrap justify-end gap-1.5">
+          <div className="flex flex-wrap justify-end gap-1">
             {Object.entries(STATUS_CLASS).map(([key, value]) => (
-              <Badge key={key} className={cn("text-primary-foreground rounded-full px-3 py-0.5 text-[10px] font-bold border-none", value)}>
+              <Badge 
+                key={key} 
+                className={cn(
+                  "text-white border-none shadow-sm px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-tight uppercase transition-all duration-300 hover:scale-105", 
+                  value
+                )}
+              >
                 {STATUS_LABEL[key]}
               </Badge>
             ))}
@@ -123,14 +130,16 @@ export default function TjmFilterBar({
 
       {/* Quyi qator: Filter + blok select + statistika */}
       <div className="border-border/60 border-t">
-        <div className="flex flex-col gap-3 px-4 py-3 sm:px-5 lg:px-6">
-          <div className="flex w-full items-center gap-2 lg:gap-3 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col gap-2 px-3 py-2 sm:px-5 sm:gap-3 sm:py-3 lg:px-6">
+
+          {/* Qator 1: Filter + Blok + Blok qo'shish */}
+          <div className="flex w-full flex-wrap items-center gap-2">
             <Button
               type="button"
               variant={hasActiveFilters ? "default" : "outline"}
               className={cn(
-                  "justify-start gap-2 rounded-[10px] h-10 transition-all min-w-[90px] shrink-0",
-                  hasActiveFilters && "shadow-[0_0_15px_-3px_rgba(var(--primary),0.4)]"
+                "justify-start gap-2 rounded-[10px] h-9 sm:h-10 transition-all shrink-0",
+                hasActiveFilters && "shadow-[0_0_15px_-3px_rgba(var(--primary),0.4)]"
               )}
               aria-expanded={filterOpen}
               onClick={onToggleFilter}
@@ -138,15 +147,15 @@ export default function TjmFilterBar({
               <Filter className={cn("size-4 transition-transform", filterOpen && "rotate-180")} />
               <span className="font-semibold text-sm">Filter</span>
               {hasActiveFilters && (
-                <span className="bg-white text-primary inline-flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
+                <span className="bg-background text-primary inline-flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
 
-            <div className="w-[160px] shrink-0">
+            <div className="w-[130px] sm:w-[160px] shrink-0">
               <Select value={selectedBlock} onValueChange={onBlockChange}>
-                <SelectTrigger className="w-full h-10 rounded-[10px] bg-background border-border focus:ring-primary/20">
+                <SelectTrigger className="w-full h-9 sm:h-10 rounded-[10px] bg-background border-border focus:ring-primary/20 text-sm">
                   <SelectValue placeholder="Barchasi" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border/50 shadow-xl">
@@ -160,35 +169,38 @@ export default function TjmFilterBar({
               </Select>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="justify-start gap-2 rounded-[10px] h-10 border-dashed hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary shrink-0"
-              onClick={onOpenAddBlock}
-            >
-              <Plus className="size-4" />
-              <span className="font-semibold text-sm">Blok qo'shish</span>
-            </Button>
+            {onOpenAddBlock && (
+              <Button
+                type="button"
+                variant="outline"
+                className="justify-start gap-1.5 rounded-[10px] h-9 sm:h-10 border-dashed hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary shrink-0 text-sm"
+                onClick={onOpenAddBlock}
+              >
+                <Plus className="size-4" />
+                <span className="hidden sm:inline font-semibold">Blok qo'shish</span>
+                <span className="sm:hidden font-semibold">Blok</span>
+              </Button>
+            )}
 
-            {/* Statistika kartalar */}
+            {/* Statistika kartalar — katta ekranlarda bir qatorda */}
             {!!statisticsCards.length && (
-              <div className="flex flex-1 items-center gap-2 lg:gap-3 min-w-max ml-auto">
+              <div className="hidden lg:flex flex-1 items-center gap-2 min-w-0 ml-auto">
                 {statisticsCards.map((stat) => (
                   <div
                     key={stat.key}
                     className={cn(
-                      "flex h-10 flex-1 items-center justify-between rounded-[10px] border px-3 sm:px-4 transition-all duration-300 hover:shadow-sm min-w-[130px]",
+                      "flex h-9 flex-1 items-center justify-between rounded-[10px] border px-3 transition-all duration-300 hover:shadow-sm min-w-0",
                       stat.tone,
                       "border-opacity-40"
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                       <span className={cn("size-1.5 sm:size-2 rounded-full shrink-0", stat.dot)} />
-                       <span className="text-[13px] font-medium capitalize">
-                        {stat.label.toLowerCase()}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={cn("size-1.5 rounded-full shrink-0", stat.dot)} />
+                      <span className="text-[11px] font-medium truncate">
+                        {stat.label}
                       </span>
                     </div>
-                    <span className="text-[14px] font-bold pl-2 sm:pl-3">
+                    <span className="text-[13px] font-bold pl-2 shrink-0">
                       {formatNumber(stat.value ?? 0)}
                     </span>
                   </div>
@@ -197,14 +209,41 @@ export default function TjmFilterBar({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-3">
+          {/* Statistika kartalar — kichik ekranlarda 2x grid */}
+          {!!statisticsCards.length && (
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:hidden">
+              {statisticsCards.map((stat) => (
+                <div
+                  key={stat.key}
+                  className={cn(
+                    "flex h-8 items-center justify-between rounded-[10px] border px-2.5 transition-all",
+                    stat.tone,
+                    "border-opacity-40"
+                  )}
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={cn("size-1.5 rounded-full shrink-0", stat.dot)} />
+                    <span className="text-[10px] font-medium truncate">
+                      {stat.label}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold pl-1.5 shrink-0">
+                    {formatNumber(stat.value ?? 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Qator 2: Xonadon toggle + View tabs */}
+          <div className="flex flex-wrap items-center gap-2">
             <div
               className={cn(
                 segmentedShellClass,
-                "gap-3 px-1 pr-1 pl-3",
+                "gap-2 px-1 pr-1 pl-2 sm:pl-3 h-9 sm:h-11",
               )}
             >
-              <div className="min-w-[9.75rem]">
+              <div className="hidden sm:block min-w-[7rem]">
                 <p className="text-foreground text-xs font-semibold whitespace-nowrap">
                   {showRoomCount ? "Xonalar soni" : "Xonadon raqami"}
                 </p>
@@ -219,22 +258,16 @@ export default function TjmFilterBar({
                 }}
                 className={segmentedTrackClass}
               >
-                <ToggleGroupItem
-                  value="house"
-                  className={toggleItemClass}
-                >
+                <ToggleGroupItem value="house" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem]")}>
                   Xonadon
                 </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="room"
-                  className={toggleItemClass}
-                >
+                <ToggleGroupItem value="room" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem]")}>
                   Xonalar
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
 
-            <div className={cn(segmentedShellClass, "px-1")}>
+            <div className={cn(segmentedShellClass, "px-1 h-9 sm:h-11 overflow-x-auto no-scrollbar")}>
               <Tabs
                 value={viewMode}
                 onValueChange={onViewModeChange}
@@ -245,7 +278,7 @@ export default function TjmFilterBar({
                     <TabsTrigger
                       key={option.value}
                       value={option.value}
-                      className={tabsItemClass}
+                      className={cn(tabsItemClass, "min-w-[3.5rem] sm:min-w-[5.25rem] px-2 sm:px-3")}
                     >
                       {option.label}
                     </TabsTrigger>
@@ -265,6 +298,7 @@ export default function TjmFilterBar({
               : "pointer-events-none -translate-y-2 grid-rows-[0fr] opacity-0",
           )}
         >
+
           <div className="min-h-0 overflow-hidden px-4 pb-4 sm:px-5 lg:px-6">
             <div className="bg-background/95 rounded-xl p-4">
               <div className="flex items-center justify-between">

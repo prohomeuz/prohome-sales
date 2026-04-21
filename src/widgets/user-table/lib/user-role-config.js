@@ -26,6 +26,7 @@ export const USER_ROLE_CONFIG = {
     drawerTitle: "Yangi admin qo'shish.",
     drawerDescription: "Admin qo'shish uchun barcha ma'lumotlarni to'ldiring",
     passFullName: true,
+    canUpdate: false,
   },
   rop: {
     crudType: "rop",
@@ -34,7 +35,11 @@ export const USER_ROLE_CONFIG = {
     emptyText: "Hozircha roplar yo'q",
     drawerTitle: "Yangi rop qo'shish.",
     drawerDescription: "Rop qo'shish uchun barcha ma'lumotlarni to'ldiring",
+    editDrawerTitle: "Ropni tahrirlash.",
+    editDrawerDescription: "O'zgartirmoqchi bo'lgan ma'lumotlarni kiriting.",
     passFullName: false,
+    canUpdate: true,
+    updateIncludesCompanyId: true,
   },
   salesmanager: {
     crudType: "sales-manager",
@@ -43,6 +48,10 @@ export const USER_ROLE_CONFIG = {
     emptyText: "Hozircha sotuv menejerlari yo'q",
     drawerTitle: "Yangi sotuv menejeri qo'shish.",
     drawerDescription: "Sotuv menejeri qo'shish uchun barcha ma'lumotlarni to'ldiring",
+    editDrawerTitle: "Sotuv menejerini tahrirlash.",
+    editDrawerDescription: "O'zgartirmoqchi bo'lgan ma'lumotlarni kiriting.",
     passFullName: false,
+    canUpdate: true,
+    updateIncludesCompanyId: false,
   },
 };

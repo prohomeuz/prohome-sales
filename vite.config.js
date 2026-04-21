@@ -16,10 +16,15 @@ export default defineConfig(({ mode }) => {
       rewrite: (path) => path.replace(/^\/pdf-service/, "") || "/",
     },
     "/api": {
-      target: env.VITE_BASE_URL?.trim() || "https://backend.prohome.uz",
+      target: env.VITE_PROXY_TARGET?.trim() || env.VITE_BASE_URL?.trim() || "https://backend.prohome.uz",
       changeOrigin: true,
       secure: false,
       ws: true,
+    },
+    "/uzbekvoice": {
+      target: "https://uzbekvoice.ai",
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/uzbekvoice/, ""),
     },
   };
 
@@ -31,9 +36,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ["enticing-disband-alto.ngrok-free.dev"], // shu yerga
       proxy: pdfProxyConfig,
     },
     preview: {
+      allowedHosts: ["enticing-disband-alto.ngrok-free.dev"], // xohlasang shu yerga ham
       proxy: pdfProxyConfig,
     },
     build: {

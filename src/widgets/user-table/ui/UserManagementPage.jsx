@@ -8,7 +8,7 @@
 
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { useUserCrud } from "@/features/user-crud/model/use-user-crud";
-import { USER_FORM_ERRORS, validateUserForm } from "@/features/user-crud/lib/user-validators";
+import { USER_FORM_ERRORS, validateUserForm, validateUpdateForm } from "@/features/user-crud/lib/user-validators";
 import { cn, getFormData } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -37,14 +37,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/widgets/optics/table";
-import { Check, Plus, Trash, X } from "lucide-react";
+import { Check, Pencil, Plus, Trash, X } from "lucide-react";
 import { useCallback, useEffect, useReducer } from "react";
 import { USER_ROLE_CONFIG } from "../lib/user-role-config";
 
 const INITIAL_STATE = {
   addModal: false,
+  editModal: false,
+  editingUser: null,
   showConfirmation: null,
   errors: USER_FORM_ERRORS,
+  editErrors: USER_FORM_ERRORS,
 };
 
 function reducer(state, action) {
@@ -61,6 +64,16 @@ function reducer(state, action) {
       return state.errors[action.payload]
         ? { ...state, errors: { ...state.errors, [action.payload]: null } }
         : state;
+    case "OPEN_EDIT":
+      return { ...state, editModal: true, editingUser: action.payload, editErrors: USER_FORM_ERRORS };
+    case "CLOSE_EDIT":
+      return { ...state, editModal: false, editingUser: null, editErrors: USER_FORM_ERRORS };
+    case "SET_EDIT_ERRORS":
+      return { ...state, editErrors: action.payload };
+    case "CLEAR_EDIT_ERROR":
+      return state.editErrors[action.payload]
+        ? { ...state, editErrors: { ...state.editErrors, [action.payload]: null } }
+        : state;
     default:
       return state;
   }
@@ -72,7 +85,7 @@ function reducer(state, action) {
 export default function UserManagementPage({ userRole }) {
   const config = USER_ROLE_CONFIG[userRole];
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
-  const { addModal, showConfirmation, errors } = state;
+  const { addModal, editModal, editingUser, showConfirmation, errors, editErrors } = state;
 
   const {
     list,
@@ -80,8 +93,10 @@ export default function UserManagementPage({ userRole }) {
     getLoading,
     addLoading,
     removeLoading,
+    updateLoading,
     add,
     remove,
+    update,
   } = useUserCrud(config.crudType);
 
   const { start, complete } = useStableLoadingBar({ color: "#5ea500", height: 3 });
@@ -135,6 +150,40 @@ export default function UserManagementPage({ userRole }) {
     });
   }, [showConfirmation]);
 
+  const handleEditOpen = useCallback((user) => {
+    dispatch({ type: "OPEN_EDIT", payload: user });
+  }, []);
+
+  const handleEditOpenChange = useCallback((open) => {
+    if (!open) dispatch({ type: "CLOSE_EDIT" });
+  }, []);
+
+  const clearEditFieldError = useCallback((field) => {
+    dispatch({ type: "CLEAR_EDIT_ERROR", payload: field });
+  }, []);
+
+  const handleEditSubmit = useCallback(
+    async (evt) => {
+      evt.preventDefault();
+      const form = evt.currentTarget;
+      const result = {
+        ...getFormData(form),
+        permissions: new FormData(form).getAll("permissions"),
+      };
+      if (!validateUpdateForm(form, result, (next) => dispatch({ type: "SET_EDIT_ERRORS", payload: next }))) return;
+      const payload = {
+        fullName: result.fullName.trim(),
+        ...(config.updateIncludesCompanyId ? { companyId: editingUser.companyId ?? 1 } : {}),
+        permissions: result.permissions,
+      };
+      if (result.email?.trim()) payload.email = result.email.trim();
+      if (result.password?.trim()) payload.password = result.password.trim();
+      const ok = await update(editingUser.id, payload);
+      if (ok) dispatch({ type: "CLOSE_EDIT" });
+    },
+    [update, editingUser],
+  );
+
   return (
     <LoadTransition
       loading={getLoading}
@@ -182,14 +231,25 @@ export default function UserManagementPage({ userRole }) {
                             <p className="font-semibold">{user.fullName}</p>
                             <p className="text-muted-foreground text-sm">{user.email}</p>
                           </div>
-                          <Button
-                            onClick={() => toggleConfirm(user.id)}
-                            variant="ghost"
-                            size="icon-sm"
-                            className="focus-visible:border-destructive focus-visible:ring-destructive/30"
-                          >
-                            {showConfirmation === user.id ? <X /> : <Trash />}
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {config.canUpdate && (
+                              <Button
+                                onClick={() => handleEditOpen(user)}
+                                variant="ghost"
+                                size="icon-sm"
+                              >
+                                <Pencil />
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => toggleConfirm(user.id)}
+                              variant="ghost"
+                              size="icon-sm"
+                              className="focus-visible:border-destructive focus-visible:ring-destructive/30"
+                            >
+                              {showConfirmation === user.id ? <X /> : <Trash />}
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -197,7 +257,7 @@ export default function UserManagementPage({ userRole }) {
                             <Badge variant="outline">Prohome</Badge>
                           )}
                           {user.permission?.CRM && (
-                            <Badge variant="outline">CRM</Badge>  
+                            <Badge variant="outline">CRM</Badge>
                           )}
                         </div>
 
@@ -261,6 +321,15 @@ export default function UserManagementPage({ userRole }) {
                                     )}
                                   </Badge>
                                 )}
+                                {config.canUpdate && (
+                                  <Button
+                                    onClick={() => handleEditOpen(user)}
+                                    variant="ghost"
+                                    size="icon-sm"
+                                  >
+                                    <Pencil />
+                                  </Button>
+                                )}
                                 <Button
                                   onClick={() => toggleConfirm(user.id)}
                                   variant="ghost"
@@ -282,6 +351,123 @@ export default function UserManagementPage({ userRole }) {
               )}
             </div>
           </section>
+
+          {/* Edit Drawer */}
+          {config.canUpdate && (
+            <Drawer open={editModal} onOpenChange={handleEditOpenChange}>
+              <DrawerContent className="inset-0 h-screen max-h-screen rounded-none data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:rounded-none">
+                <DrawerHeader className="relative flex flex-col items-center gap-2 text-center">
+                  <DrawerTitle>{config.editDrawerTitle}</DrawerTitle>
+                  <DrawerDescription className="text-muted-foreground text-sm">
+                    {config.editDrawerDescription}
+                  </DrawerDescription>
+                  <DrawerClose
+                    className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }), "absolute top-4 right-4")}
+                    aria-label="Yopish"
+                  >
+                    ✕
+                  </DrawerClose>
+                </DrawerHeader>
+
+                <form
+                  key={editingUser?.id}
+                  onSubmit={handleEditSubmit}
+                  className="mx-auto flex w-full max-w-sm flex-col gap-5 p-5"
+                >
+                  <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="edit-fullName">FISH*</Label>
+                    <Input
+                      type="text"
+                      id="edit-fullName"
+                      name="fullName"
+                      defaultValue={editingUser?.fullName ?? ""}
+                      placeholder="To'liq ismingizni yozing"
+                      onChange={() => clearEditFieldError("fullName")}
+                    />
+                    {editErrors.fullName && (
+                      <p className="text-destructive text-xs">{editErrors.fullName}</p>
+                    )}
+                  </div>
+
+                  <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="edit-email">Email</Label>
+                    <Input
+                      type="email"
+                      id="edit-email"
+                      name="email"
+                      defaultValue={editingUser?.email ?? ""}
+                      autoComplete="username"
+                      placeholder="Email"
+                      onChange={() => clearEditFieldError("email")}
+                    />
+                    {editErrors.email && (
+                      <p className="text-destructive text-xs">{editErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="edit-password">Yangi parol <span className="text-muted-foreground">(ixtiyoriy)</span></Label>
+                    <Input
+                      type="password"
+                      id="edit-password"
+                      name="password"
+                      autoComplete="new-password"
+                      placeholder="O'zgartirmasangiz bo'sh qoldiring"
+                      onChange={() => clearEditFieldError("password")}
+                    />
+                    {editErrors.password && (
+                      <p className="text-destructive text-xs">{editErrors.password}</p>
+                    )}
+                  </div>
+
+                  <div className="grid w-full items-center gap-3">
+                    <Label>Ruxsatlar*</Label>
+                    <div className="flex gap-5">
+                      <FieldLabel>
+                        <Field orientation="horizontal">
+                          <Checkbox
+                            id="edit-permissions-prohome"
+                            name="permissions"
+                            value="PROHOME"
+                            defaultChecked={editingUser?.permission?.PROHOME}
+                            onCheckedChange={() => clearEditFieldError("permissions")}
+                          />
+                          <FieldContent>
+                            <FieldTitle>PROHOME</FieldTitle>
+                          </FieldContent>
+                        </Field>
+                      </FieldLabel>
+                      <FieldLabel>
+                        <Field orientation="horizontal">
+                          <Checkbox
+                            id="edit-permissions-crm"
+                            name="permissions"
+                            value="CRM"
+                            defaultChecked={editingUser?.permission?.CRM}
+                            onCheckedChange={() => clearEditFieldError("permissions")}
+                          />
+                          <FieldContent>
+                            <FieldTitle>CRM</FieldTitle>
+                          </FieldContent>
+                        </Field>
+                      </FieldLabel>
+                    </div>
+                    {editErrors.permissions && (
+                      <p className="text-destructive text-xs">{editErrors.permissions}</p>
+                    )}
+                  </div>
+
+                  <Button disabled={updateLoading} type="submit">
+                    {updateLoading ? (
+                      <><Spinner /> Yangilanmoqda...</>
+                    ) : (
+                      <><Check /> Saqlash</>
+                    )}
+                  </Button>
+                </form>
+              </DrawerContent>
+            </Drawer>
+          )}
 
           {/* Add Drawer */}
           <Drawer open={addModal} onOpenChange={handleAddModal}>
