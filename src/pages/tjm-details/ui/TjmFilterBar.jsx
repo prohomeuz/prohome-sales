@@ -10,15 +10,14 @@
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import CurrencyBadge from "@/shared/ui/currency-badge";
 import { Label } from "@/shared/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 import { Slider } from "@/shared/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
@@ -28,6 +27,7 @@ import {
   ArrowLeft,
   Banknote,
   Building2,
+  ChevronDown,
   Filter,
   Plus,
   Ruler,
@@ -42,9 +42,9 @@ import { STATUS_CLASS, STATUS_LABEL } from "../lib/constants";
  *   onToggleFilter: () => void,
  *   hasActiveFilters: boolean,
  *   activeFilterCount: number,
- *   selectedBlock: string,
+ *   selectedBlocks: string[],
  *   blockOptions: string[],
- *   onBlockChange: (value: string) => void,
+ *   onBlocksChange: (blocks: string[]) => void,
  *   statisticsCards: Array<object>,
  *   draftFilters: object,
  *   onDraftFiltersChange: (updater: function) => void,
@@ -65,9 +65,9 @@ export default function TjmFilterBar({
   onToggleFilter,
   hasActiveFilters,
   activeFilterCount,
-  selectedBlock,
+  selectedBlocks,
   blockOptions,
-  onBlockChange,
+  onBlocksChange,
   statisticsCards,
   draftFilters,
   onDraftFiltersChange,
