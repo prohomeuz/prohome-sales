@@ -72,6 +72,7 @@ export default function TjmDetails() {
   const activeDetailsId = searchParams.get("details");
   const urlBlock = searchParams.get("block");
   const urlView = searchParams.get("view");
+  const urlBlocks = searchParams.get("blocks")?.split(",").filter(Boolean) ?? [];
 
   const [selectedBlocks, setSelectedBlocks] = useState(() => {
     const val = searchParams.get("blocks");
@@ -590,11 +591,11 @@ export default function TjmDetails() {
 
     if (result?.ok) {
       toast.success(`"${blockName}" muvaffaqiyatli o'chirildi`);
-      handleBlockChange("all");
+      handleBlocksChange([]);
     } else {
       toast.error(`O'chirishda xatolik: server javob bermadi`);
     }
-  }, [deleteConfirm, home, deleteBlock, handleBlockChange]);
+  }, [deleteConfirm, home, deleteBlock, handleBlocksChange]);
 
   // --- Render ---
 
