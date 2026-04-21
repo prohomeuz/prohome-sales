@@ -1,7 +1,7 @@
 import { Label } from "@/shared/ui/label";
 import { Eye, EyeClosed } from "lucide-react";
 import { useCallback, useReducer, useRef } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import {
@@ -68,6 +68,7 @@ function FieldError({ id, children }) {
 
 export default function Login() {
   const { user, setUser } = useAppStore();
+  const navigate = useNavigate();
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const { loading, errors } = state;
   const [passwordShow, { toggle }] = useBoolean();
@@ -102,6 +103,7 @@ export default function Login() {
           const data = await res.json();
           setUser(data);
           toast.success("Tizimga xush kelibsiz!");
+          navigate("/dashboard", { replace: true });
           return;
         }
 
