@@ -10,6 +10,7 @@
  */
 
 import { useAppStore } from "@/entities/session/model";
+import { useRoomSocket } from "@/entities/room/model/use-room-socket";
 import { useStableLoadingBar } from "@/shared/hooks/use-loading-bar";
 import { useProjectStructure } from "@/shared/hooks/use-project-structure";
 import { formatNumber } from "@/shared/lib/utils";
@@ -57,6 +58,7 @@ export default function TjmDetails() {
     error,
     loading,
     updateRoomStatus,
+    get: refetchStructure,
     save,
     deleteBlock,
   } = useProjectStructure(id);
@@ -100,6 +102,29 @@ export default function TjmDetails() {
   const { start, complete } = useStableLoadingBar({
     color: "#5ea500",
     height: 3,
+  });
+
+  // --- WebSocket: real vaqtda xona o'zgarishlari ---
+
+  const handleRoomStatusUpdated = useCallback(
+    (data) => {
+      updateRoomStatus(data.roomId, {
+        status: data.status,
+        soldDate: data.soldDate,
+        bookingDate: data.bookingDate,
+      });
+    },
+    [updateRoomStatus],
+  );
+
+  const handleRoomRefetch = useCallback(() => {
+    refetchStructure();
+  }, [refetchStructure]);
+
+  useRoomSocket({
+    onStatusUpdated: handleRoomStatusUpdated,
+    onRoomUpdated: handleRoomRefetch,
+    onRoomDeleted: handleRoomRefetch,
   });
 
   // --- Memoized hisob-kitoblar ---

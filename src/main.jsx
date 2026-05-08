@@ -2,14 +2,17 @@ import { createRoot } from "react-dom/client";
 import "react-photo-view/dist/react-photo-view.css";
 import { LoadingBarContainer } from "react-top-loading-bar";
 import { Toaster } from "sonner";
+import { SocketProvider } from "./app/providers/socket-provider.jsx";
 import App from "./app/router.jsx";
 import "./index.css";
 import Offline from "./pages/Offline.jsx";
 
 const online = (
   <LoadingBarContainer props={{ shadow: false, waitingTime: 500, transitionTime: 300 }}>
-    <App />
-    <Toaster closeButton richColors position="bottom-right" visibleToasts={3} />
+    <SocketProvider>
+      <App />
+      <Toaster closeButton richColors position="bottom-right" visibleToasts={3} />
+    </SocketProvider>
   </LoadingBarContainer>
 );
 
