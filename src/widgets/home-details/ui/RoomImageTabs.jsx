@@ -7,8 +7,70 @@
  */
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { Box, CircleMinus, CirclePlus, LayoutGrid, Square } from "lucide-react";
+import { Box, CircleMinus, CirclePlus, LayoutGrid, Square, ImageOff, Maximize2, Download } from "lucide-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
+import { apiUrl } from "@/shared/lib/api";
+
+const getImageSrc = (img) => {
+  if (!img) return "";
+  if (img.startsWith("http")) return img;
+  if (img.startsWith("image/")) return apiUrl(img);
+  return apiUrl(`image/${img}`);
+};
+
+const handleDownload = async (e, url, title) => {
+  e.stopPropagation();
+  e.preventDefault();
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = title ? `${title}.png` : "image.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    window.open(url, "_blank");
+  }
+};
+
+const ImageDisplay = ({ src, label }) => {
+  if (!src) return null;
+  return (
+    <div className="group relative mx-auto h-[52svh] w-full max-w-4xl overflow-visible sm:h-[58svh] lg:h-72 lg:max-w-none">
+      <PhotoView src={src}>
+        <img
+          src={src}
+          alt={label}
+          className="h-full w-full cursor-zoom-in object-cover transition-transform duration-500 group-hover:scale-101 rounded-3xl"
+        />
+      </PhotoView>
+      
+      <div className="absolute right-4 top-4 flex items-center gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
+        <PhotoView src={src}>
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md transition-all hover:bg-white/40 hover:scale-105"
+            title="Kattalashtirish"
+          >
+            <Maximize2 className="size-4" />
+          </button>
+        </PhotoView>
+        <button
+          type="button"
+          onClick={(e) => handleDownload(e, src, label)}
+          className="flex size-10 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md transition-all hover:bg-black/60 hover:scale-105"
+          title="Yuklab olish"
+        >
+          <Download className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /**
  * @param {{
@@ -55,83 +117,46 @@ export default function RoomImageTabs({ home, activeImageTab, onTabChange }) {
           </TabsList>
 
           <TabsContent value="2D" forceMount>
-            {home.img2d ? (
-              <PhotoView src={home.img2d}>
-                <img
-                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none rounded-lg shadow-sm border"
-                  src={home.img2d}
-                  alt="2D View"
-                />
-              </PhotoView>
-            ) : home.image?.[0] ? (
-              <PhotoView src={`/gallery/png/${home.image[0]}.png`}>
-                <picture>
-                  <source
-                    srcSet={`/gallery/avif/${home.image[0]}.avif`}
-                    type="image/avif"
-                  />
-                  <img
-                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                    src={`/gallery/png/${home.image[0]}.png`}
-                    alt={home.size}
-                  />
-                </picture>
-              </PhotoView>
+            {home.img2d && home.img2d !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.img2d)} label="2D View" />
+            ) : home.image?.[0] && home.image[0] !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.image[0])} label={home.size || "2D View"} />
             ) : (
-              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
-                <span className="text-xs text-muted-foreground italic">2D rasm mavjud emas</span>
+              <div className="flex flex-col h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border/40 bg-muted/10">
+                <div className="p-4 bg-muted/30 rounded-full mb-3">
+                  <ImageOff className="size-6 text-muted-foreground/50" />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">2D rasm yuklanmagan</span>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="3D" forceMount>
-            {home.img3d ? (
-              <PhotoView src={home.img3d}>
-                <img
-                  className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none rounded-lg shadow-sm border"
-                  src={home.img3d}
-                  alt="3D View"
-                />
-              </PhotoView>
-            ) : home.image?.[1] ? (
-              <PhotoView src={`/gallery/png/${home.image[1]}.png`}>
-                <picture>
-                  <source
-                    srcSet={`/gallery/avif/${home.image[1]}.avif`}
-                    type="image/avif"
-                  />
-                  <img
-                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                    src={`/gallery/png/${home.image[1]}.png`}
-                    alt={home.size}
-                  />
-                </picture>
-              </PhotoView>
+            {home.img3d && home.img3d !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.img3d)} label="3D View" />
+            ) : home.image?.[1] && home.image[1] !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.image[1])} label={home.size || "3D View"} />
             ) : (
-              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
-                <span className="text-xs text-muted-foreground italic">3D rasm mavjud emas</span>
+              <div className="flex flex-col h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border/40 bg-muted/10">
+                <div className="p-4 bg-muted/30 rounded-full mb-3">
+                  <ImageOff className="size-6 text-muted-foreground/50" />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">3D rasm yuklanmagan</span>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="PLAN" forceMount>
-            {home.image?.[2] ? (
-              <PhotoView src={`/gallery/png/${home.image[2]}.png`}>
-                <picture>
-                  <source
-                    srcSet={`/gallery/avif/${home.image[2]}.avif`}
-                    type="image/avif"
-                  />
-                  <img
-                    className="mx-auto h-auto max-h-[52svh] w-full max-w-4xl object-contain sm:max-h-[58svh] lg:h-64 lg:max-h-none lg:max-w-none"
-                    src={`/gallery/png/${home.image[2]}.png`}
-                    alt={home.size}
-                  />
-                </picture>
-              </PhotoView>
+            {home.plan && home.plan !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.plan)} label="Plan View" />
+            ) : home.image?.[2] && home.image[2] !== "0" ? (
+              <ImageDisplay src={getImageSrc(home.image[2])} label={home.size || "Plan View"} />
             ) : (
-              <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed bg-muted/20">
-                <span className="text-xs text-muted-foreground italic">Plan mavjud emas</span>
+              <div className="flex flex-col h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border/40 bg-muted/10">
+                <div className="p-4 bg-muted/30 rounded-full mb-3">
+                  <ImageOff className="size-6 text-muted-foreground/50" />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">Plan yuklanmagan</span>
               </div>
             )}
           </TabsContent>

@@ -51,11 +51,13 @@ import {
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  Plus
+  Plus,
+  CheckCircle2
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { apiRequest } from "@/shared/lib/api";
 
 const INITIAL_FORM = {
   name: "",
@@ -214,6 +216,8 @@ export default function TjmAddBlock() {
   const [selectedCells, setSelectedCells] = useState([]); // [{ fIdx, rIdx }]
   const [draggedCell, setDraggedCell] = useState(null);
   const [dragEnabledId, setDragEnabledId] = useState(null);
+  const [inspectorFiles, setInspectorFiles] = useState({ image2d: null, image3d: null, plan: null });
+  const [savingInspector, setSavingInspector] = useState(false);
   // suppressDetailsIdx is now a ref (no re-render needed)
   const [selectionBox, setSelectionBox] = useState(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
@@ -411,12 +415,14 @@ export default function TjmAddBlock() {
     if (Array.isArray(block.appartment)) {
       const config = block.appartment.map((floorRow) =>
         (floorRow ?? []).map((apt) => ({
+          id: apt?.id, // Store real room ID
           room: apt?.room ?? 1,
           size: apt?.size ?? '',
           price: apt?.price ?? '',
           customNumber: apt?.houseNumber ? String(apt.houseNumber) : '',
           img2d: apt?.img2d ?? '',
           img3d: apt?.img3d ?? '',
+          plan: apt?.plan ?? '', // Added plan
           status: apt?.status === 'EMPTY' ? 'available'
             : apt?.status === 'RESERVED' ? 'reserved'
             : apt?.status === 'SOLD' ? 'sold'
@@ -926,6 +932,72 @@ export default function TjmAddBlock() {
     toast.success("Bino strukturasi gorizontal o'girildi!");
   }, []);
 
+  const handleInspectorSave = async () => {
+    const roomsWithIds = selectedCells.map(p => floorsConfig[p.fIdx]?.[p.rIdx]).filter(r => r && r.id);
+    const roomIds = roomsWithIds.map(r => r.id);
+
+    if (roomIds.length === 0) {
+      toast.error("Xonadonlar hali serverda saqlanmagan. Iltimos oldin blokni to'liq saqlang.");
+      return;
+    }
+
+    const firstCellData = roomsWithIds[0];
+    const price = firstCellData.price;
+    const blocId = home?.blocks?.[editBlockName]?.id;
+
+    if (!blocId) {
+      toast.error("Blok ID topilmadi. Oldin blokni saqlang.");
+      return;
+    }
+
+    setSavingInspector(true);
+    try {
+      let hasImages = false;
+      const formData = new FormData();
+      formData.append("blocId", blocId);
+      roomIds.forEach(roomId => formData.append("roomIds[]", roomId));
+
+      if (inspectorFiles.image2d) { formData.append("image2d", inspectorFiles.image2d); hasImages = true; }
+      if (inspectorFiles.image3d) { formData.append("image3d", inspectorFiles.image3d); hasImages = true; }
+      if (inspectorFiles.plan) { formData.append("plan", inspectorFiles.plan); hasImages = true; }
+
+      if (hasImages) {
+        if (!inspectorFiles.image2d || !inspectorFiles.image3d || !inspectorFiles.plan) {
+          throw new Error("Backend talabi: Rasm yuklash uchun barcha 3 ta fayl (2D, 3D va Plan) kiritilishi shart!");
+        }
+
+        const uploadRes = await apiRequest(`/api/v1/projects/${id}/upload-room-images`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error("Rasmlarni yuklashda xatolik yuz berdi");
+      }
+
+      if (price) {
+        const priceRes = await apiRequest(`/api/v1/projects/${id}/set-room-prices`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blocId: Number(blocId),
+            roomIds: roomIds.map(Number),
+            price: Number(price)
+          })
+        });
+        if (!priceRes.ok) throw new Error("Narxni saqlashda xatolik yuz berdi");
+      }
+
+      toast.success("Xonadon rasmlari va narxlari muvaffaqiyatli saqlandi!");
+      setInspectorFiles({ image2d: null, image3d: null, plan: null });
+      const el2d = document.getElementById('img2d-upload'); if (el2d) el2d.value = '';
+      const el3d = document.getElementById('img3d-upload'); if (el3d) el3d.value = '';
+      const elPlan = document.getElementById('plan-upload'); if (elPlan) elPlan.value = '';
+    } catch (err) {
+      toast.error(err.message || "Xatolik yuz berdi");
+    } finally {
+      setSavingInspector(false);
+    }
+  };
+
   const fillEmptySpaces = useCallback(() => {
     pushState();
     setFloorsConfig((prev) => {
@@ -1308,9 +1380,13 @@ export default function TjmAddBlock() {
                       <Input
                         type="number"
                         min="1"
-                        max="100"
+                        max="20"
                         value={form.floor}
-                        onChange={(e) => setForm(f => ({ ...f, floor: e.target.value }))}
+                        onChange={(e) => {
+                          let v = parseInt(e.target.value);
+                          if (v > 20) v = 20;
+                          setForm(f => ({ ...f, floor: v ? String(v) : "" }))
+                        }}
                         className="h-11 rounded-xl bg-muted/30 border-border/30 focus:bg-background focus:ring-4 focus:ring-primary/5"
                       />
                     </div>
@@ -1617,65 +1693,36 @@ export default function TjmAddBlock() {
                                  cellObj.status === "not_for_sale" ? "bg-[#90A0B7] border-transparent text-white font-bold" :
                                  "bg-[#00C347] border-transparent text-white font-bold";
                               
-                              const isDragging = draggedCell?.fIdx === floorIndex && draggedCell?.rIdx === roomIndex;
-                              const dragId = `${floorIndex}-${roomIndex}`;
-
                               return (
                                   <div 
                                     key={roomIndex}
                                     className={cn(
                                       "relative group/cell",
-                                      isDragging ? "opacity-30" : ""
+                                      selectionBox ? "pointer-events-none" : ""
                                     )}
-                                    draggable={dragEnabledId === dragId}
                                     onMouseMove={(e) => handleCellMouseMove(e, floorIndex, roomIndex)}
                                     onMouseLeave={() => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; }}
-                                    onDragStart={(e) => {
-                                      setDraggedCell({ fIdx: floorIndex, rIdx: roomIndex });
-                                      e.dataTransfer.effectAllowed = "move";
-                                    }}
-                                    onDragEnd={() => {
-                                      setDraggedCell(null);
-                                      setDragEnabledId(null);
-                                    }}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={(e) => handleDrop(e, floorIndex, roomIndex)}
                                   >
-                                         <div 
-                                           onMouseEnter={() => {
-                                             setDragEnabledId(dragId);
-                                             suppressDetailsRef.current = dragId;
-                                             if (tooltipRef.current) tooltipRef.current.style.display = 'none';
-                                           }}
-                                           onMouseLeave={() => {
-                                             setDragEnabledId(null);
-                                             suppressDetailsRef.current = null;
-                                           }}
-                                           className={cn(
-                                             "absolute -left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/cell:opacity-100 cursor-grab text-muted-foreground z-30 p-1 bg-card rounded border border-border/30 transition-all",
-                                             isDragging && "cursor-grabbing scale-110 border-primary text-primary opacity-100"
-                                           )}
-                                         >
-                                          <GripVertical className="size-3" />
-                                        </div>
-
-                                        <Input 
-                                          type={showRoomCount ? "number" : "text"}
-                                          min="1"
-                                          max="8"
+                                        <div
                                           data-floor={floorIndex}
                                           data-room={roomIndex}
                                           onPointerDown={(e) => handleCellPointerDown(e, floorIndex, roomIndex)}
                                           onKeyDown={(e) => handleKeyDown(e, floorIndex, roomIndex)}
+                                          tabIndex={0}
                                           className={cn(
-                                            "group/cell/input w-16 h-12 text-center text-xs font-bold p-0 transition-all no-spinners border bg-background rounded-xl ring-inset ring-black/5",
+                                            "group/cell/input relative flex items-center justify-center cursor-pointer w-16 h-12 text-center text-xs font-bold p-0 transition-all border border-transparent rounded-xl select-none outline-none",
                                             statusClass,
-                                            isSelected ? "ring-2 ring-primary ring-offset-2 z-20 scale-105" : "",
+                                            isSelected ? "opacity-60 scale-[0.97] z-20" : "",
                                             previewVariant === "expanded" ? "w-24 h-16 text-base" : ""
                                           )}
-                                          value={showRoomCount ? (cellObj?.room ?? cellObj) : (cellObj?.customNumber || homeDetails?.houseNumber || "")}
-                                          onChange={(e) => updateRoomBox(floorIndex, roomIndex, showRoomCount ? "room" : "customNumber", e.target.value)}
-                                        />
+                                        >
+                                          {isSelected && (
+                                            <div className="absolute -top-1.5 -left-1.5 bg-background rounded-full p-[2px] shadow-sm border border-border/50 z-30 animate-in zoom-in-75 duration-200">
+                                              <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-500 fill-emerald-500/20" strokeWidth={3} />
+                                            </div>
+                                          )}
+                                          {showRoomCount ? `${cellObj?.room ?? cellObj}x` : (cellObj?.customNumber || homeDetails?.houseNumber || "")}
+                                        </div>
 
                                         <Tooltip delayDuration={0}>
                                           <TooltipTrigger asChild>
@@ -1692,7 +1739,7 @@ export default function TjmAddBlock() {
                                               <Minus className="size-3" />
                                             </button>
                                           </TooltipTrigger>
-                                          <TooltipContent side="top" className="text-white border-none shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Xonadonni o'chirish</TooltipContent>
+                                          <TooltipContent side="top" className="dark:text-white border-none shadow-xl px-3 py-1.5 rounded-lg overflow-visible">Xonadonni o'chirish</TooltipContent>
                                         </Tooltip>
 
                                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground whitespace-nowrap opacity-0 group-hover/cell:opacity-100 font-mono transition-opacity pointer-events-none z-20 bg-background/95 border border-border/30 px-1.5 py-0.5 rounded-md">
@@ -1885,6 +1932,47 @@ export default function TjmAddBlock() {
                                })}
                              </div>
                           </div>
+
+                          <div className="space-y-2 pt-4 border-t border-border/30">
+                             <Label className="text-[11px] font-bold text-muted-foreground ml-1">
+                               Rasmlar <span className="font-normal opacity-60">(Saqlangan xonalar uchun)</span>
+                             </Label>
+                             <div className="space-y-2">
+                               {[
+                                 { key: "image2d", label: "2D Ko'rinish", icon: "2D" },
+                                 { key: "image3d", label: "3D Ko'rinish", icon: "3D" },
+                                 { key: "plan", label: "Reja (Plan)", icon: "📐" },
+                               ].map(({ key, label, icon }) => (
+                                 <label
+                                   key={key}
+                                   htmlFor={`${key}-upload`}
+                                   className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-all"
+                                 >
+                                   <div className="size-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0 text-[10px] font-black text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                     {icon}
+                                   </div>
+                                   <div className="flex-1 min-w-0">
+                                     <p className="text-[11px] font-bold text-foreground">{label}</p>
+                                     <p className="text-[10px] text-muted-foreground truncate">
+                                       {inspectorFiles?.[key]?.name ?? "Fayl tanlash..."}
+                                     </p>
+                                   </div>
+                                   {inspectorFiles?.[key] && (
+                                     <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0">
+                                       <CheckCircle2 className="size-3 text-white" strokeWidth={3} />
+                                     </div>
+                                   )}
+                                   <input
+                                     id={`${key}-upload`}
+                                     type="file"
+                                     accept="image/*"
+                                     className="hidden"
+                                     onChange={e => setInspectorFiles(p => ({ ...p, [key]: e.target.files[0] }))}
+                                   />
+                                 </label>
+                               ))}
+                             </div>
+                          </div>
                         </div>
 
 
@@ -1911,8 +1999,17 @@ export default function TjmAddBlock() {
                 </div>
               )}
 
-              <div className="p-6 border-t border-border/30 mt-auto">
-                {selectedCells.length === 0 && (
+              <div className="p-5 border-t border-border/30 mt-auto shrink-0 bg-card">
+                {selectedCells.length > 0 ? (
+                  <Button
+                    className="w-full h-11 rounded-2xl text-sm font-bold shadow-none gap-2"
+                    onClick={handleInspectorSave}
+                    disabled={savingInspector}
+                  >
+                    {savingInspector ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    Ma'lumotlarni saqlash
+                  </Button>
+                ) : (
                   <Button
                      variant="outline"
                      onClick={() => setIsShortcutsOpen(true)}
@@ -1927,121 +2024,61 @@ export default function TjmAddBlock() {
           </div>
         </section>
         
-        {/* Shortcuts Modal (Figma-style Premium) */}
+        {/* Shortcuts Modal (Simplified Premium) */}
         {isShortcutsOpen && (
-           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-0">
               <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-[8px] animate-in fade-in duration-500"
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
                 onClick={() => setIsShortcutsOpen(false)}
               />
-              <div className="relative bg-card rounded-[32px] w-full max-w-xl shadow-[0_32px_128px_rgba(0,0,0,0.15)] border border-border/30 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
-                  {/* Header */}
-                  <div className="p-8 border-b border-border/30 flex items-center justify-between bg-gradient-to-b from-muted/30 to-transparent">
-                     <div className="flex items-center gap-5">
-                        <div className="size-14 rounded-[22px] bg-primary/10 flex items-center justify-center ring-8 ring-primary/[0.03]">
-                           <MousePointer2 className="size-7 text-primary" />
+              <div className="relative bg-card rounded-[32px] w-full max-w-[420px] shadow-2xl border border-border/50 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+                  <div className="p-5 flex items-center justify-between border-b border-border/40">
+                     <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                           <MousePointer2 className="size-5 text-primary" />
                         </div>
                         <div>
-                           <h2 className="text-2xl font-bold text-foreground tracking-tight">Shortcutlar</h2>
-                           <p className="text-sm text-muted-foreground font-semibold mt-0.5">Tezkor tugmalar va navigatsiya</p>
+                           <h2 className="text-base font-bold text-foreground">Shortcutlar</h2>
+                           <p className="text-[11px] text-muted-foreground font-semibold">Tezkor boshqaruv tugmalari</p>
                         </div>
                      </div>
                      <Button
                        variant="ghost"
                        size="icon"
-                       className="size-10 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all border border-transparent hover:border-border/30"
+                       className="size-8 rounded-full hover:bg-muted text-muted-foreground"
                        onClick={() => setIsShortcutsOpen(false)}
                      >
-                        <Plus className="size-5 rotate-45" />
+                        <Plus className="size-4 rotate-45" />
                      </Button>
                   </div>
                   
-                  {/* Content Grid */}
-                  <div className="p-10 grid grid-cols-2 gap-x-14 gap-y-10">
-                     {/* Navigatsiya */}
-                     <div className="space-y-5">
-                        <div className="flex items-center gap-2 mb-2">
-                           <div className="size-1.5 rounded-full bg-primary" />
-                           <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Navigatsiya</h3>
-                        </div>
-                        <div className="space-y-4">
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Surgich (Pan)</span>
+                  <div className="p-3">
+                     <div className="space-y-1 p-2">
+                        {[
+                           { label: "Surgich (Pan)", keys: ["SPACE", "DRAG"] },
+                           { label: "Mashtab (Zoom)", keys: ["CTRL", "WHEEL"] },
+                           { label: "Tezkor Pan", keys: ["CTRL", "DRAG"] },
+                           { label: "Ko'p tanlash", keys: ["ALT", "CLICK"] },
+                           { label: "Orqaga (Undo)", keys: ["CTRL", "Z"] },
+                           { label: "Oldinga (Redo)", keys: ["CTRL", "Y"] },
+                        ].map((s, i) => (
+                           <div key={i} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/50 transition-colors">
+                              <span className="text-sm font-bold text-foreground/80">{s.label}</span>
                               <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">SPACE</kbd>
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">DRAG</kbd>
+                                 {s.keys.map(k => (
+                                    <kbd key={k} className="px-2 py-1 bg-background border border-border/50 rounded-md text-[10px] font-black text-foreground/70 shadow-sm min-w-[32px] text-center">{k}</kbd>
+                                 ))}
                               </div>
                            </div>
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Mashtab (Zoom)</span>
-                              <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">CTRL</kbd>
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">WHEEL</kbd>
-                              </div>
-                           </div>
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Tezkor Pan</span>
-                              <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[42px] text-center">CTRL</kbd>
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">DRAG</kbd>
-                              </div>
-                           </div>
-                        </div>
+                        ))}
                      </div>
                      
-                     {/* Tahrirlash */}
-                     <div className="space-y-5">
-                        <div className="flex items-center gap-2 mb-2">
-                           <div className="size-1.5 rounded-full bg-orange-400" />
-                           <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Tahrirlash</h3>
-                        </div>
-                        <div className="space-y-4">
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Ko'p tanlash</span>
-                              <div className="flex gap-1.5">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm min-w-[36px] text-center">ALT</kbd>
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CLICK</kbd>
-                              </div>
-                           </div>
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Orqaga (Undo)</span>
-                              <div className="flex gap-1">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CTRL + Z</kbd>
-                              </div>
-                           </div>
-                           <div className="flex items-center justify-between group">
-                              <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">Oldinga (Redo)</span>
-                              <div className="flex gap-1">
-                                 <kbd className="px-2 py-1 bg-background border-b-2 border-border border-x border-t border-border/50 rounded-lg text-[10px] font-black text-foreground/80 shadow-sm">CTRL + Y</kbd>
-                              </div>
-                           </div>
-                        </div>
+                     <div className="mx-2 mt-2 mb-2 p-4 rounded-2xl bg-primary/5 border border-primary/10 flex gap-3 items-start">
+                        <Layers3 className="size-5 text-primary shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                          Sichqonchaning chap tugmasini bo'sh joydan bosib tortish orqali xonadonlarni <strong className="text-foreground">Lasso Selection</strong> (ommaviy belgilash) qilishingiz mumkin.
+                        </p>
                      </div>
-                     
-                     {/* Tip Box */}
-                     <div className="col-span-2 p-6 rounded-[24px] bg-muted/30 border border-border/30 mt-2 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-                           <Layers3 className="size-16 text-foreground" />
-                        </div>
-                        <div className="flex items-start gap-4 h-full">
-                           <div className="size-10 rounded-xl bg-background border border-border flex items-center justify-center shadow-sm shrink-0">
-                              <Layers3 className="size-5 text-primary" />
-                           </div>
-                           <p className="text-[12px] text-muted-foreground font-bold leading-relaxed pr-8">
-                             Sichqonchaning chap tugmasini bo'sh joydan bosib tortish orqali xonadonlarni <span className="text-foreground underline decoration-primary/30 decoration-2 underline-offset-2">Lasso Selection</span> (ommaviy belgilash) qilishingiz mumkin.
-                           </p>
-                        </div>
-                     </div>
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="p-8 px-10 bg-muted/20 border-t border-border/30 flex justify-end">
-                     <Button
-                       onClick={() => setIsShortcutsOpen(false)}
-                       className="rounded-[20px] px-12 h-14 font-extrabold bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_12px_24px_rgba(0,195,71,0.25)] transition-all active:scale-[0.97] text-sm"
-                     >
-                       Tushunarli
-                     </Button>
                   </div>
               </div>
            </div>
