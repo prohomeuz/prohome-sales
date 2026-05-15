@@ -9,7 +9,7 @@
 
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { STATUS_CLASS } from "../lib/constants";
 
 /**
@@ -194,13 +194,18 @@ export default function TjmFloorGrid({
                                     "relative flex shrink-0 items-center justify-center rounded-lg leading-none font-bold transition-all duration-300 cursor-pointer hover:scale-105 hover:z-20 active:scale-95",
                                     "size-[var(--room-tile-size)]",
                                     STATUS_CLASS[h.status] || "bg-muted/30 text-muted-foreground",
-                                    "text-white shadow-sm ring-inset ring-black/5",
+                                    "text-white",
                                     isActive &&
-                                      "z-20 ring-primary shadow-[0_0_25px_-2px_var(--color-primary)] ring-2 ring-offset-2 scale-110",
+                                      "opacity-60 scale-[0.97] z-20",
                                     isFilteredOut && "grayscale-[0.5] opacity-20 scale-90",
                                   )}
                                   style={{ fontSize: "var(--room-font-size)" }}
                                 >
+                                  {isActive && (
+                                    <div className="absolute -top-1.5 -left-1.5 bg-background rounded-full p-[2px] shadow-sm border border-border/50 z-30 animate-in zoom-in-75 duration-200">
+                                      <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-500 fill-emerald-500/20" strokeWidth={3} />
+                                    </div>
+                                  )}
                                   {tileLabel}
                                 </div>
                               </TooltipTrigger>

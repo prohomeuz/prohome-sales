@@ -87,13 +87,13 @@ export default function TjmFilterBar({
   const draftPriceRange = draftFilters?.priceRange ?? rangeBounds.price;
   const draftFloorRange = draftFilters?.floorRange ?? rangeBounds.floor;
   const segmentedShellClass =
-    "border-border/70 bg-background inline-flex h-11 max-w-full items-center rounded-xl border shadow-sm";
+    "border-border/70 bg-background inline-flex h-11 max-w-full items-center rounded-[10px] border";
   const segmentedTrackClass =
-    "bg-muted/40 inline-flex items-center rounded-lg p-0.5";
+    "bg-muted/40 inline-flex items-center rounded-[10px] p-1 gap-1";
   const toggleItemClass =
-    "data-[state=off]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background hover:text-foreground data-[state=on]:bg-primary/8 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20";
+    "data-[state=off]:bg-transparent min-w-[5.25rem] !rounded-[10px] border-0 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background/50 hover:text-foreground data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/40";
   const tabsItemClass =
-    "data-[state=inactive]:bg-background/70 min-w-[5.25rem] rounded-md border-0 px-3 py-1 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background hover:text-foreground data-[state=active]:bg-primary/8 data-[state=active]:text-primary data-[state=active]:ring-1 data-[state=active]:ring-primary/20";
+    "data-[state=inactive]:bg-transparent min-w-[5.25rem] !rounded-[10px] border-0 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-muted-foreground shadow-none transition-all hover:bg-background/50 hover:text-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:ring-1 data-[state=active]:ring-primary/40";
 
   return (
     <div className="bg-background/95 flex w-full flex-col border-b backdrop-blur-sm">
@@ -110,12 +110,12 @@ export default function TjmFilterBar({
 
         <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
           <CurrencyBadge />
-          <div className="flex flex-wrap justify-end gap-1">
+          <div className="grid grid-cols-2 gap-1">
             {Object.entries(STATUS_CLASS).map(([key, value]) => (
               <Badge 
                 key={key} 
                 className={cn(
-                  "text-white border-none shadow-sm px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-tight uppercase transition-all duration-300 hover:scale-105", 
+                  "w-full text-white border-none shadow-sm px-2.5 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] font-bold tracking-tight uppercase transition-all duration-300 hover:scale-105", 
                   value
                 )}
               >
@@ -254,9 +254,9 @@ export default function TjmFilterBar({
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:hidden">
               {statisticsCards.map((stat) => (
                 <div
-                  key={stat.key}
+                  key={stat.label}
                   className={cn(
-                    "flex h-8 items-center justify-between rounded-[10px] border px-2.5 transition-all",
+                    "flex flex-1 items-center justify-between rounded-[10px] border px-2.5 py-1.5 min-w-[100px]",
                     stat.tone,
                     "border-opacity-40"
                   )}
@@ -276,14 +276,14 @@ export default function TjmFilterBar({
           )}
 
           {/* Qator 2: Xonadon toggle + View tabs */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <div
               className={cn(
                 segmentedShellClass,
-                "gap-2 px-1 pr-1 pl-2 sm:pl-3 h-9 sm:h-11",
+                "gap-2 px-1 pr-1 pl-2 sm:pl-3 h-10 sm:h-11 py-2",
               )}
             >
-              <div className="hidden sm:block min-w-[7rem]">
+              <div className="hidden sm:block min-w-[7rem] border-r border-border/50 pr-2 mr-1">
                 <p className="text-foreground text-xs font-semibold whitespace-nowrap">
                   {showRoomCount ? "Xonalar soni" : "Xonadon raqami"}
                 </p>
@@ -298,16 +298,16 @@ export default function TjmFilterBar({
                 }}
                 className={segmentedTrackClass}
               >
-                <ToggleGroupItem value="house" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem]")}>
+                <ToggleGroupItem value="house" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem] px-2 sm:px-3")}>
                   Xonadon
                 </ToggleGroupItem>
-                <ToggleGroupItem value="room" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem]")}>
+                <ToggleGroupItem value="room" className={cn(toggleItemClass, "min-w-[4rem] sm:min-w-[5.25rem] px-2 sm:px-3")}>
                   Xonalar
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
 
-            <div className={cn(segmentedShellClass, "px-1 h-9 sm:h-11 overflow-x-auto no-scrollbar")}>
+            <div className={cn(segmentedShellClass, "px-1 h-10 sm:h-11 overflow-x-auto no-scrollbar")}>
               <Tabs
                 value={viewMode}
                 onValueChange={onViewModeChange}
@@ -340,7 +340,7 @@ export default function TjmFilterBar({
         >
 
           <div className="min-h-0 overflow-hidden px-4 pb-4 sm:px-5 lg:px-6">
-            <div className="bg-background/95 rounded-xl p-4">
+            <div className="bg-background/95 rounded-[10px] p-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">Filtrlash</h4>
                 <Button
@@ -372,13 +372,13 @@ export default function TjmFilterBar({
                           rooms: value,
                         }))
                       }
-                      className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-xl border p-1 shadow-none"
+                      className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-none"
                     >
                       {roomOptions.map((room) => (
                         <ToggleGroupItem
                           key={room}
                           value={room}
-                          className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center rounded-lg border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
+                          className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center !rounded-[10px] border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
                         >
                           {room} xona
                         </ToggleGroupItem>
@@ -403,13 +403,13 @@ export default function TjmFilterBar({
                           statuses: value,
                         }))
                       }
-                      className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-xl border p-1 shadow-none sm:grid-cols-4"
+                      className="border-border/70 bg-muted/40 grid w-full grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-none sm:grid-cols-4"
                     >
                       {Object.entries(STATUS_LABEL).map(([value, label]) => (
                         <ToggleGroupItem
                           key={value}
                           value={value}
-                          className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center gap-2 rounded-lg border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
+                          className="text-foreground data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:ring-primary/35 w-full justify-center gap-2 !rounded-[10px] border-0 bg-transparent text-sm font-medium shadow-none transition-all data-[state=on]:shadow-sm data-[state=on]:ring-1"
                         >
                           <span
                             className={cn(
@@ -433,7 +433,7 @@ export default function TjmFilterBar({
                       <Ruler className="text-muted-foreground size-4" />
                       O'lchami (m²)
                     </Label>
-                    <div className="border-border/60 bg-muted/30 rounded-lg border px-3 py-3">
+                    <div className="border-border/60 bg-muted/30 rounded-[10px] border px-3 py-3">
                       <div className="text-muted-foreground flex items-center justify-between text-xs">
                         <span>{formatNumber(draftSizeRange[0])} m²</span>
                         <span>{formatNumber(draftSizeRange[1])} m²</span>
@@ -460,7 +460,7 @@ export default function TjmFilterBar({
                       <Banknote className="text-muted-foreground size-4" />
                       Uy narxi (umumiy)
                     </Label>
-                    <div className="border-border/60 bg-muted/30 rounded-lg border px-3 py-3">
+                    <div className="border-border/60 bg-muted/30 rounded-[10px] border px-3 py-3">
                       <div className="text-muted-foreground flex items-center justify-between text-xs">
                         <span>{formatNumber(draftPriceRange[0])} USD</span>
                         <span>{formatNumber(draftPriceRange[1])} USD</span>
@@ -489,7 +489,7 @@ export default function TjmFilterBar({
                     <Building2 className="text-muted-foreground size-4" />
                     Qavat
                   </Label>
-                  <div className="border-border/60 bg-muted/30 rounded-lg border px-3 py-3">
+                  <div className="border-border/60 bg-muted/30 rounded-[10px] border px-3 py-3">
                     <div className="text-muted-foreground flex items-center justify-between text-xs">
                       <span>{draftFloorRange[0]}-qavat</span>
                       <span>{draftFloorRange[1]}-qavat</span>

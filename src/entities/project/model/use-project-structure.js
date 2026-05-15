@@ -251,7 +251,13 @@ export function useProjectStructure(id) {
     setError(null);
     setNotFound(false);
     try {
+      // 1. Fetch Structure
       const res = await apiRequest(`/api/v1/projects/${id}/structure`, {
+        signal: controller.signal,
+      });
+
+      // 2. Fetch Project Info (to get real block IDs)
+      const infoRes = await apiRequest(`/api/v1/projects/my-projects/${id}`, {
         signal: controller.signal,
       });
 
@@ -262,8 +268,30 @@ export function useProjectStructure(id) {
         apiData = await res.json();
       }
 
+      let projectInfo = null;
+      if (infoRes.ok) {
+        const infoData = await infoRes.json();
+        // Endpoint returns a single project or array of projects, but since we queried by ID, let's handle both
+        const projects = infoData?.data || (Array.isArray(infoData) ? infoData : [infoData]);
+        projectInfo = projects.find(p => String(p.id) === String(id)) || projects[0];
+      }
+
       // 1. Initial merge with legacy drafts (names only)
       let finalData = apiData ? mergeDraftBlocks(apiData, id) : null;
+
+      // 3. Map real IDs from projectInfo to finalData.blocks
+      if (finalData && projectInfo?.blocs) {
+        const nameToId = Object.fromEntries(
+          projectInfo.blocs.map(b => [String(b.name).trim().toLowerCase(), b.id])
+        );
+        
+        finalData.blocks = Object.fromEntries(
+          Object.entries(finalData.blocks).map(([name, block]) => {
+            const realId = nameToId[String(name).trim().toLowerCase()];
+            return [name, { ...block, id: realId || block.id }];
+          })
+        );
+      }
 
       // 2. Critical Merge: Full resolution drafts from LocalStorage (includes the builder data)
       try {
@@ -464,50 +492,29 @@ export function useProjectStructure(id) {
     if (!id || !structure?.blocks?.[blockName]) return { ok: false };
     
     const block = structure.blocks[blockName];
-    let bId = block.id || block.projectId;
+    const bId = block.id;
+
+    if (!bId) {
+      console.error(`Blok uchun ID topilmadi: ${blockName}. Bu blok hali serverda yaratilmagan bo'lishi mumkin.`);
+      return { ok: false, reason: "id_not_found" };
+    }
 
     setSubmitting(true);
     try {
-      // 1. Agar ID bo'lmasa, loyihalar ro'yxatidan nom bo'yicha qidiramiz
-      if (!bId) {
-        const pRes = await apiRequest("/api/v1/projects");
-        if (pRes.ok) {
-          const pData = await pRes.json();
-          const items = pData?.data || pData?.items || pData?.results || pData?.payload || (Array.isArray(pData) ? pData : []);
-          const found = items.find(p => String(p.name).trim().toLowerCase() === String(blockName).trim().toLowerCase());
-          if (found) bId = found.id;
-        }
-      }
-
-      // ID baribir topilmasa, o'chirish imkonsiz
-      if (!bId) {
-        console.error(`Blok uchun ID topilmadi: ${blockName}`);
-        return { ok: false, reason: "id_not_found" };
-      }
-
-      // 2. HAQIQIY DELETE REQUEST yuboramiz
-      console.log(`Backenddan o'chirish so'rovi yuborilmoqda: /api/v1/projects/${bId}`);
-      const delRes = await apiRequest(`/api/v1/projects/${bId}`, {
+      // 1. HAQIQIY DELETE REQUEST yuboramiz: /api/v1/projects/block/{id}
+      console.log(`Backenddan blok o'chirish so'rovi yuborilmoqda: /api/v1/projects/block/${bId}`);
+      const delRes = await apiRequest(`/api/v1/projects/block/${bId}`, {
         method: "DELETE",
       });
 
       if (!delRes.ok) {
-        console.error("Backenddan o'chirishda xatolik:", delRes.status);
+        console.error("Backenddan blok o'chirishda xatolik:", delRes.status);
         return { ok: false, status: delRes.status };
       }
 
-      // 3. Faqat server o'chirgandan keyin lokal holatni va TJM strukturasini yangilaymiz
+      // 2. Server o'chirgandan keyin lokal holatni yangilaymiz
       const { [blockName]: _, ...remainingBlocks } = structure.blocks ?? {};
       
-      // TJM strukturadan ham o'chirib qo'yamiz (JSON field update)
-      await apiRequest(`/api/v1/projects/${id}/add`, {
-        method: "POST",
-        body: JSON.stringify({
-          maxFloor: structure.maxFloor,
-          blocks: { ...remainingBlocks, [blockName]: null }
-        }),
-      });
-
       setStructure(prev => {
         if (!prev) return prev;
         const allBlocks = Object.values(remainingBlocks);
@@ -539,7 +546,7 @@ export function useProjectStructure(id) {
       await get();
       return { ok: true };
     } catch (err) {
-      console.error("O'chirishda xatolik:", err);
+      console.error("Blokni o'chirishda xatolik:", err);
       return { ok: false };
     } finally {
       setSubmitting(false);
